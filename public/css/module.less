@@ -1,0 +1,282 @@
+@color-severity-emergency: #ff2200;
+@color-severity-emergency-fg: @text-color-inverted;
+@color-severity-alert: #ff4400;
+@color-severity-alert-fg: @text-color-inverted;
+@color-severity-critical: #ff6600;
+@color-severity-critical-fg: @text-color-inverted;
+@color-severity-error: #ff8800;
+@color-severity-error-fg: @text-color-inverted;
+@color-severity-warning: @color-warning; // same as @color-warning
+@color-severity-warning-fg: @text-color;
+@color-severity-notice: @color-ok; // same as @color-ok;
+@color-severity-notice-fg: @text-color-inverted;
+@color-severity-informational: #aaaaff;
+@color-severity-informational-fg: @text-color;
+@color-severity-debug: #ccc;
+@color-severity-debug-fg: @text-color;
+
+
+.border-emergency {
+  border-color: @color-severity-emergency;
+}
+
+.border-alert {
+  border-color: @color-severity-alert;
+}
+
+.border-critical {
+  border-color: @color-severity-critical;
+}
+
+.border-error {
+  border-color: @color-severity-error;
+}
+
+.border-warning {
+  border-color: @color-severity-warning;
+}
+
+.border-notice {
+  border-color: @color-severity-notice;
+}
+
+.border-informational {
+  border-color: @color-severity-informational;
+}
+
+.border-debug {
+  border-color: @color-severity-debug;
+}
+
+.severity-col {
+  width: 6em;
+  border-left: 5px solid;
+  white-space: nowrap;
+  text-align: center;
+  margin-right: 1em;
+  padding: 0.33em 1em;
+  font-weight: bold;
+
+  &.emergency {
+    border-left-color: @color-severity-emergency;
+    background-color: @color-severity-emergency;
+    color: @color-severity-emergency-fg;
+
+    &.ack {
+      color: inherit;
+      background-color: inherit;
+    }
+  }
+
+  &.critical {
+    border-left-color: @color-severity-critical;
+    background-color: @color-severity-critical;
+    color: @color-severity-critical-fg;
+
+    &.ack {
+      color: inherit;
+      background-color: inherit;
+    }
+  }
+
+  &.alert {
+    border-left-color: @color-severity-alert;
+    background-color: @color-severity-alert;
+    color: @color-severity-alert-fg;
+
+    &.ack {
+      color: inherit;
+      background-color: inherit;
+    }
+  }
+
+  &.error {
+    border-left-color: @color-severity-error;
+    background-color: @color-severity-error;
+    color: @color-severity-error-fg;
+
+    &.ack {
+      color: inherit;
+      background-color: inherit;
+    }
+  }
+
+  &.warning {
+    border-left-color: @color-severity-warning;
+    background-color: @color-severity-warning;
+    color: @color-severity-warning-fg;
+
+    &.ack {
+      color: inherit;
+      background-color: inherit;
+    }
+  }
+
+  &.notice {
+    border-left-color: @color-severity-notice;
+  }
+
+  &.informational, &.info {
+    border-left-color: @color-severity-informational;
+  }
+
+  &.debug {
+    border-left-color: @color-severity-debug;
+  }
+}
+
+div.output {
+  position: relative;
+  min-height: 10em;
+  border-width: 1px;
+  border-style: solid;
+  border-left-width: 2em;
+  border-radius: 1em;
+  h2 {
+    margin: 0;
+    position: absolute;
+    padding: 0.3em 1em;
+    border: none;
+    font-weight: normal;
+    font-size: 1em;
+    color: @text-color-inverted;
+    text-align: center;
+    text-transform: uppercase;
+    transform: rotate(-90deg) translateX(-100%);
+    transform-origin: -1em 1em;
+    display: block;
+    width: 10em;
+  }
+  pre {
+    padding: 1em;
+    color: @text-color;
+    background: transparent;
+    overflow: auto;
+    white-space: pre-wrap;
+  }
+}
+
+/** QuickSearch (aus vSphereDB) **/
+form.quicksearch {
+  display: block;
+  input.search {
+    width: 8em;
+    min-width: unset;
+    border: none;
+    background-size: 0.75em auto;
+    background-position: 0.5em 0.9em;
+    padding-left: 1.5em;
+    margin-left: 1.5em;
+    font-size: 0.75em;
+    font-weight: normal;
+    &:focus {
+      width: 16em;
+      .transition(width 0.5s ease);
+      border: none;
+    }
+  }
+}
+
+#layout.twocols form.quicksearch input.search {
+  float: right;
+}
+/** END of QuickSearch (aus vSphereDB) **/
+
+
+/** Action Bar **/
+div.action-bar a, div.action-bar form i {
+  color: @icinga-blue;
+}
+
+div.action-bar > a {
+  margin-right: 1em;
+}
+
+div.action-bar {
+  > * {
+    vertical-align: middle;
+  }
+  .pagination-control {
+    float: none;
+    clear: none;
+    display: inline-block;
+    line-height: inherit;
+    margin: 0;
+  }
+
+  form input {
+    margin: 0;
+  }
+}
+
+#layout.twocols div.action-bar .pagination-control {
+  li {
+    display: none;
+  }
+
+  li:nth-child(1), li.active, li:last-child {
+    display: list-item;
+  }
+
+  li.active a {
+    border-bottom: none;
+  }
+}
+
+/** Dropdown in action bar **/
+div.action-bar ul {
+  padding: 0;
+  margin: 0;
+
+  li {
+    list-style-type: none;
+    a { display: block; }
+  }
+}
+
+div.action-bar > ul {
+  display: inline-block;
+  > li {
+    display: inline-block;
+  }
+}
+
+div.action-bar > ul ul {
+  padding: 0.5em 1em 1em 0em;
+  min-width: 10em;
+  position: absolute;
+  display: none;
+  color: white;
+  background-color: @icinga-blue;
+
+  a {
+    display: block;
+    padding: 0.3em 0.5em 0.3em 1em;
+    margin: 0;
+    outline: none;
+    color: white;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+
+  li.active a {
+    font-weight: bold;
+  }
+}
+
+div.action-bar > ul > li:hover ul {
+  display: block;
+}
+div.action-bar > ul > li > a {
+  padding: 0.2em 0.5em;
+}
+div.action-bar > ul > li:hover {
+  background-color: @icinga-blue;
+  & > a {
+    color: white;
+    text-decoration: none;
+  }
+}
+/** END of dropdown in action bar **/
