@@ -2,14 +2,11 @@
 
 namespace Icinga\Module\Eventtracker\Web\Table;
 
-use gipfl\IcingaWeb2\Link;
 use gipfl\IcingaWeb2\Widget\NameValueTable;
 use gipfl\Translation\TranslationHelper;
-use Icinga\Module\Eventtracker\Hook\EventActionsHook;
 use Icinga\Module\Eventtracker\Incident;
 use Icinga\Module\Eventtracker\Time;
-use Icinga\Web\Hook;
-use ipl\Html\Html;
+use Icinga\Module\Eventtracker\Web\HtmlPurifier;
 
 class EventDetailsTable extends NameValueTable
 {
@@ -25,7 +22,7 @@ class EventDetailsTable extends NameValueTable
             $this->translate('Host')     => $incident->get('host_name'),
             $this->translate('Object')   => $incident->get('object_name'),
             $this->translate('Class')    => $incident->get('object_class'),
-            $this->translate('Message')  => $incident->get('message'),
+            $this->translate('Message')  => HtmlPurifier::process($incident->get('message')),
             $this->translate('Owner')    => $incident->get('owner', '-'),
         ]);
 
