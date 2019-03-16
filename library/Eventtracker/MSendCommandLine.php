@@ -43,8 +43,10 @@ class MSendCommandLine
             'event_timeout' => $timeout,
             'sender_event_id' => $this->getSlotValue('mc_tool_key', ''),
             'sender_id'       => $senders->getSenderId(
-                $this->getRequiredSlotValue('mc_tool'),
-                $this->getRequiredSlotValue('mc_tool_class')
+                $this->getSlotValue('mc_tool', 'no-tool'),
+                $this->getSlotValue('mc_tool_class', 'NO-CLASS')
+                // $this->getRequiredSlotValue('mc_tool'),
+                // $this->getRequiredSlotValue('mc_tool_class')
             )
         ]);
 
@@ -54,59 +56,17 @@ class MSendCommandLine
     public function getSeverity()
     {
         if ($this->hasSlotValue('severity')) {
-            $severity = $this->getSlotValue('severity');
+            return $this->getSlotValue('severity');
         } elseif ($this->hasArgument('-r')) {
-            $severity = $this->getArgument('-r');
+            return $this->getArgument('-r');
         } else {
             throw new InvalidArgumentException('Got no severity');
         }
-
-        return $this->mapSeverity($severity);
     }
 
     public function getPriority($default = null)
     {
-        if ($this->hasSlotValue('mc_priority')) {
-            return $this->mapPriority($this->getSlotValue('mc_priority'));
-        } else {
-            return $default;
-        }
-    }
-
-    protected function mapSeverity($severity)
-    {
-        $severities = [
-            // 'emergency',
-            'MAJOR'         => 'alert',
-            'CRITICAL'      => 'critical',
-            'MINOR'         => 'error',
-            'WARNING'       => 'warning',
-            'INFORMATIONAL' => 'notice',
-            'OK'            => 'informational', // !?!?!?!
-        ];
-
-        if (isset($severities[$severity])) {
-            return $severities[$severity];
-        } else {
-            throw new InvalidArgumentException("Got invalid severity $severity");
-        }
-    }
-
-    protected function mapPriority($priority)
-    {
-        $priorities = [
-            'PRIORITY_1' => 'lowest',
-            'PRIORITY_2' => 'low',
-            'PRIORITY_3' => 'normal',
-            'PRIORITY_4' => 'high',
-            'PRIORITY_5' => 'highest',
-        ];
-
-        if (isset($priorities[$priority])) {
-            return $priorities[$priority];
-        } else {
-            throw new InvalidArgumentException("Got invalid priority $priority");
-        }
+        return $this->getSlotValue('mc_priority', $default);
     }
 
     public function getMessage()
@@ -115,17 +75,6 @@ class MSendCommandLine
             return $this->getSlotValue('msg');
         } elseif ($this->hasArgument('-m')) {
             return $this->getArgument('-m');
-        } else {
-            throw new InvalidArgumentException('Got no message');
-        }
-    }
-
-    public function getObjectClass()
-    {
-        if ($this->hasSlotValue('mc_object_class')) {
-            return $this->getSlotValue('mc_object_class');
-        } elseif ($this->hasArgument('-a')) {
-            return $this->getArgument('-a');
         } else {
             throw new InvalidArgumentException('Got no message');
         }
