@@ -4,6 +4,7 @@ namespace Icinga\Module\Eventtracker;
 
 use Exception;
 use Zend_Db_Adapter_Abstract as Db;
+use Zend_Db_Adapter_Exception as DbException;
 
 class ObjectClassInventory
 {
@@ -22,7 +23,7 @@ class ObjectClassInventory
     /**
      * @param $className
      * @return string
-     * @throws Exception
+     * @throws DbException
      */
     public function requireClass($className)
     {
@@ -35,7 +36,7 @@ class ObjectClassInventory
 
     /**
      * @param $className
-     * @throws Exception
+     * @throws DbException
      */
     protected function createNewObjectClass($className)
     {
@@ -44,7 +45,7 @@ class ObjectClassInventory
                 'class_name' => $className,
             ]);
             $this->classes[$className] = $className;
-        } catch (Exception $e) {
+        } catch (DbException $e) {
             $this->refreshClasses();
             if (! isset($this->classes[$className])) {
                 throw $e;
