@@ -7,6 +7,7 @@ use gipfl\IcingaWeb2\Link;
 use gipfl\Translation\TranslationHelper;
 use Icinga\Module\Eventtracker\Time;
 use Icinga\Module\Eventtracker\Uuid;
+use Icinga\Module\Eventtracker\Web\HtmlPurifier;
 use ipl\Html\Html;
 
 class EventsTable extends BaseTable
@@ -63,17 +64,25 @@ class EventsTable extends BaseTable
                 return $row->object_name;
             }),
             $this->createColumn('message', $this->translate('Message'), [
-                'message'     => 'i.message',
-                'object_name' => 'i.object_name',
+                'severity'      => 'i.severity',
+                'incident_uuid' => 'i.incident_uuid',
+                'message'       => 'i.message',
+                'object_name'   => 'i.object_name',
             ])->setRenderer(function ($row) {
+                $hex = Uuid::toHex($row->incident_uuid);
+                $link = Link::create(substr(strtoupper($row->severity), 0, 4), 'eventtracker/event', [
+                    'uuid' => $hex
+                ], [
+                    'title' => ucfirst($row->severity)
+                ]);
                 if (in_array('object_name', $this->getChosenColumnNames())) {
-                    return $row->message;
+                    return HtmlPurifier::process($row->message);
                 } else {
-                    return Html::sprintf(
+                    return Html::tag('td', ['id' => $hex], Html::sprintf(
                         '%s: %s',
-                        Html::tag('strong', $row->object_name),
-                        $row->message
-                    );
+                        $link,
+                        HtmlPurifier::process($row->message)
+                    ));
                 }
             }),
         ]);
