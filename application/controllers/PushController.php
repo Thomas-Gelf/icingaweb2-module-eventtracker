@@ -2,6 +2,7 @@
 
 namespace Icinga\Module\Eventtracker\Controllers;
 
+use Icinga\Module\Eventtracker\MSendEventFactory;
 use ipl\Html\Html;
 use gipfl\IcingaWeb2\CompatController;
 use Icinga\Module\Eventtracker\DbFactory;
@@ -25,7 +26,8 @@ class PushController extends CompatController
         $classes = new ObjectClassInventory($db);
         $receiver = new EventReceiver($db);
         $mSend = new MSendCommandLine($cmd);
-        $event = $mSend->getEvent($senders, $classes);
+        $eventFactory = new MSendEventFactory($senders, $classes);
+        $event = $eventFactory->fromCommandLine($mSend);
         $incident = $receiver->processEvent($event);
         $this->addSingleTab('Testing');
         $this->content()->add([
