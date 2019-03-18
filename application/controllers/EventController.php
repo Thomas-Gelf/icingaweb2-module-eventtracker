@@ -7,6 +7,7 @@ use Icinga\Module\Eventtracker\DbFactory;
 use Icinga\Module\Eventtracker\Hook\EventActionsHook;
 use Icinga\Module\Eventtracker\Incident;
 use Icinga\Module\Eventtracker\Uuid;
+use Icinga\Module\Eventtracker\Web\HtmlPurifier;
 use Icinga\Module\Eventtracker\Web\Table\EventDetailsTable;
 use Icinga\Web\Hook;
 use ipl\Html\Html;
@@ -23,6 +24,7 @@ class EventController extends CompatController
         $this->addSingleTab('Event');
         $uuid = $this->params->getRequired('uuid');
         $incident = Incident::load(Uuid::toBinary($uuid), $db);
+
         $this->addTitle(sprintf(
             '%s (%s)',
             $incident->get('object_name'),
@@ -32,7 +34,19 @@ class EventController extends CompatController
         $this->content()->add([
             Html::tag('div', ['class' => 'output border-' . $incident->get('severity')], [
                 Html::tag('h2', $incident->get('severity')),
-                Html::tag('pre', ['class' => 'output'], $incident->get('message')),
+                Html::tag('pre', [
+                    'class' => 'output'
+                ], [
+                    Html::tag('strong', 'Host: '),
+                    $incident->get('host_name') . "\n",
+                    Html::tag('strong', 'Object: '),
+                    $incident->get('object_name'),
+                    Html::tag('strong', '   Class: '),
+                    $incident->get('object_class'),
+                    "\n",
+                    Html::tag('strong', $this->translate('Message') . ': '),
+                    HtmlPurifier::process($incident->get('message'))
+                ]),
             ]),
             new EventDetailsTable($incident)
         ]);
