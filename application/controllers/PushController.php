@@ -3,6 +3,7 @@
 namespace Icinga\Module\Eventtracker\Controllers;
 
 use Icinga\Module\Eventtracker\MSendEventFactory;
+use Icinga\Module\Eventtracker\Uuid;
 use ipl\Html\Html;
 use gipfl\IcingaWeb2\CompatController;
 use Icinga\Module\Eventtracker\DbFactory;
@@ -40,5 +41,29 @@ class PushController extends CompatController
             Html::tag('h1', 'Slot Values'),
             Html::tag('pre', print_r($mSend->getSlotValues(), true)),
         ]);
+    }
+
+    /**
+     * @throws \Exception
+     */
+    public function msendAction()
+    {
+        $cmd = $this->getRequest()->getRawBody();
+        $this->getResponse()->setHeader('Content-Type', 'text/plain');
+        try {
+            $db = DbFactory::db();
+            $senders = new SenderInventory($db);
+            $classes = new ObjectClassInventory($db);
+            $receiver = new EventReceiver($db);
+            $mSend = new MSendCommandLine($cmd);
+            $eventFactory = new MSendEventFactory($senders, $classes);
+            $event = $eventFactory->fromCommandLine($mSend);
+            $incident = $receiver->processEvent($event);
+            echo 'Message #1 - Evtid = ';
+            echo Uuid::toHex($incident->getUuid()) . "\n";
+        } catch (\Exception $e) {
+            echo $e->getMessage() . "\n";
+        }
+        exit;
     }
 }
