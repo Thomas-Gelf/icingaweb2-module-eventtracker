@@ -4,6 +4,7 @@ namespace Icinga\Module\Eventtracker\Web\Table;
 
 use gipfl\IcingaWeb2\Icon;
 use gipfl\IcingaWeb2\Link;
+use gipfl\IcingaWeb2\Table\Extension\MultiSelect;
 use gipfl\Translation\TranslationHelper;
 use Icinga\Module\Eventtracker\Time;
 use Icinga\Module\Eventtracker\Uuid;
@@ -13,6 +14,7 @@ use ipl\Html\Html;
 class EventsTable extends BaseTable
 {
     use TranslationHelper;
+    use MultiSelect;
 
     protected $searchColumns = [
         'i.host_name',
@@ -20,13 +22,54 @@ class EventsTable extends BaseTable
         'i.message',
     ];
 
+    protected $noHeader = false;
+
+    public function setNoHeader($setNoHeader = true)
+    {
+        $this->noHeader = (bool) $setNoHeader;
+
+        return $this;
+    }
+
+    protected function renderTitleColumns()
+    {
+        if ($this->noHeader) {
+            return null;
+        } else {
+            return parent::renderTitleColumns();
+        }
+    }
+
     protected function initialize()
     {
+        $this->enableMultiSelect(
+            'eventtracker/event',
+            'eventtracker/event',
+            ['uuid']
+        );
+        $prioIconRenderer = function ($row) {
+            $icons = [
+                'highest' => 'up-big',
+                'high'    => 'up-small',
+                'normal'  => 'right-small',
+                'low'     => 'down-small',
+                'lowest'  => 'down-big',
+            ];
+
+            if ($row->priority === 'normal') {
+                // return '';
+            }
+
+            return Icon::create($icons[$row->priority], [
+                'title' => ucfirst($row->priority)
+            ]);
+        };
         $this->addAvailableColumns([
             $this->createColumn('severity', $this->translate('Sev'), [
                 'severity'      => 'i.severity',
-                'incident_uuid' => 'i.incident_uuid'
-            ])->setRenderer(function ($row) {
+                'incident_uuid' => 'i.incident_uuid',
+                'priority'      => 'i.priority',
+            ])->setRenderer(function ($row) use ($prioIconRenderer) {
                 $classes = [
                     "severity-col $row->severity"
                 ];
@@ -36,21 +79,15 @@ class EventsTable extends BaseTable
                     'title' => ucfirst($row->severity)
                 ]);
 
+                if (! in_array('priority', $this->getChosenColumnNames())) {
+                    $link->add($prioIconRenderer($row));
+                }
+
                 return Html::tag('td', ['class' => $classes], $link);
             }),
-            $this->createColumn('priority', $this->translate('Priority'))->setRenderer(function ($row) {
-                $icons = [
-                    'highest' => 'up-big',
-                    'high'    => 'up-small',
-                    'normal'  => 'right-small',
-                    'low'     => 'down-small',
-                    'lowest'  => 'down-big',
-                ];
-
-                return Icon::create($icons[$row->priority], [
-                    'title' => ucfirst($row->priority)
-                ]);
-            }),
+            $this->createColumn('priority', $this->translate('Priority'), [
+                'priority' => 'i.priority'
+            ])->setRenderer($prioIconRenderer),
             $this->createColumn('ts_first_event', $this->translate('Received'))->setRenderer(function ($row) {
                 return Time::agoFormatted($row->ts_first_event);
             }),
