@@ -13,12 +13,20 @@ class EventsController extends CompatController
     public function indexAction()
     {
         $db = DbFactory::db();
-        $this->addSingleTab('Events');
-        $this->addTitle('Event Tracker');
+
         $table = new EventsTable($db);
-        (new AdditionalTableActions($table, Auth::getInstance(), $this->url()))
-            ->appendTo($this->actions());
-        $table->handleSortUrl($this->url());
-        $table->renderTo($this);
+        if ($this->params->get('view') === 'compact') {
+            $table->setNoHeader();
+            $table->search($this->params->get('q'));
+            $table->handleSortUrl($this->url());
+            $this->content()->add($table);
+        } else {
+            $this->addSingleTab('Events');
+            $this->addTitle('Event Tracker');
+            (new AdditionalTableActions($table, Auth::getInstance(), $this->url()))
+                ->appendTo($this->actions());
+            $table->handleSortUrl($this->url());
+            $table->renderTo($this);
+        }
     }
 }
