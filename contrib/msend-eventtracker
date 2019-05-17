@@ -12,6 +12,6 @@ for i in "$@"; do
     esac
     C="$C '$i'"
 done
-printf "$C"
+echo "$C"
 
 curl -X POST $ICINGAWEB2/eventtracker/push/msend -H "Content-Type: text/plain" --data-binary "$C"
