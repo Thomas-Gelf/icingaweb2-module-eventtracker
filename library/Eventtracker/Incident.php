@@ -252,6 +252,14 @@ class Incident
         $db->update(self::$tableName, [
             'cnt_events' => new DbExpr('cnt_events + 1'),
         ] + $this->getProperties(), $where);
+        $db->insert('incident_activity', [
+            'activity_uuid' => Uuid::generate(),
+            'incident_uuid' => $this->getUuid(),
+            'ts_modified'   => $this::now(),
+            'modifications' => json_encode($modifications)
+        ]);
+
+        return true;
     }
 
     public static function resolve(Event $event)
