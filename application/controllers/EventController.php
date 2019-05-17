@@ -118,7 +118,9 @@ class EventController extends CompatController
             "\n",
             Html::tag('strong', 'Owner: '),
             $this->renderOwner($incident),
-            $this->getHookedActions($incident)
+            "\n",
+            Html::tag('strong', 'Ticket: '),
+            $this->renderTicket($incident),
         ];
     }
 
@@ -268,6 +270,11 @@ class EventController extends CompatController
         $result->add([$lower, $raise]);
 
         return $result;
+    }
+
+    protected function renderTicket(Incident $incident)
+    {
+        return $this->getHookedActions($incident);
     }
 
     protected function renderOwner(Incident $incident)
