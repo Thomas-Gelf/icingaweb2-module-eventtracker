@@ -4,7 +4,6 @@ namespace Icinga\Module\Eventtracker\Web\Form;
 
 use gipfl\IcingaWeb2\Icon;
 use Icinga\Module\Eventtracker\Web\Form;
-use ipl\Html\Html;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -22,6 +21,7 @@ class LinkLikeForm extends Form
     /**
      * TestForm constructor.
      * @param string|$linkLabel
+     * @param null $linkTitle
      * @param string|null $linkIcon
      */
     public function __construct($linkLabel, $linkTitle = null, $linkIcon = null)
@@ -45,15 +45,16 @@ class LinkLikeForm extends Form
 
     protected function assemble()
     {
-        if ($this->linkIcon) {
-            $this->add(Icon::create($this->linkIcon, [
-                'class' => 'link-color'
-            ]));
-        }
+        // TODO: class icon-button, if no label but icon -> set font!
         $this->addElement('submit', 'submit', [
             'class' => 'link-button',
             'title' => $this->linkTitle,
             'label' => $this->linkLabel
         ]);
+        if ($this->linkIcon) {
+            $this->add(Icon::create($this->linkIcon, [
+                'class' => 'link-color'
+            ]));
+        }
     }
 }
