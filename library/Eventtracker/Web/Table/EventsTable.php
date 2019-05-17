@@ -6,6 +6,7 @@ use gipfl\IcingaWeb2\Icon;
 use gipfl\IcingaWeb2\Link;
 use gipfl\IcingaWeb2\Table\Extension\MultiSelect;
 use gipfl\Translation\TranslationHelper;
+use Icinga\Date\DateFormatter;
 use Icinga\Module\Eventtracker\Time;
 use Icinga\Module\Eventtracker\Uuid;
 use Icinga\Module\Eventtracker\Web\HtmlPurifier;
@@ -19,6 +20,7 @@ class EventsTable extends BaseTable
     protected $searchColumns = [
         'i.host_name',
         'i.object_name',
+        'i.object_class',
         'i.message',
     ];
 
@@ -67,12 +69,18 @@ class EventsTable extends BaseTable
         $this->addAvailableColumns([
             $this->createColumn('severity', $this->translate('Sev'), [
                 'severity'      => 'i.severity',
-                'incident_uuid' => 'i.incident_uuid',
                 'priority'      => 'i.priority',
+                'status'        => 'i.status',
+                'timestamp'     => 'i.ts_first_event',
+                'incident_uuid' => 'i.incident_uuid',
             ])->setRenderer(function ($row) use ($prioIconRenderer) {
                 $classes = [
-                    "severity-col $row->severity"
+                    'severity-col',
+                    $row->severity
                 ];
+                if ($row->status !== 'open') {
+                    $classes[] = 'ack';
+                }
                 $link = Link::create(substr(strtoupper($row->severity), 0, 4), 'eventtracker/event', [
                     'uuid' => Uuid::toHex($row->incident_uuid)
                 ], [
@@ -83,8 +91,18 @@ class EventsTable extends BaseTable
                     $link->add($prioIconRenderer($row));
                 }
 
-                return Html::tag('td', ['class' => $classes], $link);
-            }),
+                return Html::tag('td', [
+                    'class' => $classes
+                ], [
+                    $link,
+                    Time::agoFormatted($row->timestamp)
+                ]);
+            })->setSortExpression([
+                'severity',
+                'status',
+                'priority',
+                'timestamp'
+            ]),
             $this->createColumn('priority', $this->translate('Priority'), [
                 'priority' => 'i.priority'
             ])->setRenderer($prioIconRenderer),
@@ -98,31 +116,65 @@ class EventsTable extends BaseTable
                 'object_name'   => 'i.object_name',
                 'incident_uuid' => 'i.incident_uuid'
             ])->setRenderer(function ($row) {
-                return $row->object_name;
+                return $this->fixObjectName($row->object_name);
             }),
             $this->createColumn('message', $this->translate('Message'), [
                 'severity'      => 'i.severity',
                 'incident_uuid' => 'i.incident_uuid',
                 'message'       => 'i.message',
+                'host_name'     => 'i.host_name',
                 'object_name'   => 'i.object_name',
             ])->setRenderer(function ($row) {
                 $hex = Uuid::toHex($row->incident_uuid);
-                $link = Link::create(substr(strtoupper($row->severity), 0, 4), 'eventtracker/event', [
-                    'uuid' => $hex
-                ], [
-                    'title' => ucfirst($row->severity)
-                ]);
-                if (in_array('object_name', $this->getChosenColumnNames())) {
-                    return HtmlPurifier::process($row->message);
+                if (in_array('host_name', $this->getChosenColumnNames())) {
+                    $host = null;
                 } else {
-                    return Html::tag('td', ['id' => $hex], Html::sprintf(
-                        '%s: %s',
+                    $host = $row->host_name;
+                }
+                if (in_array('object_name', $this->getChosenColumnNames())) {
+                    $object = null;
+                } else {
+                    $object = $this->fixObjectName($row->object_name);
+                }
+
+                if ($host === null && $object === null) {
+                    $link = null;
+                } else {
+                    if ($host === null) {
+                        $link = $this->linkToObject($row, $host);
+                    } elseif ($object === null) {
+                        $link = $this->linkToObject($row, $object);
+                    } else {
+                        $link = $this->linkToObject($row, "$object on $host");
+                    }
+                }
+                $message = preg_replace('/\r?\n.+/s', '', $row->message);
+                if ($link === null) {
+                    return HtmlPurifier::process($message);
+                } else {
+                    return Html::tag('td', ['id' => $hex], [
                         $link,
-                        HtmlPurifier::process($row->message)
-                    ));
+                        Html::tag('p', ['class' => 'output-line'], HtmlPurifier::process($message))
+                    ]);
                 }
             }),
         ]);
+    }
+
+    protected function linkToObject($row, $label)
+    {
+        return Link::create($label, 'eventtracker/event', [
+            'uuid' => Uuid::toHex($row->incident_uuid)
+        ], [
+            'title' => ucfirst($row->severity)
+        ]);
+    }
+
+    protected function fixObjectName($objectName)
+    {
+        // [Skype] Centralized Logging Service Agent Local logs being deleted and unable to move to network share
+        // -> Skype
+        return preg_replace('/^\[([^\]?]+)\].*/', '\1', $objectName);
     }
 
     public function getDefaultColumnNames()
