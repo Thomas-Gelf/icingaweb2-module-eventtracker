@@ -68,7 +68,22 @@ CREATE TABLE incident (
     ON UPDATE RESTRICT
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE utf8mb4_bin;
 
+CREATE TABLE incident_activity (
+  activity_uuid VARBINARY(16) NOT NULL,
+  incident_uuid VARBINARY(16) NOT NULL,
+  ts_modified BIGINT(20) NOT NULL,
+  modifications TEXT NOT NULL,
+  PRIMARY KEY (activity_uuid),
+  INDEX (incident_uuid, ts_modified),
+  INDEX (ts_modified),
+  CONSTRAINT incident_activity_uuid
+  FOREIGN KEY property_incident_uuid (incident_uuid)
+    REFERENCES incident (incident_uuid)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE utf8mb4_bin;
 
+-- TODO: check whether we can drop this
 CREATE TABLE incident_change (
   incident_uuid VARBINARY(16) NOT NULL,
   change_type ENUM(
@@ -93,6 +108,8 @@ CREATE TABLE incident_property (
   incident_uuid VARBINARY(16) NOT NULL,
   property_name VARCHAR(64) NOT NULL,
   property_value TEXT,
+  PRIMARY KEY (incident_uuid, property_name),
+  INDEX (property_value),
   CONSTRAINT incident_uuid
     FOREIGN KEY property_incident_uuid (incident_uuid)
     REFERENCES incident (incident_uuid)
