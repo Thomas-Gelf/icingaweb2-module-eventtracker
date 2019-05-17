@@ -123,6 +123,11 @@
   &.debug {
     border-left-color: @color-severity-debug;
   }
+
+  span.time-ago {
+    display: block;
+    font-weight: normal;
+  }
 }
 
 div.output {
@@ -131,7 +136,7 @@ div.output {
   border-width: 1px;
   border-style: solid;
   border-left-width: 2em;
-  border-radius: 1em;
+  border-radius: 1em 0 0 1em;
   margin-bottom: 0.5em;
   h2 {
     margin: 0;
@@ -143,18 +148,45 @@ div.output {
     color: @text-color-inverted;
     text-align: center;
     text-transform: uppercase;
-    transform: rotate(-90deg) translateX(-100%);
+    transform: rotate(-90deg) translateX(-120%);
     transform-origin: -1em 1em;
     display: block;
     width: 10em;
   }
   pre {
+    margin: 0;
     padding: 1em;
     color: @text-color;
     background: transparent;
     overflow: auto;
     white-space: pre-wrap;
   }
+  table pre {
+    padding: 0;
+    margin: 0;
+  }
+
+  &.comment {
+    border-left-width: 0.3em;
+    padding-left: 1.7em;
+    h2 {
+      color: @text-color;
+      transform: rotate(-90deg) translateX(-100%);
+    }
+  }
+
+  &.ack {
+    border-left-width: 0.3em;
+    padding-left: 1.7em;
+    h2 {
+      color: @text-color;
+    }
+  }
+}
+
+div.activities {
+  height: 10em;
+  overflow: auto;
 }
 
 pre a {
@@ -163,6 +195,13 @@ pre a {
   &:hover {
     text-decoration: underline;
   }
+}
+
+input[type=submit]:disabled {
+  color: @gray !important;
+}
+input[type=submit]:disabled + i:before {
+  color: @gray;
 }
 
 form.inline {
