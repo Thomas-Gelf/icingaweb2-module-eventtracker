@@ -16,10 +16,10 @@ CREATE TABLE sender (
 CREATE TABLE incident (
   incident_uuid VARBINARY(16) NOT NULL,
   status ENUM (
-    'open',
-    'acknowledged',
+    'closed',
     'in_downtime',
-    'closed'
+    'acknowledged',
+    'open'
   ) NOT NULL,
   severity ENUM (
     'debug',
@@ -50,6 +50,7 @@ CREATE TABLE incident (
   ts_last_modified BIGINT(20) NOT NULL, -- milliseconds since epoch
   cnt_events INT(10) NOT NULL,
   owner VARCHAR(64) COLLATE utf8mb4_general_ci NULL DEFAULT NULL,
+  ticket_ref VARCHAR(64) COLLATE utf8mb4_general_ci NULL DEFAULT NULL,
   message TEXT COLLATE utf8mb4_general_ci NOT NULL,
   PRIMARY KEY (incident_uuid),
   UNIQUE INDEX sender_event (sender_event_checksum),
