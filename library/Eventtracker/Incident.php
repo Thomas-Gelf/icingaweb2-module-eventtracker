@@ -156,6 +156,48 @@ class Incident
         $this->fixOpenAck();
     }
 
+    public function setTicketRef($ticketRef)
+    {
+        $this->properties['ticket_ref'] = $ticketRef;
+        $this->fixOpenAck();
+    }
+
+    public function raisePriority()
+    {
+        switch ($this->get('priority')) {
+            case 'high':
+                $this->set('priority', 'highest');
+                break;
+            case 'normal':
+                $this->set('priority', 'high');
+                break;
+            case 'low':
+                $this->set('priority', 'normal');
+                break;
+            case 'lowest':
+                $this->set('priority', 'low');
+                break;
+        }
+    }
+
+    public function lowerPriority()
+    {
+        switch ($this->get('priority')) {
+            case 'highest':
+                $this->set('priority', 'high');
+                break;
+            case 'high':
+                $this->set('priority', 'normal');
+                break;
+            case 'normal':
+                $this->set('priority', 'low');
+                break;
+            case 'low':
+                $this->set('priority', 'lowest');
+                break;
+        }
+    }
+
     protected function fixOpenAck()
     {
         $status = $this->get('status');
