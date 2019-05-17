@@ -59,9 +59,6 @@ class GiveOwnerShipForm extends Form
             $submit = new SubmitElement('submit', [
                 'label' => $this->translate('Set'),
             ]);
-            $what = new SubmitElement('what', [
-                'label' => $this->translate('What'),
-            ]);
             $cancel = new SubmitElement('cancel', [
                 'label' => $this->translate('Cancel')
             ]);
@@ -69,11 +66,9 @@ class GiveOwnerShipForm extends Form
             $this->addElement($select);
             $this->addElement($submit);
             $this->addElement($cancel);
-            $this->addElement($what);
             if ($cancel->hasBeenPressed()) {
                 $this->remove($select);
-                $this->remove($what);
-                $this->remove($submit);
+                    $this->remove($submit);
                 $this->remove($cancel);
             } else {
                 $this->setSubmitButton($submit);
@@ -87,7 +82,8 @@ class GiveOwnerShipForm extends Form
      */
     public function onSuccess()
     {
-        $this->incident->set('owner', $this->getValue('new_owner'));
-        $this->incident->storeToDb($this->db);
+        $incident = $this->incident;
+        $incident->setOwner($this->getValue('new_owner'));
+        $incident->storeToDb($this->db);
     }
 }
