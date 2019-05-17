@@ -25,6 +25,7 @@ class Incident
         'sender_event_id'       => null,
         'message'               => null,
         'owner'                 => null,
+        'ticket_ref'            => null,
         'cnt_events'            => null,
         'ts_first_event'        => null,
         'ts_last_modified'      => null,
@@ -48,10 +49,7 @@ class Incident
         );
 
         if ($result) {
-            $incident = new static();
-            $incident->setProperties($result);
-
-            return $incident;
+            return static::createStored($result);
         } else {
             throw new NotFoundError('There is no such incident');
         }
@@ -71,13 +69,19 @@ class Incident
         );
 
         if ($result) {
-            $incident = new static();
-            $incident->setProperties($result);
-
-            return $incident;
+            return static::createStored($result);
         } else {
             return null;
         }
+    }
+
+    protected static function createStored($result)
+    {
+        $incident = new static();
+        $incident->setProperties($result);
+        $incident->setStored();
+
+        return $incident;
     }
 
     public static function create(Event $event, Db $db)
@@ -131,19 +135,44 @@ class Incident
 
     /**
      * @param Db $db
+     * @return bool
      * @throws \Zend_Db_Adapter_Exception
      */
     public function storeToDb(Db $db)
     {
         if ($this->isNew()) {
-            $this->insertIntoDb($db);
+            $result = $this->insertIntoDb($db);
         } else {
-            $this->updateDb($db);
+            $result = $this->updateDb($db);
+        }
+        $this->setStored();
+
+        return $result;
+    }
+
+    public function setOwner($owner)
+    {
+        $this->properties['owner'] = $owner;
+        $this->fixOpenAck();
+    }
+
+    protected function fixOpenAck()
+    {
+        $status = $this->get('status');
+        if ($this->get('owner') === null && $this->get('ticket_ref') === null) {
+            if ($status !== 'in_downtime' && $status !== 'closed') {
+                $this->set('status', 'open');
+            }
+        } else {
+            if ($status === 'open') {
+                $this->set('status', 'acknowledged');
+            }
         }
     }
 
     /**
      * @param Db $db
+     * @return bool
      * @throws \Zend_Db_Adapter_Exception
      */
     protected function insertIntoDb(Db $db)
@@ -157,14 +186,22 @@ class Incident
             'ts_last_modified' => $now,
         ]);
         $db->insert(self::$tableName, $this->getProperties());
+
+        return true;
     }
 
     /**
      * @param Db $db
+     * @return bool
      * @throws \Zend_Db_Adapter_Exception
      */
     protected function updateDb(Db $db)
     {
+        if (! $this->hasChanged()) {
+            return false;
+        }
+
+        $modifications = $this->getModifications();
         $this->setProperties([
             'cnt_events'       => $this->get('cnt_events') + 1, // might be wrong, but safes a DB roundtrip
             'ts_last_modified' => static::now(),
