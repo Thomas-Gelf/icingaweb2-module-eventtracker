@@ -17,6 +17,18 @@ class EventsController extends CompatController
         $db = DbFactory::db();
 
         $table = new EventsTable($db);
+
+        if ($this->getRequest()->isApiRequest()) {
+            $table->search($this->params->get('q'));
+            $table->handleSortUrl($this->url());
+            $result = $table->fetch();
+            foreach ($result as & $row) {
+                $row->incident_uuid = Uuid::toHex($row->incident_uuid);
+            }
+            $flags = JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE;
+            echo json_encode($result, $flags);
+            exit;
+        }
         if (! $this->url()->getParam('sort')) {
             $this->url()->setParam('sort', 'severity DESC');
         }
