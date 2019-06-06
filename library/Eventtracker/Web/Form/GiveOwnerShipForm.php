@@ -4,7 +4,7 @@ namespace Icinga\Module\Eventtracker\Web\Form;
 
 use gipfl\IcingaWeb2\Icon;
 use gipfl\Translation\TranslationHelper;
-use Icinga\Module\Eventtracker\Incident;
+use Icinga\Module\Eventtracker\Issue;
 use Icinga\Module\Eventtracker\Web\Form;
 use ipl\Html\FormElement\SelectElement;
 use ipl\Html\FormElement\SubmitElement;
@@ -20,12 +20,12 @@ class GiveOwnerShipForm extends Form
     /** @var DbAdapter */
     protected $db;
 
-    /** @var Incident */
-    protected $incident;
+    /** @var Issue */
+    protected $issue;
 
-    public function __construct(Incident $incident, DbAdapter $db)
+    public function __construct(Issue $issue, DbAdapter $db)
     {
-        $this->incident = $incident;
+        $this->issue = $issue;
         $this->db = $db;
         $this->setMethod('POST');
         $this->addAttributes(['class' => 'inline']);
@@ -54,7 +54,7 @@ class GiveOwnerShipForm extends Form
                     'zsa' => 'Sàrosi Zoltàn (zsa)',
                     null => $this->translate('Nobody in particular'),
                 ],
-                'value' => $this->incident->get('owner'),
+                'value' => $this->issue->get('owner'),
             ]);
             $submit = new SubmitElement('submit', [
                 'label' => $this->translate('Set'),
@@ -82,8 +82,8 @@ class GiveOwnerShipForm extends Form
      */
     public function onSuccess()
     {
-        $incident = $this->incident;
-        $incident->setOwner($this->getValue('new_owner'));
-        $incident->storeToDb($this->db);
+        $issue = $this->issue;
+        $issue->setOwner($this->getValue('new_owner'));
+        $issue->storeToDb($this->db);
     }
 }

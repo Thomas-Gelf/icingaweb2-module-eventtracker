@@ -10,7 +10,7 @@ Purpose
 
 This module allows Operators to track Events from various sources in a single
 place. It provides Hooks allowing Third-Party modules to trigger custom actions,
-with Ticket/Incident-Creation being the most obvious use-case. 
+with Ticket/Issue-Creation being the most obvious use-case.
 
 There are also hooks for a back-channel, providing information regarding created
 tickets and acknowledged or resolved problems to various Event senders.

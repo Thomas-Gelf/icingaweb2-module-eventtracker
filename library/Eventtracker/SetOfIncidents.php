@@ -11,30 +11,30 @@ use Icinga\Data\Filter\FilterOr;
 use InvalidArgumentException;
 use Zend_Db_Adapter_Abstract as DbAdapter;
 
-class SetOfIncidents implements Countable
+class SetOfIssues implements Countable
 {
     /** DbAdapter $db */
     protected $db;
 
-    /** @var Incident[] */
-    protected $incidents = [];
+    /** @var Issue[] */
+    protected $issues = [];
 
-    public function __construct(DbAdapter $db, $incidents = [])
+    public function __construct(DbAdapter $db, $issues = [])
     {
         $this->db = $db;
-        foreach ($incidents as $incident) {
-            $this->addIncident($incident);
+        foreach ($issues as $issue) {
+            $this->addIssue($issue);
         }
     }
 
-    public function getIncidents()
+    public function getIssues()
     {
-        return $this->incidents;
+        return $this->issues;
     }
 
-    public function addIncident(Incident $incident)
+    public function addIssue(Issue $issue)
     {
-        $this->incidents[] = $incident;
+        $this->issues[] = $issue;
 
         return $this;
     }
@@ -48,16 +48,16 @@ class SetOfIncidents implements Countable
                     $sub = $part->filters()[0];
                     if ($sub instanceof FilterExpression) {
                         $expression = $sub->getExpression();
-                        $this->incidents[] = Incident::load(Uuid::toBinary($expression), $this->db);
+                        $this->issues[] = Issue::load(Uuid::toBinary($expression), $this->db);
                     } else {
-                        throw new InvalidArgumentException('Could not extract Incident Set from URL');
+                        throw new InvalidArgumentException('Could not extract Issue Set from URL');
                     }
                 } else {
-                    throw new InvalidArgumentException('Could not extract Incident Set from URL');
+                    throw new InvalidArgumentException('Could not extract Issue Set from URL');
                 }
             }
         } else {
-            throw new InvalidArgumentException('Could not extract Incident Set from URL');
+            throw new InvalidArgumentException('Could not extract Issue Set from URL');
         }
     }
 
@@ -71,6 +71,6 @@ class SetOfIncidents implements Countable
 
     public function count()
     {
-        return count($this->incidents);
+        return count($this->issues);
     }
 }

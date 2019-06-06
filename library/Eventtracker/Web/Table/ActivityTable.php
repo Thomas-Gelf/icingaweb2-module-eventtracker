@@ -2,7 +2,7 @@
 
 namespace Icinga\Module\Eventtracker\Web\Table;
 
-use Icinga\Module\Eventtracker\Incident;
+use Icinga\Module\Eventtracker\Issue;
 use Icinga\Module\Eventtracker\Time;
 use ipl\Html\Html;
 
@@ -11,12 +11,12 @@ class ActivityTable extends BaseTable
     protected $defaultAttributes = [
         'common-table'
     ];
-    protected $incident;
+    protected $issue;
 
-    public function __construct($db, Incident $incident)
+    public function __construct($db, Issue $issue)
     {
         parent::__construct($db);
-        $this->incident = $incident;
+        $this->issue = $issue;
     }
 
     protected function renderTitleColumns()
@@ -64,8 +64,8 @@ class ActivityTable extends BaseTable
     public function prepareQuery()
     {
         return $this->db()->select()
-            ->from(['i' => 'incident_activity'], $this->getRequiredDbColumns())
-            ->where('incident_uuid = ?', $this->incident->getUuid())
+            ->from(['i' => 'issue_activity'], $this->getRequiredDbColumns())
+            ->where('issue_uuid = ?', $this->issue->getUuid())
             ->order('ts_modified DESC');
     }
 }

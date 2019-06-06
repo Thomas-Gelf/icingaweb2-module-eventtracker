@@ -6,14 +6,14 @@ use Icinga\Exception\NotFoundError;
 use Zend_Db_Adapter_Abstract as Db;
 use Zend_Db_Expr as DbExpr;
 
-class Incident
+class Issue
 {
     use PropertyHelpers;
 
-    protected static $tableName = 'incident';
+    protected static $tableName = 'issue';
 
     protected $properties = [
-        'incident_uuid'         => null,
+        'issue_uuid'         => null,
         'sender_event_checksum' => null,
         'status'                => null,
         'severity'              => null,
@@ -37,7 +37,7 @@ class Incident
     /**
      * @param $uuid
      * @param Db $db
-     * @return Incident
+     * @return Issue
      * @throws NotFoundError
      */
     public static function load($uuid, Db $db)
@@ -45,20 +45,20 @@ class Incident
         $result = $db->fetchRow(
             $db->select()
                 ->from(self::$tableName)
-                ->where('incident_uuid = ?', $uuid)
+                ->where('issue_uuid = ?', $uuid)
         );
 
         if ($result) {
             return static::createStored($result);
         } else {
-            throw new NotFoundError('There is no such incident');
+            throw new NotFoundError('There is no such issue');
         }
     }
 
     /**
      * @param Event $event
      * @param Db $db
-     * @return Incident|null
+     * @return Issue|null
      */
     public static function loadIfEventExists(Event $event, Db $db)
     {
@@ -77,25 +77,25 @@ class Incident
 
     protected static function createStored($result)
     {
-        $incident = new static();
-        $incident->setProperties($result);
-        $incident->setStored();
+        $issue = new static();
+        $issue->setProperties($result);
+        $issue->setStored();
 
-        return $incident;
+        return $issue;
     }
 
     public static function create(Event $event, Db $db)
     {
-        $incident = new Incident();
-        $incident->setPropertiesFromEvent($event);
+        $issue = new Issue();
+        $issue->setPropertiesFromEvent($event);
 
-        return $incident;
+        return $issue;
     }
 
     public static function resolveIfExists(Event $event, Db $db)
     {
-        if ($incident = Incident::loadIfEventExists($event, $db)) {
-            $incident->resolve($event);
+        if ($issue = Issue::loadIfEventExists($event, $db)) {
+            $issue->resolve($event);
         }
     }
 
@@ -125,12 +125,12 @@ class Incident
 
     public function getUuid()
     {
-        return $this->get('incident_uuid');
+        return $this->get('issue_uuid');
     }
 
     public function getHexUuid()
     {
-        return bin2hex($this->get('incident_uuid'));
+        return bin2hex($this->get('issue_uuid'));
     }
 
     /**
@@ -221,7 +221,7 @@ class Incident
     {
         $now = static::now();
         $this->setProperties([
-            'incident_uuid'    => Uuid::generate(),
+            'issue_uuid'    => Uuid::generate(),
             'cnt_events'       => 1,
             'status'           => 'open',
             'ts_first_event'   => $now,
@@ -248,13 +248,13 @@ class Incident
             'cnt_events'       => $this->get('cnt_events') + 1, // might be wrong, but safes a DB roundtrip
             'ts_last_modified' => static::now(),
         ]);
-        $where = $db->quoteInto('incident_uuid = ?', $this->getUuid());
+        $where = $db->quoteInto('issue_uuid = ?', $this->getUuid());
         $db->update(self::$tableName, [
             'cnt_events' => new DbExpr('cnt_events + 1'),
         ] + $this->getProperties(), $where);
-        $db->insert('incident_activity', [
+        $db->insert('issue_activity', [
             'activity_uuid' => Uuid::generate(),
-            'incident_uuid' => $this->getUuid(),
+            'issue_uuid' => $this->getUuid(),
             'ts_modified'   => $this::now(),
             'modifications' => json_encode($modifications)
         ]);
@@ -264,7 +264,7 @@ class Incident
 
     public static function resolve(Event $event)
     {
-        // TODO: delete from incident, store to incident_history
+        // TODO: delete from issue, store to issue_history
     }
 
     protected static function now()

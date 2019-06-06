@@ -8,8 +8,8 @@ use Icinga\Authentication\Auth;
 use Icinga\Date\DateFormatter;
 use Icinga\Module\Eventtracker\DbFactory;
 use Icinga\Module\Eventtracker\Hook\EventActionsHook;
-use Icinga\Module\Eventtracker\Incident;
-use Icinga\Module\Eventtracker\SetOfIncidents;
+use Icinga\Module\Eventtracker\Issue;
+use Icinga\Module\Eventtracker\SetOfIssues;
 use Icinga\Module\Eventtracker\Uuid;
 use Icinga\Module\Eventtracker\Web\Form\GiveOwnerShipForm;
 use Icinga\Module\Eventtracker\Web\Form\LinkLikeForm;
@@ -31,29 +31,29 @@ class EventController extends CompatController
         $this->addSingleTab('Event');
         $uuid = $this->params->get('uuid');
         if ($uuid === null) {
-            $incidents = SetOfIncidents::fromUrl($this->url(), $db);
-            $this->addTitle($this->translate('%d incidents'), count($incidents));
-            foreach ($incidents->getIncidents() as $incident) {
-                $this->showIncident($incident);
+            $issues = SetOfIssues::fromUrl($this->url(), $db);
+            $this->addTitle($this->translate('%d issues'), count($issues));
+            foreach ($issues->getIssues() as $issue) {
+                $this->showIssue($issue);
             }
         } else {
-            $incident = $this->loadIncident($uuid, $db);
+            $issue = $this->loadIssue($uuid, $db);
 
             $this->addTitle(sprintf(
                 '%s (%s)',
-                $incident->get('object_name'),
-                $incident->get('host_name')
+                $issue->get('object_name'),
+                $issue->get('host_name')
             ));
-            // $this->addHookedActions($incident);
-            $this->showIncident($incident);
-            $this->showActivities($incident, $db);
-            $this->showMessage($incident);
+            // $this->addHookedActions($issue);
+            $this->showIssue($issue);
+            $this->showActivities($issue, $db);
+            $this->showMessage($issue);
         }
     }
 
-    protected function showActivities(Incident $incident, $db)
+    protected function showActivities(Issue $issue, $db)
     {
-        $activities = new ActivityTable($db, $incident);
+        $activities = new ActivityTable($db, $issue);
         if ($activities->count()) {
             $this->content()->add(Html::tag('div', [
                 'class' => 'output comment'
@@ -67,60 +67,60 @@ class EventController extends CompatController
     /**
      * @param $uuid
      * @param \Zend_Db_Adapter_Abstract $db
-     * @return Incident
+     * @return Issue
      * @throws \Icinga\Exception\NotFoundError
      */
-    protected function loadIncident($uuid, \Zend_Db_Adapter_Abstract $db)
+    protected function loadIssue($uuid, \Zend_Db_Adapter_Abstract $db)
     {
-        return Incident::load(Uuid::toBinary($uuid), $db);
+        return Issue::load(Uuid::toBinary($uuid), $db);
     }
 
-    protected function showObjectDetails(Incident $incident)
+    protected function showObjectDetails(Issue $issue)
     {
         return [
             Html::tag('strong', 'Host: '),
             Link::create(
-                $incident->get('host_name'),
+                $issue->get('host_name'),
                 'eventtracker/events',
                 // TODO: search host_name
-                ['q' => $incident->get('host_name')],
+                ['q' => $issue->get('host_name')],
                 ['data-base-target' => 'col1']
             ),
             "\n",
             Html::tag('strong', 'Object: '),
             Link::create(
-                $this->shorten($incident->get('object_name'), 64),
+                $this->shorten($issue->get('object_name'), 64),
                 'eventtracker/events',
                 // TODO: search object_name
-                ['q' => $incident->get('object_name')],
+                ['q' => $issue->get('object_name')],
                 ['data-base-target' => 'col1']
             ),
             "\n",
             Html::tag('strong', 'Class: '),
             Link::create(
-                $this->shorten($incident->get('object_class'), 64),
+                $this->shorten($issue->get('object_class'), 64),
                 'eventtracker/events',
                 // TODO: search object_class
-                ['q' => $incident->get('object_class')],
+                ['q' => $issue->get('object_class')],
                 ['data-base-target' => 'col1']
             ),
         ];
     }
 
-    protected function showStatusDetails(Incident $incident)
+    protected function showStatusDetails(Issue $issue)
     {
         return [
             Html::tag('strong', 'Status: '),
-            $incident->get('status'),
+            $issue->get('status'),
             "\n",
             Html::tag('strong', 'Priority: '),
-            $this->renderPriority($incident),
+            $this->renderPriority($issue),
             "\n",
             Html::tag('strong', 'Owner: '),
-            $this->renderOwner($incident),
+            $this->renderOwner($issue),
             "\n",
             Html::tag('strong', 'Ticket: '),
-            $this->renderTicket($incident),
+            $this->renderTicket($issue),
         ];
     }
 
@@ -132,19 +132,19 @@ class EventController extends CompatController
         ], $content);
     }
 
-    protected function showIncident(Incident $incident)
+    protected function showIssue(Issue $issue)
     {
-        $preRight = $this->halfPre($this->showObjectDetails($incident), 'right');
-        $preLeft = $this->halfPre($this->showStatusDetails($incident), 'left');
+        $preRight = $this->halfPre($this->showObjectDetails($issue), 'right');
+        $preLeft = $this->halfPre($this->showStatusDetails($issue), 'left');
         $classes = [
-            'output border-' . $incident->get('severity')
+            'output border-' . $issue->get('severity')
         ];
-        if ($incident->get('status') !== 'open') {
+        if ($issue->get('status') !== 'open') {
             $classes[] = 'ack';
         }
         $this->content()->add([
             Html::tag('div', ['class' => $classes], [
-                Html::tag('h2', $incident->get('severity')),
+                Html::tag('h2', $issue->get('severity')),
                 $preLeft,
                 $preRight,
                 Html::tag('pre', [
@@ -152,18 +152,18 @@ class EventController extends CompatController
                     'style' => 'clear: both'
                 ], [
                     Html::tag('strong', 'Events: '),
-                    $this->renderTimings($incident),
+                    $this->renderTimings($issue),
                     "\n",
                     Html::tag('strong', 'Expiration: '),
-                    $this->renderExpiration($incident->get('ts_expiration')),
+                    $this->renderExpiration($issue->get('ts_expiration')),
                 ])
             ]),
 
-            // UNUSED. new EventDetailsTable($incident)
+            // UNUSED. new EventDetailsTable($issue)
         ]);
     }
 
-    protected function showMessage(Incident $incident)
+    protected function showMessage(Issue $issue)
     {
         $this->content()->add(
             Html::tag('div', [
@@ -174,27 +174,27 @@ class EventController extends CompatController
                     'style' => 'clear: both;'
                 ], [
                     Html::tag('strong', $this->translate('Message') . ': '),
-                    HtmlPurifier::process($incident->get('message')),
+                    HtmlPurifier::process($issue->get('message')),
                 ])
             ])
         );
     }
 
-    protected function renderTimings(Incident $incident)
+    protected function renderTimings(Issue $issue)
     {
-        $count = (int) $incident->get('cnt_events');
+        $count = (int) $issue->get('cnt_events');
         if ($count === 1) {
             return Html::sprintf(
                 $this->translate('Got a single event %s'),
-                $this->formatTimeAgo($incident->get('ts_first_event'))
+                $this->formatTimeAgo($issue->get('ts_first_event'))
             );
         } else {
             return Html::sprintf(
                 // $this->translate('Got %s events, the first one %s and the last one %s'),
                 $this->translate('%s Events erhalten, den ersten %s and den letzten %s'),
                 $count,
-                $this->formatTimeAgo($incident->get('ts_first_event')),
-                $this->formatTimeAgo($incident->get('ts_last_modified'))
+                $this->formatTimeAgo($issue->get('ts_first_event')),
+                $this->formatTimeAgo($issue->get('ts_last_modified'))
             );
         }
     }
@@ -232,12 +232,12 @@ class EventController extends CompatController
         ], DateFormatter::timeAgo($ts));
     }
 
-    protected function renderPriority(Incident $incident)
+    protected function renderPriority(Issue $issue)
     {
         $result = new HtmlDocument();
         $db = DbFactory::db();
 
-        $priority = $incident->get('priority');
+        $priority = $issue->get('priority');
         $result->add(sprintf('%-8s', $priority));
 
         $lower = new LinkLikeForm(
@@ -245,9 +245,9 @@ class EventController extends CompatController
             $this->translate('Lower priority for this issue'),
             'down-big'
         );
-        $lower->on('success', function () use ($incident, $db) {
-            $incident->lowerPriority();
-            $incident->storeToDb($db);
+        $lower->on('success', function () use ($issue, $db) {
+            $issue->lowerPriority();
+            $issue->storeToDb($db);
             $this->getResponse()->redirectAndExit($this->url());
         });
         $lower->handleRequest($this->getServerRequest());
@@ -256,9 +256,9 @@ class EventController extends CompatController
             $this->translate('Raise priority for this issue'),
             'up-big'
         );
-        $raise->on('success', function () use ($incident, $db) {
-            $incident->raisePriority();
-            $incident->storeToDb($db);
+        $raise->on('success', function () use ($issue, $db) {
+            $issue->raisePriority();
+            $issue->storeToDb($db);
             $this->getResponse()->redirectAndExit($this->url());
         });
         $raise->handleRequest($this->getServerRequest());
@@ -272,16 +272,16 @@ class EventController extends CompatController
         return $result;
     }
 
-    protected function renderTicket(Incident $incident)
+    protected function renderTicket(Issue $issue)
     {
-        return $this->getHookedActions($incident);
+        return $this->getHookedActions($issue);
     }
 
-    protected function renderOwner(Incident $incident)
+    protected function renderOwner(Issue $issue)
     {
         $myUsername = Auth::getInstance()->getUser()->getUsername();
         $result = new HtmlDocument();
-        $owner = $incident->get('owner');
+        $owner = $issue->get('owner');
         if ($owner === null) {
             $result->add($this->translate('Nobody in particular'));
         } else {
@@ -293,14 +293,14 @@ class EventController extends CompatController
             $this->translate('[ Take ]'),
             $this->translate('Take ownership for this issue') // TODO: issue type!?
         );
-        $take->on('success', function () use ($incident, $myUsername, $db) {
-            $incident->setOwner($myUsername);
-            $incident->storeToDb($db);
+        $take->on('success', function () use ($issue, $myUsername, $db) {
+            $issue->setOwner($myUsername);
+            $issue->storeToDb($db);
             $this->getResponse()->redirectAndExit($this->url());
         });
         $take->handleRequest($this->getServerRequest());
 
-        $give = new GiveOwnerShipForm($incident, $db);
+        $give = new GiveOwnerShipForm($issue, $db);
         $give->on('success', function () {
             $this->getResponse()->redirectAndExit($this->url());
         });
@@ -316,33 +316,33 @@ class EventController extends CompatController
         return $result;
     }
 
-    protected function addHookedActions(Incident $incident, BaseHtmlElement $target = null)
+    protected function addHookedActions(Issue $issue, BaseHtmlElement $target = null)
     {
         if ($target === null) {
             $target = $this->actions();
         }
-        $target->add($this->getHookedActions($incident));
+        $target->add($this->getHookedActions($issue));
     }
 
-    protected function getHookedActions(Incident $incident)
+    protected function getHookedActions(Issue $issue)
     {
         $result = [];
         /** @var EventActionsHook $impl */
         foreach (Hook::all('eventtracker/EventActions') as $impl) {
-            $result[] = $impl->getIncidentActions($incident);
+            $result[] = $impl->getIssueActions($issue);
         }
 
         return $result;
     }
 
-    // TODO: IncidentList?
-    protected function addHookedMultiActions($incidents)
+    // TODO: IssueList?
+    protected function addHookedMultiActions($issues)
     {
-        $incident = current($incidents);
+        $issue = current($issues);
         $actions = $this->actions();
         /** @var EventActionsHook $impl */
         foreach (Hook::all('eventtracker/EventActions') as $impl) {
-            $actions->add($impl->getIncidentActions($incident));
+            $actions->add($impl->getIssueActions($issue));
         }
     }
 }

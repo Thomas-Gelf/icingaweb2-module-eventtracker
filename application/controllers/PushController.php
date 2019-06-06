@@ -29,11 +29,11 @@ class PushController extends CompatController
         $mSend = new MSendCommandLine($cmd);
         $eventFactory = new MSendEventFactory($senders, $classes);
         $event = $eventFactory->fromCommandLine($mSend);
-        $incident = $receiver->processEvent($event);
+        $issue = $receiver->processEvent($event);
         $this->addSingleTab('Testing');
         $this->content()->add([
-            Html::tag('h1', 'Incident'),
-            Html::tag('pre', print_r($incident->getProperties(), true)),
+            Html::tag('h1', 'Issue'),
+            Html::tag('pre', print_r($issue->getProperties(), true)),
             Html::tag('h1', 'Event'),
             Html::tag('pre', print_r($event->getProperties(), true)),
             Html::tag('h1', 'Arguments'),
@@ -58,9 +58,9 @@ class PushController extends CompatController
             $mSend = new MSendCommandLine($cmd);
             $eventFactory = new MSendEventFactory($senders, $classes);
             $event = $eventFactory->fromCommandLine($mSend);
-            $incident = $receiver->processEvent($event);
+            $issue = $receiver->processEvent($event);
             echo 'Message #1 - Evtid = ';
-            echo Uuid::toHex($incident->getUuid()) . "\n";
+            echo Uuid::toHex($issue->getUuid()) . "\n";
         } catch (\Exception $e) {
             echo $e->getMessage() . "\n";
         }

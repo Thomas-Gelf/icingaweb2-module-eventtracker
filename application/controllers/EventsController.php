@@ -23,7 +23,7 @@ class EventsController extends CompatController
             $table->handleSortUrl($this->url());
             $result = $table->fetch();
             foreach ($result as & $row) {
-                $row->incident_uuid = Uuid::toHex($row->incident_uuid);
+                $row->issue_uuid = Uuid::toHex($row->issue_uuid);
             }
             $flags = JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE;
             echo json_encode($result, $flags);

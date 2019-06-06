@@ -1,7 +1,7 @@
 SET sql_mode = 'STRICT_ALL_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,NO_ENGINE_SUBSTITUTION,PIPES_AS_CONCAT,ANSI_QUOTES,ERROR_FOR_DIVISION_BY_ZERO';
 
 CREATE TABLE object_class (
-  class_name VARCHAR(32) NOT NULL, -- mc_object_class
+  class_name VARCHAR(64) NOT NULL, -- mc_object_class
   PRIMARY KEY (class_name)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE utf8mb4_bin;
 
@@ -13,8 +13,8 @@ CREATE TABLE sender (
   UNIQUE INDEX(sender_name)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE utf8mb4_bin;
 
-CREATE TABLE incident (
-  incident_uuid VARBINARY(16) NOT NULL,
+CREATE TABLE issue (
+  issue_uuid VARBINARY(16) NOT NULL,
   status ENUM (
     'closed',
     'in_downtime',
@@ -52,67 +52,47 @@ CREATE TABLE incident (
   owner VARCHAR(64) COLLATE utf8mb4_general_ci NULL DEFAULT NULL,
   ticket_ref VARCHAR(64) COLLATE utf8mb4_general_ci NULL DEFAULT NULL,
   message TEXT COLLATE utf8mb4_general_ci NOT NULL,
-  PRIMARY KEY (incident_uuid),
+  PRIMARY KEY (issue_uuid),
   UNIQUE INDEX sender_event (sender_event_checksum),
   INDEX host_name (host_name),
   INDEX sort_first_event (ts_first_event),
-  CONSTRAINT incident_objectclass
-    FOREIGN KEY incident_objectclass_class (object_class)
+  CONSTRAINT issue_objectclass
+    FOREIGN KEY issue_objectclass_class (object_class)
     REFERENCES object_class (class_name)
     ON DELETE RESTRICT
     ON UPDATE RESTRICT,
-  CONSTRAINT incident_sender
-    FOREIGN KEY incident_sender_id (sender_id)
+  CONSTRAINT issue_sender
+    FOREIGN KEY issue_sender_id (sender_id)
     REFERENCES sender (id)
     ON DELETE RESTRICT
     ON UPDATE RESTRICT
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE utf8mb4_bin;
 
-CREATE TABLE incident_activity (
+CREATE TABLE issue_activity (
   activity_uuid VARBINARY(16) NOT NULL,
-  incident_uuid VARBINARY(16) NOT NULL,
+  issue_uuid VARBINARY(16) NOT NULL,
   ts_modified BIGINT(20) NOT NULL,
   modifications TEXT NOT NULL,
   PRIMARY KEY (activity_uuid),
-  INDEX (incident_uuid, ts_modified),
+  INDEX (issue_uuid, ts_modified),
   INDEX (ts_modified),
-  CONSTRAINT incident_activity_uuid
-  FOREIGN KEY property_incident_uuid (incident_uuid)
-    REFERENCES incident (incident_uuid)
+  CONSTRAINT issue_activity_uuid
+  FOREIGN KEY property_issue_uuid (issue_uuid)
+    REFERENCES issue (issue_uuid)
     ON DELETE CASCADE
     ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE utf8mb4_bin;
 
--- TODO: check whether we can drop this
-CREATE TABLE incident_change (
-  incident_uuid VARBINARY(16) NOT NULL,
-  change_type ENUM(
-    'state_change',
-    'acknowledged',
-    'unacknowledged',
-    'downtime_start',
-    'downtime_end',
-    'comment'
-  ),
-  author_name VARCHAR(64) NOT NULL,
-  comment TEXT,
-  CONSTRAINT change_incident_uuid
-    FOREIGN KEY change_incident_uuid (incident_uuid)
-    REFERENCES incident (incident_uuid)
-    ON DELETE CASCADE
-    ON UPDATE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE utf8mb4_bin;
-
-
-CREATE TABLE incident_property (
-  incident_uuid VARBINARY(16) NOT NULL,
+-- UNUSED.
+CREATE TABLE issue_property (
+  issue_uuid VARBINARY(16) NOT NULL,
   property_name VARCHAR(64) NOT NULL,
   property_value TEXT,
-  PRIMARY KEY (incident_uuid, property_name),
+  PRIMARY KEY (issue_uuid, property_name),
   INDEX (property_value),
-  CONSTRAINT incident_uuid
-    FOREIGN KEY property_incident_uuid (incident_uuid)
-    REFERENCES incident (incident_uuid)
+  CONSTRAINT issue_uuid
+    FOREIGN KEY property_issue_uuid (issue_uuid)
+    REFERENCES issue (issue_uuid)
     ON DELETE CASCADE
     ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE utf8mb4_bin;

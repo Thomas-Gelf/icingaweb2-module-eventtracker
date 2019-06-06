@@ -15,24 +15,24 @@ class EventReceiver
 
     /**
      * @param Event $event
-     * @return Incident|null
+     * @return Issue|null
      * @throws \Zend_Db_Adapter_Exception
      */
     public function processEvent(Event $event)
     {
-        $incident = Incident::loadIfEventExists($event, $this->db);
+        $issue = Issue::loadIfEventExists($event, $this->db);
         if ($event->isProblem()) {
-            if ($incident) {
-                $incident->setPropertiesFromEvent($event);
+            if ($issue) {
+                $issue->setPropertiesFromEvent($event);
             } else {
-                $incident = Incident::create($event, $this->db);
+                $issue = Issue::create($event, $this->db);
             }
         } else {
-            $incident->resolve($event);
+            $issue->resolve($event);
         }
 
-        $incident->storeToDb($this->db);
+        $issue->storeToDb($this->db);
 
-        return $incident;
+        return $issue;
     }
 }

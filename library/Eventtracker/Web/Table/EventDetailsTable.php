@@ -4,7 +4,7 @@ namespace Icinga\Module\Eventtracker\Web\Table;
 
 use gipfl\IcingaWeb2\Widget\NameValueTable;
 use gipfl\Translation\TranslationHelper;
-use Icinga\Module\Eventtracker\Incident;
+use Icinga\Module\Eventtracker\Issue;
 use Icinga\Module\Eventtracker\Time;
 use Icinga\Module\Eventtracker\Web\HtmlPurifier;
 
@@ -14,18 +14,18 @@ class EventDetailsTable extends NameValueTable
 
     // HINT: This renders nothing right now.
 
-    public function __construct(Incident $incident)
+    public function __construct(Issue $issue)
     {
         $this->addNameValuePairs([
-            // $this->translate('Since')    => Time::agoFormatted($incident->get('ts_first_event')),
-            // $this->translate('Status')   => $incident->get('status'),
-            // $this->translate('Severity') => $incident->get('severity'),
-            // $this->translate('Priority') => $incident->get('priority'),
-            // $this->translate('Host')     => $incident->get('host_name'),
-            // $this->translate('Object')   => $incident->get('object_name'),
-            // $this->translate('Class')    => $incident->get('object_class'),
-            // $this->translate('Message')  => HtmlPurifier::process($incident->get('message')),
-            // this->translate('Owner')    => $incident->get('owner', '-'),
+            // $this->translate('Since')    => Time::agoFormatted($issue->get('ts_first_event')),
+            // $this->translate('Status')   => $issue->get('status'),
+            // $this->translate('Severity') => $issue->get('severity'),
+            // $this->translate('Priority') => $issue->get('priority'),
+            // $this->translate('Host')     => $issue->get('host_name'),
+            // $this->translate('Object')   => $issue->get('object_name'),
+            // $this->translate('Class')    => $issue->get('object_class'),
+            // $this->translate('Message')  => HtmlPurifier::process($issue->get('message')),
+            // this->translate('Owner')    => $issue->get('owner', '-'),
         ]);
 
         $blacklist = [
@@ -38,7 +38,7 @@ class EventDetailsTable extends NameValueTable
             'cnt_events',
             'object_name',
             'object_class',
-            'incident_uuid',
+            'issue_uuid',
             'ts_first_event',
             'ts_last_modified',
             'ts_expiration',
@@ -47,7 +47,7 @@ class EventDetailsTable extends NameValueTable
             'sender_event_id',
             'sender_event_checksum',
         ];
-        foreach ($incident->getProperties() as $name => $value) {
+        foreach ($issue->getProperties() as $name => $value) {
             if (in_array($name, $blacklist)) {
                 continue;
             }

@@ -46,7 +46,7 @@ class ScomSync
 
         foreach ($events as $scomEvent) {
             $event = $factory->fromPlainObject($scomEvent);
-            $incident = $receiver->processEvent($event);
+            $issue = $receiver->processEvent($event);
         }
     }
 }

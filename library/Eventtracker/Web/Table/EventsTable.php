@@ -72,7 +72,7 @@ class EventsTable extends BaseTable
                 'priority'      => 'i.priority',
                 'status'        => 'i.status',
                 'timestamp'     => 'i.ts_first_event',
-                'incident_uuid' => 'i.incident_uuid',
+                'issue_uuid' => 'i.issue_uuid',
             ])->setRenderer(function ($row) use ($prioIconRenderer) {
                 $classes = [
                     'severity-col',
@@ -82,7 +82,7 @@ class EventsTable extends BaseTable
                     $classes[] = 'ack';
                 }
                 $link = Link::create(substr(strtoupper($row->severity), 0, 4), 'eventtracker/event', [
-                    'uuid' => Uuid::toHex($row->incident_uuid)
+                    'uuid' => Uuid::toHex($row->issue_uuid)
                 ], [
                     'title' => ucfirst($row->severity)
                 ]);
@@ -114,18 +114,18 @@ class EventsTable extends BaseTable
             ]),
             $this->createColumn('object_name', $this->translate('Object'), [
                 'object_name'   => 'i.object_name',
-                'incident_uuid' => 'i.incident_uuid'
+                'issue_uuid' => 'i.issue_uuid'
             ])->setRenderer(function ($row) {
                 return $this->fixObjectName($row->object_name);
             }),
             $this->createColumn('message', $this->translate('Message'), [
                 'severity'      => 'i.severity',
-                'incident_uuid' => 'i.incident_uuid',
+                'issue_uuid' => 'i.issue_uuid',
                 'message'       => 'i.message',
                 'host_name'     => 'i.host_name',
                 'object_name'   => 'i.object_name',
             ])->setRenderer(function ($row) {
-                $hex = Uuid::toHex($row->incident_uuid);
+                $hex = Uuid::toHex($row->issue_uuid);
                 if (in_array('host_name', $this->getChosenColumnNames())) {
                     $host = null;
                 } else {
@@ -164,7 +164,7 @@ class EventsTable extends BaseTable
     protected function linkToObject($row, $label)
     {
         return Link::create($label, 'eventtracker/event', [
-            'uuid' => Uuid::toHex($row->incident_uuid)
+            'uuid' => Uuid::toHex($row->issue_uuid)
         ], [
             'title' => ucfirst($row->severity)
         ]);
@@ -187,6 +187,6 @@ class EventsTable extends BaseTable
 
     public function prepareQuery()
     {
-        return $this->db()->select()->from(['i' => 'incident'], $this->getRequiredDbColumns());
+        return $this->db()->select()->from(['i' => 'issue'], $this->getRequiredDbColumns());
     }
 }
