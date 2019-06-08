@@ -1,9 +1,8 @@
-Just a header
-=============
-
 #!/bin/bash
 
 ICINGAWEB2=http://localhost/icingaweb2
+# CURL="curl --capath /etc/ssl/certs/ --cert /my/cert.pem --cert-type PEM"
+CURL="curl"
 
 C=''
 for i in "$@"; do
@@ -17,4 +16,4 @@ for i in "$@"; do
 done
 echo "$C"
 
-curl -X POST $ICINGAWEB2/eventtracker/push/msend -H "Content-Type: text/plain" --data-binary "$C"
+"$CURL" -X POST $ICINGAWEB2/eventtracker/push/msend -H "Content-Type: text/plain" --data-binary "$C"
