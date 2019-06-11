@@ -7,6 +7,7 @@ use gipfl\IcingaWeb2\Link;
 use gipfl\IcingaWeb2\Table\Extension\MultiSelect;
 use gipfl\Translation\TranslationHelper;
 use Icinga\Date\DateFormatter;
+use Icinga\Module\Eventtracker\Priority;
 use Icinga\Module\Eventtracker\Time;
 use Icinga\Module\Eventtracker\Uuid;
 use Icinga\Module\Eventtracker\Web\HtmlPurifier;
@@ -51,14 +52,14 @@ class EventsTable extends BaseTable
         );
         $prioIconRenderer = function ($row) {
             $icons = [
-                'highest' => 'up-big',
-                'high'    => 'up-small',
-                'normal'  => 'right-small',
-                'low'     => 'down-small',
-                'lowest'  => 'down-big',
+                Priority::HIGHEST => 'up-big',
+                Priority::HIGH    => 'up-small',
+                Priority::NORMAL  => 'right-small',
+                Priority::LOW     => 'down-small',
+                Priority::LOWEST  => 'down-big',
             ];
 
-            if ($row->priority === 'normal') {
+            if ($row->priority === Priority::NORMAL) {
                 // return '';
             }
 

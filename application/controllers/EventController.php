@@ -9,6 +9,7 @@ use Icinga\Date\DateFormatter;
 use Icinga\Module\Eventtracker\DbFactory;
 use Icinga\Module\Eventtracker\Hook\EventActionsHook;
 use Icinga\Module\Eventtracker\Issue;
+use Icinga\Module\Eventtracker\Priority;
 use Icinga\Module\Eventtracker\SetOfIssues;
 use Icinga\Module\Eventtracker\Uuid;
 use Icinga\Module\Eventtracker\Web\Form\GiveOwnerShipForm;
@@ -251,6 +252,10 @@ class EventController extends CompatController
             $this->getResponse()->redirectAndExit($this->url());
         });
         $lower->handleRequest($this->getServerRequest());
+        if (Priority::isLowest($priority)) {
+            $lower->getElement('submit')->getAttributes()->add('disabled', 'disabled');
+        }
+
         $raise = new LinkLikeForm(
             $this->translate('[ Raise ]'),
             $this->translate('Raise priority for this issue'),
@@ -263,7 +268,7 @@ class EventController extends CompatController
         });
         $raise->handleRequest($this->getServerRequest());
 
-        if ($priority === 'highest') {
+        if (Priority::isHighest($priority)) {
             $raise->getElement('submit')->getAttributes()->add('disabled', 'disabled');
         }
 

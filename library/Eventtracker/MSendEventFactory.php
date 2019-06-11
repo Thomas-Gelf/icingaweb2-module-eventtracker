@@ -74,11 +74,11 @@ class MSendEventFactory
     protected function mapPriority($priority)
     {
         $priorities = [
-            'PRIORITY_1' => 'lowest',
-            'PRIORITY_2' => 'low',
-            'PRIORITY_3' => 'normal',
-            'PRIORITY_4' => 'high',
-            'PRIORITY_5' => 'highest',
+            'PRIORITY_1' => Priority::LOWEST,
+            'PRIORITY_2' => Priority::LOW,
+            'PRIORITY_3' => Priority::NORMAL,
+            'PRIORITY_4' => Priority::HIGH,
+            'PRIORITY_5' => Priority::HIGHEST,
         ];
 
         if (isset($priorities[$priority])) {
