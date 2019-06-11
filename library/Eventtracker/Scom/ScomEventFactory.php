@@ -1,6 +1,6 @@
 <?php
 
-namespace Icinga\Module\Scom;
+namespace Icinga\Module\Eventtracker\Scom;
 
 use Icinga\Module\Eventtracker\Event;
 use Icinga\Module\Eventtracker\ObjectClassInventory;
