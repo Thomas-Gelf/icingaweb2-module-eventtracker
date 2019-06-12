@@ -104,6 +104,13 @@ class Issue
         $properties = $event->getProperties();
         $timeout = $properties['event_timeout'];
         unset($properties['event_timeout']);
+
+        // Priority can be customized, source will not be allowed to change it
+        // We might however check whether we want to allow this for issues with
+        // "unmodified" priority
+        if (! $this->isNew()) {
+            unset($properties['priority']);
+        }
         if ($timeout !== null) {
             $properties['ts_expiration'] = static::now() + $timeout * 1000;
         }
