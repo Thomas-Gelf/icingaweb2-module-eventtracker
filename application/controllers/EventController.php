@@ -79,12 +79,11 @@ class EventController extends CompatController
     protected function showObjectDetails(Issue $issue)
     {
         return [
-            Html::tag('strong', 'Host: '),
+            Html::tag('strong', 'Host:   '),
             Link::create(
                 $issue->get('host_name'),
                 'eventtracker/events',
-                // TODO: search host_name
-                ['q' => $issue->get('host_name')],
+                ['host_name' => $issue->get('host_name')],
                 ['data-base-target' => 'col1']
             ),
             "\n",
@@ -92,17 +91,15 @@ class EventController extends CompatController
             Link::create(
                 $this->shorten($issue->get('object_name'), 64),
                 'eventtracker/events',
-                // TODO: search object_name
-                ['q' => $issue->get('object_name')],
+                ['object_name' => $issue->get('object_name')],
                 ['data-base-target' => 'col1']
             ),
             "\n",
-            Html::tag('strong', 'Class: '),
+            Html::tag('strong', 'Class:  '),
             Link::create(
                 $this->shorten($issue->get('object_class'), 64),
                 'eventtracker/events',
-                // TODO: search object_class
-                ['q' => $issue->get('object_class')],
+                ['object_class' => $issue->get('object_class')],
                 ['data-base-target' => 'col1']
             ),
         ];
