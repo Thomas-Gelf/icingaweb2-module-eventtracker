@@ -338,18 +338,24 @@ div.action-bar > ul ul {
   min-width: 10em;
   position: absolute;
   display: none;
-  color: white;
+  color: @text-color-inverted;
   background-color: @icinga-blue;
+  border-radius: 0.4em;
+  border-top-left-radius: 0;
+  box-shadow: 1em 1em 1em 0 rgba(0, 0, 0, 0.2);
 
   a {
     display: block;
     padding: 0.3em 0.5em 0.3em 1em;
     margin: 0;
     outline: none;
-    color: white;
+    color: @text-color-inverted;
 
     &:hover {
       text-decoration: underline;
+      &:before {
+        text-decoration: none;
+      }
     }
   }
 
@@ -366,8 +372,10 @@ div.action-bar > ul > li > a {
 }
 div.action-bar > ul > li:hover {
   background-color: @icinga-blue;
+  border-top-left-radius: 0.4em;
+  border-top-right-radius: 0.4em;
   & > a {
-    color: white;
+    color: @text-color-inverted;
     text-decoration: none;
   }
 }
