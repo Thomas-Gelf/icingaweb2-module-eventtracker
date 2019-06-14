@@ -12,7 +12,7 @@ class Priority
     const HIGH    = 'high';
     const HIGHEST = 'highest';
 
-    const PRIORITY_LIST = [
+    const ENUM = [
         self::LOWEST  => self::LOWEST,
         self::LOW     => self::LOW,
         self::NORMAL  => self::NORMAL,
@@ -22,7 +22,7 @@ class Priority
 
     public static function isValid($priority)
     {
-        return \array_key_exists($priority, self::PRIORITY_LIST);
+        return \array_key_exists($priority, self::ENUM);
     }
 
     public static function isHighest($priority)
