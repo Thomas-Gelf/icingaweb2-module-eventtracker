@@ -149,7 +149,7 @@ class EventController extends CompatController
                     'class' => 'output',
                     'style' => 'clear: both'
                 ], [
-                    Html::tag('strong', 'Events: '),
+                    Html::tag('strong', 'Events:     '),
                     $this->renderTimings($issue),
                     "\n",
                     Html::tag('strong', 'Expiration: '),
@@ -188,8 +188,7 @@ class EventController extends CompatController
             );
         } else {
             return Html::sprintf(
-                // $this->translate('Got %s events, the first one %s and the last one %s'),
-                $this->translate('%s Events erhalten, den ersten %s and den letzten %s'),
+                $this->translate('Got %s events, the first one %s and the last one %s'),
                 $count,
                 $this->formatTimeAgo($issue->get('ts_first_event')),
                 $this->formatTimeAgo($issue->get('ts_last_modified'))
