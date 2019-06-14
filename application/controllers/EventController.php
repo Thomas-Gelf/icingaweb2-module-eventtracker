@@ -237,6 +237,10 @@ class EventController extends CompatController
         $priority = $issue->get('priority');
         $result->add(sprintf('%-8s', $priority));
 
+        if (! $this->isOperator()) {
+            return $result;
+        }
+
         $lower = new LinkLikeForm(
             $this->translate('[ Lower ]'),
             $this->translate('Lower priority for this issue'),
@@ -289,6 +293,14 @@ class EventController extends CompatController
             $result->add($owner);
         }
         $db = DbFactory::db();
+
+        if (! $this->isOperator()) {
+            if ($owner === $myUsername) {
+                $result->add(" (that's me!) ");
+            }
+
+            return $result;
+        }
 
         $take = new LinkLikeForm(
             $this->translate('[ Take ]'),
@@ -345,5 +357,10 @@ class EventController extends CompatController
         foreach (Hook::all('eventtracker/EventActions') as $impl) {
             $actions->add($impl->getIssueActions($issue));
         }
+    }
+
+    protected function isOperator()
+    {
+        return $this->hasPermission('eventtracker/operator');
     }
 }
