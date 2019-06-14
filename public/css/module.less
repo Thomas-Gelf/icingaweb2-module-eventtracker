@@ -15,6 +15,20 @@
 @color-severity-debug: #ccc;
 @color-severity-debug-fg: @text-color;
 
+a:focus {
+  outline: none;
+  text-decoration: underline;
+}
+
+thead tr[href]:hover {
+  background-color: inherit;
+  cursor: unset;
+}
+
+table.common-table td {
+  padding-top: 0.2em;
+  padding-bottom: 0.2em;
+}
 
 .border-emergency {
   border-color: @color-severity-emergency;
