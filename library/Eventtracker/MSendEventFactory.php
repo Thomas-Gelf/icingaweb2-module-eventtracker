@@ -61,6 +61,8 @@ class MSendEventFactory
             'MINOR'         => 'error',
             'WARNING'       => 'warning',
             'INFORMATIONAL' => 'notice',
+            'INFO'          => 'notice',        // !?!?!?!
+            'NORMAL'        => 'informational', // !?!?!?!
             'OK'            => 'informational', // !?!?!?!
         ];
 
