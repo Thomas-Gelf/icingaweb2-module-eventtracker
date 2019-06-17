@@ -6,7 +6,6 @@ use gipfl\IcingaWeb2\Icon;
 use gipfl\IcingaWeb2\Link;
 use gipfl\IcingaWeb2\Table\Extension\MultiSelect;
 use gipfl\Translation\TranslationHelper;
-use Icinga\Date\DateFormatter;
 use Icinga\Module\Eventtracker\Priority;
 use Icinga\Module\Eventtracker\Time;
 use Icinga\Module\Eventtracker\Uuid;

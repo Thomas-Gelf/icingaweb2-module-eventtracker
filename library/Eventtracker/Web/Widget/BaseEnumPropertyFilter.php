@@ -5,16 +5,17 @@ namespace Icinga\Module\Eventtracker\Web\Widget;
 use gipfl\IcingaWeb2\Link;
 use gipfl\IcingaWeb2\Url;
 use gipfl\Translation\TranslationHelper;
-use Icinga\Module\Eventtracker\Severity;
 use ipl\Html\BaseHtmlElement;
 
-class SummaryFilter extends BaseHtmlElement
+class BaseEnumPropertyFilter extends BaseHtmlElement
 {
     use TranslationHelper;
 
     protected $tag = 'div';
 
-    protected $property = 'severity';
+    protected $property;
+
+    protected $enum;
 
     protected $active;
 
@@ -55,20 +56,12 @@ class SummaryFilter extends BaseHtmlElement
 
     protected function getDefaultSelection()
     {
-        $selection = [
-            Severity::EMERGENCY,
-            Severity::ALERT,
-            Severity::CRITICAL,
-            Severity::ERROR,
-            Severity::WARNING,
-        ];
-
-        return array_combine($selection, $selection);
+        return $this->enum;
     }
 
     protected function assemble()
     {
-        $options = \array_values(Severity::ENUM);
+        $options = \array_values($this->enum);
         $param = $this->property;
         $titleToggleOn = $this->translate('Show "%s"');
         $titleToggleOff = $this->translate('Hide "%s"');
@@ -77,10 +70,10 @@ class SummaryFilter extends BaseHtmlElement
             if ((int) $count === 0 && $this->skipMissing) {
                 continue;
             }
-            $classes = ['badge', "severity-$key"];
+            $classes = ['badge', $param, "$param-$key"];
             if ($this->active === null) {
                 $isActive = true;
-                $chosen = Severity::ENUM;
+                $chosen = $this->enum;
             } else {
                 $chosen = \array_combine($this->active, $this->active);
                 $isActive = \in_array($key, $this->active);
@@ -90,6 +83,7 @@ class SummaryFilter extends BaseHtmlElement
                 $title = $titleToggleOff;
                 $classes[] = 'active';
             } else {
+                $classes[] = 'disabled';
                 $chosen[$key] = $key;
                 $title = $titleToggleOn;
             }

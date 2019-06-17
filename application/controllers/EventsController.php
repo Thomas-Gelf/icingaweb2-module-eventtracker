@@ -11,7 +11,8 @@ use Icinga\Module\Eventtracker\DbFactory;
 use Icinga\Module\Eventtracker\Uuid;
 use Icinga\Module\Eventtracker\Web\Table\EventsTable;
 use Icinga\Module\Eventtracker\Web\Widget\AdditionalTableActions;
-use Icinga\Module\Eventtracker\Web\Widget\SummaryFilter;
+use Icinga\Module\Eventtracker\Web\Widget\PriorityFilter;
+use Icinga\Module\Eventtracker\Web\Widget\SeverityFilter;
 use Icinga\Web\Widget\Tabextension\DashboardAction;
 use ipl\Html\Html;
 
@@ -76,12 +77,20 @@ class EventsController extends CompatController
 
         $table = new EventsTable($db);
         $this->applyFilters($table);
+        $badgeFilters = Html::tag('div', ['class' => 'filter-badges']);
 
         $prioSummary = new EventSummaryByPriority($table->getQuery());
         $sevSummary = new EventSummaryBySeverity($table->getQuery());
+        $prioSummary->filterByUrl($this->url());
         $sevSummary->filterByUrl($this->url());
         if (! $this->showCompact()) {
-            $this->actions()->prepend(new SummaryFilter($sevSummary->fetch($db), $this->url()));
+            $badgeFilters->add([
+                'Sev: ',
+                new SeverityFilter($sevSummary->fetch($db), $this->url()),
+                'Prio: ',
+                new PriorityFilter($prioSummary->fetch($db), $this->url()),
+            ]);
+            $this->controls()->add($badgeFilters);
         }
 
         if ($this->getRequest()->isApiRequest()) {

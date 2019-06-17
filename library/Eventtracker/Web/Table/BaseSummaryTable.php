@@ -7,7 +7,7 @@ use gipfl\IcingaWeb2\Table\Extension\MultiSelect;
 use gipfl\IcingaWeb2\Url;
 use gipfl\Translation\TranslationHelper;
 use Icinga\Module\Eventtracker\Db\EventSummaryBySeverity;
-use Icinga\Module\Eventtracker\Web\Widget\SummaryFilter;
+use Icinga\Module\Eventtracker\Web\Widget\SeverityFilter;
 
 abstract class BaseSummaryTable extends BaseTable
 {
@@ -43,7 +43,7 @@ abstract class BaseSummaryTable extends BaseTable
                 'cnt' => 'COUNT(*)',
             ])->setRenderer(function ($row) {
                 $url = Url::fromPath('eventtracker/events');
-                $summary = new SummaryFilter($row, $url);
+                $summary = new SeverityFilter($row, $url);
 
                 return $this::td($summary->skipMissing(), [
                     'align' => 'right'
