@@ -66,7 +66,6 @@ table.common-table td {
   background-color: transparent;
   margin-left: 1px;
   border: 2px solid transparent;
-  font-weight: bold;
   &.severity-emergency {
     border-color: @color-severity-emergency;
   }
@@ -97,6 +96,50 @@ table.common-table td {
 
   &.severity-debug {
     border-color: @color-severity-debug;
+  }
+
+  &.priority {
+    padding-right: 1.25em;
+    &:before {
+      font-family: 'ifont';
+      position: absolute;
+      right: 0.25em;
+    }
+    &.priority-lowest {
+      background-color: rgba(255, 0, 0, 0.1);
+      border-color: rgba(255, 0, 0, 0.5);
+      &:before {
+        content: "\e828"; // down-big
+      }
+    }
+    &.priority-low {
+      background-color: rgba(255, 0, 0, 0.3);
+      border-color: rgba(255, 0, 0, 0.5);
+      &:before {
+        content: "\e875"; // down-small
+      }
+    }
+    &.priority-normal {
+      background-color: rgba(255, 0, 0, 0.5);
+      border-color: rgba(255, 0, 0, 0.5);
+      &:before {
+        content: "\e877"; // right-small
+      }
+    }
+    &.priority-high {
+      background-color: rgba(255, 0, 0, 0.7);
+      border-color: rgba(255, 0, 0, 0.5);
+      &:before {
+        content: "\e878"; // up-small
+      }
+    }
+    &.priority-highest {
+      background-color: rgba(255, 0, 0, 0.9);
+      border-color: rgba(255, 0, 0, 0.5);
+      &:before {
+        content: "\e825"; // up-big
+      }
+    }
   }
 }
 
