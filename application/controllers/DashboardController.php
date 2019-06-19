@@ -22,17 +22,17 @@ class DashboardController extends CompatController
         ]);
         $subDash = Html::tag('div', ['class' => 'dashboard']);
         $subDash->add([
-            new Dashlet('eventtracker/events?sort=severity%20DESC', 'Host-Probleme'),
-            new Dashlet('eventtracker/events?sort=severity%20ASC', 'DB-Probleme'),
-            new Dashlet('eventtracker/events?q=ho&sort=severity%20DESC', 'Andere Probleme'),
+            new Dashlet('eventtracker/issues?sort=severity%20DESC', 'Host-Probleme'),
+            new Dashlet('eventtracker/issues?sort=severity%20ASC', 'DB-Probleme'),
+            new Dashlet('eventtracker/issues?q=ho&sort=severity%20DESC', 'Andere Probleme'),
         ]);
         $zoom->add($subDash);
 
         $subDash = Html::tag('div', ['class' => 'dashboard']);
         $subDash->add([
-            new Dashlet('eventtracker/events?sort=severity%20DESC&q=aha', 'Neue Probleme'),
-            new Dashlet('eventtracker/events?sort=severity%20ASC&q=net', 'Netze'),
-            new Dashlet('eventtracker/events?q=UNIX&sort=severity%20DESC', 'UNIX'),
+            new Dashlet('eventtracker/issues?sort=severity%20DESC&q=aha', 'Neue Probleme'),
+            new Dashlet('eventtracker/issues?sort=severity%20ASC&q=net', 'Netze'),
+            new Dashlet('eventtracker/issues?q=UNIX&sort=severity%20DESC', 'UNIX'),
         ]);
         $zoom->add($subDash);
 

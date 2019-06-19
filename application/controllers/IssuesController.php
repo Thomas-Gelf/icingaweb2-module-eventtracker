@@ -16,7 +16,7 @@ use Icinga\Module\Eventtracker\Web\Widget\SeverityFilter;
 use Icinga\Web\Widget\Tabextension\DashboardAction;
 use ipl\Html\Html;
 
-class EventsController extends CompatController
+class IssuesController extends CompatController
 {
     protected function showCompact()
     {
@@ -112,7 +112,7 @@ class EventsController extends CompatController
             $table->handleSortUrl($this->url());
             $table->getQuery()->limit(10);
         } else {
-            $this->addSingleTab('Events');
+            $this->addSingleTab('Issues');
             $this->addTitle('Event Tracker');
             (new AdditionalTableActions($table, Auth::getInstance(), $this->url()))
                 ->appendTo($this->actions());

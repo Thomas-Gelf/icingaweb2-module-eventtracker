@@ -21,7 +21,7 @@ use ipl\Html\BaseHtmlElement;
 use ipl\Html\Html;
 use ipl\Html\HtmlDocument;
 
-class EventController extends CompatController
+class IssueController extends CompatController
 {
     /**
      * @throws \Icinga\Exception\NotFoundError
@@ -82,7 +82,7 @@ class EventController extends CompatController
             Html::tag('strong', 'Host:   '),
             Link::create(
                 $issue->get('host_name'),
-                'eventtracker/events',
+                'eventtracker/issues',
                 ['host_name' => $issue->get('host_name')],
                 ['data-base-target' => 'col1']
             ),
@@ -90,7 +90,7 @@ class EventController extends CompatController
             Html::tag('strong', 'Object: '),
             Link::create(
                 $this->shorten($issue->get('object_name'), 64),
-                'eventtracker/events',
+                'eventtracker/issues',
                 ['object_name' => $issue->get('object_name')],
                 ['data-base-target' => 'col1']
             ),
@@ -98,7 +98,7 @@ class EventController extends CompatController
             Html::tag('strong', 'Class:  '),
             Link::create(
                 $this->shorten($issue->get('object_class'), 64),
-                'eventtracker/events',
+                'eventtracker/issues',
                 ['object_class' => $issue->get('object_class')],
                 ['data-base-target' => 'col1']
             ),
