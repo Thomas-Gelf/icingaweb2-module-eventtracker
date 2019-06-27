@@ -75,10 +75,15 @@ class MSendEventFactory
     {
         $priorities = [
             'PRIORITY_1' => Priority::LOWEST,
+            'lowest'     => Priority::LOWEST,
             'PRIORITY_2' => Priority::LOW,
+            'low'        => Priority::LOW,
             'PRIORITY_3' => Priority::NORMAL,
+            'normal'     => Priority::NORMAL,
             'PRIORITY_4' => Priority::HIGH,
+            'high'       => Priority::HIGH,
             'PRIORITY_5' => Priority::HIGHEST,
+            'highest'    => Priority::HIGHEST,
         ];
 
         if (isset($priorities[$priority])) {
