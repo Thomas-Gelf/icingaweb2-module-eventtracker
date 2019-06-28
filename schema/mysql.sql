@@ -82,20 +82,3 @@ CREATE TABLE issue_activity (
     ON DELETE CASCADE
     ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE utf8mb4_bin;
-
--- UNUSED.
-CREATE TABLE issue_property (
-  issue_uuid VARBINARY(16) NOT NULL,
-  property_name VARCHAR(64) NOT NULL,
-  property_value TEXT,
-  PRIMARY KEY (issue_uuid, property_name),
-  INDEX (property_value),
-  CONSTRAINT issue_uuid
-    FOREIGN KEY property_issue_uuid (issue_uuid)
-    REFERENCES issue (issue_uuid)
-    ON DELETE CASCADE
-    ON UPDATE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE utf8mb4_bin;
-
--- mc_parameter: Tablespace Name,AUD_INDX,Table Space Used(%);
--- mc_parameter_value: 99
