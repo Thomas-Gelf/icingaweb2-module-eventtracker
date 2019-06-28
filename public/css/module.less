@@ -66,6 +66,7 @@ table.common-table td {
   background-color: transparent;
   margin-left: 1px;
   border: 2px solid transparent;
+  position: relative;
   &.severity-emergency {
     border-color: @color-severity-emergency;
   }
@@ -143,9 +144,18 @@ table.common-table td {
   }
 }
 
-.action-bar a.badge.active {
+.filter-badges {
+  background-color: @text-color;
   color: @text-color-inverted;
+  padding: 0.3em 1em;
+  border-radius: 0.5em;
 }
+
+.badge.priority.disabled {
+  background-color: @gray !important;
+  color: white;
+}
+
 .badge.active {
   color: @text-color-inverted;
   &.severity-emergency {
@@ -181,17 +191,21 @@ table.common-table td {
   }
 }
 
+table.common-table {
+  border-collapse: separate;
+  border-spacing: 0 1px;
+  table.common-table {
+    border-left: 0;
+  }
+}
+
 .severity-col {
-  width: 6em;
-  border-left: 5px solid;
+  width: 8em;
   white-space: nowrap;
+  border-left: 5px solid;
   text-align: center;
   margin-right: 1em;
   padding: 0.33em 1em;
-  font-weight: bold;
-  border-top-right-radius: 1em;
-  border-bottom-right-radius: 1em;
-
   &.emergency {
     border-left-color: @color-severity-emergency;
     background-color: @color-severity-emergency;
