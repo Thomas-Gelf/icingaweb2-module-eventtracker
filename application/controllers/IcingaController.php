@@ -28,6 +28,45 @@ class IcingaController extends CompatController
         }
     }
 
+    protected function hasObject($name)
+    {
+        if (\strpos($name, '!') === false) {
+            return $this->hasHost($name);
+        } else {
+            list($host, $service) = \preg_split('/\!/', $name, 2);
+            return $this->hasService($host, $service);
+        }
+    }
+
+    protected function hasHost($host)
+    {
+        $db = $this->monitoringDb();
+        $select = $db->select()
+            ->from(['o' => 'icinga_objects'], 'o.name1')
+            ->where('o.name1 = ?', $host)
+            ->where('o.objecttype_id = 1')
+            ->where('o.is_active = 1');
+
+        $result = $db->fetchOne($select);
+
+        return $result === $host;
+    }
+
+    protected function hasService($host, $service)
+    {
+        $db = $this->monitoringDb();
+        $select = $db->select()
+            ->from(['o' => 'icinga_objects'], 'o.name2')
+            ->where('o.name1 = ?', $host)
+            ->where('o.name2 = ?', $service)
+            ->where('o.objecttype_id = 2')
+            ->where('o.is_active = 1');
+
+        $result = $db->fetchOne($select);
+
+        return $result === $service;
+    }
+
     protected function getObjectState($name)
     {
         if (\strpos($name, '!') === false) {
@@ -147,6 +186,41 @@ class IcingaController extends CompatController
                 echo $tag;
                 $this->finish();
             }
+        } catch (\Exception $e) {
+            $this->fail(500, $e->getMessage());
+        }
+    }
+
+    public function eventAction()
+    {
+        $request = $this->getRequest();
+        if (! $request->isPost()) {
+            $this->fail(400, 'Only POST is supported, got ' . $request->getMethod());
+        }
+        $object = $request->getPost('Object');
+        $state = $request->getPost('State');
+        $message = $request->getPost('Message');
+        $path = $request->getPost('Path');
+        if ($object === null) {
+            $this->fail(400, "Parameter 'Object' is missing");
+        }
+        if ($state === null) {
+            $this->fail(400, "Parameter 'State' is missing");
+        }
+        if ($message === null) {
+            $this->fail(400, "Parameter 'Message' is missing");
+        }
+        try {
+            $result = $this->hasObject($object);
+            $tag = Html::tag('result')->setSeparator("\r\n");
+            if ($result === false) {
+                $tag->add(Html::tag('success', 'true'));
+            } else {
+                $tag->add(Html::tag('success', 'false'));
+                $tag->add(Html::tag('reason', 'Object not found'));
+            }
+            echo $tag;
+            $this->finish();
         } catch (\Exception $e) {
             $this->fail(500, $e->getMessage());
         }
