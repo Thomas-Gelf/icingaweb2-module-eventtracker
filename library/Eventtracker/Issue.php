@@ -125,6 +125,11 @@ class Issue
         return $this->getStoredRepeatCount() === 0;
     }
 
+    public function isClosed()
+    {
+        return $this->get('status') === 'closed';
+    }
+
     public function getStoredRepeatCount()
     {
         return (int) $this->get('cnt_events');
