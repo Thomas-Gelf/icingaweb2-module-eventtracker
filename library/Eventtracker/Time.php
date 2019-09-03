@@ -19,7 +19,10 @@ class Time
 
     public static function agoFormatted($ms)
     {
-        return Html::tag('span', ['class' => 'time-ago'], static::ago($ms));
+        return Html::tag('span', [
+            'class' => 'time-ago',
+            'title' => DateFormatter::formatDateTime($ms / 1000)
+        ], static::ago($ms));
     }
 
     public static function info($ms)
