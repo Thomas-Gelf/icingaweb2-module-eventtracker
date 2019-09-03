@@ -19,16 +19,16 @@ class SummaryTabs extends Tabs
     {
         $this->add('hosts', [
             'label' => $this->translate('Hosts'),
-            'url'   => 'eventtracker/hosts',
+            'url'   => 'eventtracker/summary/hosts',
         ])->add('classes', [
             'label' => $this->translate('Object Classes'),
-            'url'   => 'eventtracker/classes',
+            'url'   => 'eventtracker/summary/classes',
         ])->add('objects', [
             'label' => $this->translate('Object Names'),
-            'url'   => 'eventtracker/objects',
+            'url'   => 'eventtracker/summary/objects',
         ])->add('owners', [
             'label' => $this->translate('Owner'),
-            'url'   => 'eventtracker/owners',
+            'url'   => 'eventtracker/summary/owners',
         ]);
     }
 }

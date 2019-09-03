@@ -32,7 +32,7 @@ class IssuesController extends CompatController
         $this->columnFilter($table, 'owner', 'owners', $this->translate('Owners: %s'));
     }
 
-    protected function columnFilter($table, $column, $controller, $title)
+    protected function columnFilter(EventsTable $table, $column, $type, $title)
     {
         $compact = $this->showCompact();
         if ($this->params->has($column)) {
@@ -61,7 +61,7 @@ class IssuesController extends CompatController
             $this->content()->add(
                 Link::create(
                     sprintf($title, $this->translate('all')),
-                    "eventtracker/$controller",
+                    "eventtracker/summary/$type",
                     null,
                     ['data-base-target' => '_next']
                 )
