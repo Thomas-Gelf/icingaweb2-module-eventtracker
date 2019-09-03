@@ -106,7 +106,9 @@ class EventsTable extends BaseTable
             $this->createColumn('priority', $this->translate('Priority'), [
                 'priority' => 'i.priority'
             ])->setRenderer($prioIconRenderer),
-            $this->createColumn('ts_first_event', $this->translate('Received'))->setRenderer(function ($row) {
+            $this->createColumn('ts_first_event', $this->translate('Received'), [
+                'ts_first_event' => 'i.ts_first_event'
+            ])->setRenderer(function ($row) {
                 return Time::agoFormatted($row->ts_first_event);
             }),
             $this->createColumn('host_name', $this->translate('Host'), [
