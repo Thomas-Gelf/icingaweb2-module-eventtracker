@@ -14,12 +14,15 @@ class Form extends iplForm
 {
     use TranslationHelper;
 
+    protected $formNameElementName = '__FORM_NAME';
+
     public function ensureAssembled()
     {
         if ($this->hasBeenAssembled === false) {
             if ($this->getRequest() === null) {
                 throw new RuntimeException('Cannot assemble a WebForm without a Request');
             }
+            // TODO? $this->addElementLoader(__NAMESPACE__ . '\\Element');
             parent::ensureAssembled();
             $this->prepareWebForm();
         }
@@ -39,10 +42,23 @@ class Form extends iplForm
 
     protected function prepareWebForm()
     {
+        $this->addFormNameElement();
         if ($this->getMethod() === 'POST') {
             $this->addCsrfElement();
             $this->setupStyling();
         }
+    }
+
+    protected function getUniqueFormName()
+    {
+        return \get_class($this);
+    }
+
+    protected function addFormNameElement()
+    {
+        $this->addElement('hidden', $this->formNameElementName, [
+            'value' => $this->getUniqueFormName()
+        ]);
     }
 
     protected function setupStyling()
@@ -63,6 +79,39 @@ class Form extends iplForm
             }
         } else {
             $element->setValue($this->generateCsrfValue());
+        }
+    }
+
+    public function getSentValue($name, $default = null)
+    {
+        $request = $this->getRequest();
+        if ($request === null) {
+            throw new RuntimeException(
+                "It's impossible to access SENT values with no request"
+            );
+        }
+        if ($request->getMethod() === 'POST') {
+            $params = $request->getParsedBody();
+        } elseif ($this->getMethod() === 'GET') {
+            \parse_str($request->getUri()->getQuery(), $params);
+        } else {
+            $params = [];
+        }
+
+        if (\array_key_exists($name, $params)) {
+            return $params[$name];
+        } else {
+            return $default;
+        }
+    }
+
+    public function hasBeenSent()
+    {
+        if (parent::hasBeenSent()) {
+            return $this->getSentValue($this->formNameElementName)
+                === $this->getUniqueFormName();
+        } else {
+            return false;
         }
     }
 
