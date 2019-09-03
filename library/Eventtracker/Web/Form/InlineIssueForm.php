@@ -24,6 +24,25 @@ abstract class InlineIssueForm extends Form
         $this->styleWithDirector();
     }
 
+    protected function provideAction($label, $title = null)
+    {
+        $next = new SubmitElement('next', [
+            'class' => 'link-button',
+            'label' => sprintf('[ %s ]', $label),
+            'title' => $title,
+        ]);
+        $submit = new SubmitElement('submit', [
+            'label' => sprintf(
+                $this->translate('Really %s'),
+                $label
+            )
+        ]);
+        $cancel = new SubmitElement('cancel', [
+            'label' => $this->translate('Cancel')
+        ]);
+        $this->toggleNextSubmitCancel($next, $submit, $cancel);
+    }
+
     protected function toggleNextSubmitCancel(
         SubmitElement $next,
         SubmitElement $submit,

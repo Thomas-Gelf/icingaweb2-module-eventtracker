@@ -2,24 +2,11 @@
 
 namespace Icinga\Module\Eventtracker\Web\Form;
 
-use ipl\Html\FormElement\SubmitElement;
-
 class ReOpenIssueForm extends InlineIssueForm
 {
     protected function assemble()
     {
-        $next = new SubmitElement('next', [
-            'class' => 'link-button',
-            'label' => $this->translate('[ Re-Open ]'),
-            'title' => $this->translate('Manually re-open this issue')
-        ]);
-        $submit = new SubmitElement('submit', [
-            'label' => $this->translate('Really re-open'),
-        ]);
-        $cancel = new SubmitElement('cancel', [
-            'label' => $this->translate('Cancel')
-        ]);
-        $this->toggleNextSubmitCancel($next, $submit, $cancel);
+        $this->provideAction($this->translate('Re-Open'), $this->translate('Manually re-open this issue'));
     }
 
     /**
@@ -27,8 +14,6 @@ class ReOpenIssueForm extends InlineIssueForm
      */
     public function onSuccess()
     {
-        $issue = $this->issue;
-        $issue->set('status', 'open');
-        $issue->storeToDb($this->db);
+        $this->issue->set('status', 'open')->storeToDb($this->db);
     }
 }

@@ -2,25 +2,11 @@
 
 namespace Icinga\Module\Eventtracker\Web\Form;
 
-use ipl\Html\FormElement\SubmitElement;
-
 class CloseIssueForm extends InlineIssueForm
 {
     protected function assemble()
     {
-        $next = new SubmitElement('next', [
-            'class' => 'link-button',
-            'label' => $this->translate('[ Close ]'),
-            'title' => $this->translate('Manually close this issue')
-        ]);
-        $submit = new SubmitElement('submit', [
-            'label' => $this->translate('Really Close'),
-        ]);
-        $cancel = new SubmitElement('cancel', [
-            'label' => $this->translate('Cancel')
-        ]);
-
-        $this->toggleNextSubmitCancel($next, $submit, $cancel);
+        $this->provideAction($this->translate('Close'), $this->translate('Manually close this issue'));
     }
 
     /**
@@ -28,8 +14,6 @@ class CloseIssueForm extends InlineIssueForm
      */
     public function onSuccess()
     {
-        $issue = $this->issue;
-        $issue->set('status', 'closed');
-        $issue->storeToDb($this->db);
+        $this->issue->set('status', 'closed')->storeToDb($this->db);
     }
 }
