@@ -2,6 +2,7 @@
 
 namespace Icinga\Module\Eventtracker\Web;
 
+use gipfl\Translation\TranslationHelper;
 use Icinga\Module\Eventtracker\Validator\PhpSessionBasedCsrfTokenValidator;
 use ipl\Html\Form as iplForm;
 use ipl\Html\FormDecorator\DdDtDecorator;
@@ -11,6 +12,8 @@ use RuntimeException;
 
 class Form extends iplForm
 {
+    use TranslationHelper;
+
     public function ensureAssembled()
     {
         if ($this->hasBeenAssembled === false) {
