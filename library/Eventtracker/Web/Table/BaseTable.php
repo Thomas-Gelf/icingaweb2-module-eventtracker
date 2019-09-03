@@ -228,6 +228,7 @@ abstract class BaseTable extends ZfQueryBasedTable
      */
     public function sortBy($columns)
     {
+        $this->assertInitialized();
         if (! is_array($columns)) {
             $columns = [$columns];
         }
