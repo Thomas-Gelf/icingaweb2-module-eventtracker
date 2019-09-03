@@ -135,4 +135,18 @@ class Form extends iplForm
             }
         }
     }
+
+    public function addHint($hint)
+    {
+        return $this->add(Html::tag('p', ['class' => 'information'], $hint));
+    }
+
+    public function optionalEnum($enum, $nullLabel = null)
+    {
+        if ($nullLabel === null) {
+            $nullLabel = $this->translate('- please choose -');
+        }
+
+        return [null => $nullLabel] + $enum;
+    }
 }
