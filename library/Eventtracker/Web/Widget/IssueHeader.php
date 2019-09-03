@@ -89,6 +89,7 @@ class IssueHeader extends BaseHtmlElement
         return [
             Html::tag('strong', 'Status: '),
             $issue->get('status'),
+            $this->createOpenCloseForm($issue, DbFactory::db()),
             "\n",
             Html::tag('strong', 'Priority: '),
             $this->renderPriority($issue),
@@ -170,7 +171,7 @@ class IssueHeader extends BaseHtmlElement
         $priority = $issue->get('priority');
         $result->add(sprintf('%-8s', $priority));
 
-        if (! $this->isOperator) {
+        if (! $this->isOperator || $issue->isClosed()) {
             return $result;
         }
 
@@ -224,7 +225,6 @@ class IssueHeader extends BaseHtmlElement
 
     protected function renderOwner(Issue $issue)
     {
-        $myUsername = Auth::getInstance()->getUser()->getUsername();
         $result = new HtmlDocument();
         $owner = $issue->get('owner');
         if ($owner === null) {
@@ -232,37 +232,38 @@ class IssueHeader extends BaseHtmlElement
         } else {
             $result->add($owner);
         }
+        $me = $this->getMyUsername();
         $db = DbFactory::db();
 
         if (! $this->isOperator) {
-            if ($owner === $myUsername) {
+            if ($owner === $me) {
                 $result->add(" (that's me!) ");
             }
 
             return $result;
         }
 
-        $take = new LinkLikeForm(
-            $this->translate('[ Take ]'),
-            $this->translate('Take ownership for this issue') // TODO: issue type!?
-        );
-        $take->on('success', function () use ($issue, $myUsername, $db) {
-            $issue->setOwner($myUsername);
-            $issue->storeToDb($db);
-            $this->response->redirectAndExit($this->url());
-        });
-        $take->handleRequest($this->request);
+        $take = $this->createTakeOwnerShipForm($issue, $db);
+        $give = $this->createGiveOwnerShipForm($issue, $db);
 
-        $give = new GiveOwnerShipForm($issue, $db);
-        $give->on('success', function () {
-            $this->response->redirectAndExit($this->url());
-        });
-        $give->handleRequest($this->request);
-
-        if ($owner === $myUsername) {
+        if ($owner === $me) {
             $result->add([" (that's me!) ", "\n", $give]);
         } else {
             $result->add([' ', $take, "\n", $give]);
+        }
+
+        return $result;
+    }
+
+    protected function getMyUsername()
+    {
+        return Auth::getInstance()->getUser()->getUsername();
+    }
+
+    protected function createOpenCloseForm(Issue $issue, $db)
+    {
+        if (! $this->isOperator) {
+            return null;
         }
 
         if ($issue->get('status') === 'closed') {
@@ -274,9 +275,43 @@ class IssueHeader extends BaseHtmlElement
             $this->response->redirectAndExit($this->url());
         });
         $openClose->handleRequest($this->request);
-        $result->add($openClose);
 
-        return $result;
+        return [' ', $openClose];
+    }
+
+    protected function createGiveOwnerShipForm(Issue $issue, $db)
+    {
+        if (! $this->isOperator || $issue->isClosed()) {
+            return null;
+        }
+
+        $give = new GiveOwnerShipForm($issue, $db);
+        $give->on('success', function () {
+            $this->response->redirectAndExit($this->url());
+        });
+        $give->handleRequest($this->request);
+
+        return $give;
+    }
+
+    protected function createTakeOwnerShipForm(Issue $issue, $db)
+    {
+        if (! $this->isOperator || $issue->isClosed()) {
+            return null;
+        }
+
+        $take = new LinkLikeForm(
+            $this->translate('[ Take ]'),
+            $this->translate('Take ownership for this issue') // TODO: issue type!?
+        );
+        $take->on('success', function () use ($issue, $db) {
+            $issue->setOwner($this->getMyUsername());
+            $issue->storeToDb($db);
+            $this->response->redirectAndExit($this->url());
+        });
+        $take->handleRequest($this->request);
+
+        return $take;
     }
 
     protected function halfPre($content, $align)
