@@ -7,6 +7,9 @@ specific Hosts or Services. The main use-case for this was an integration with
 the IPC Incentage Process Cockpit, serving requests from the
 [Incentage](https://www.incentage.com/) Middleware Suite.
 
+> Hint: I didn't have much details about that software, it showed User-Agent
+> `Incentage Middleware Suite (IMS 8.03.00)`
+
 As no ACLs are applied, access to this feature is granted:
 
 * only for SSL-Requests
