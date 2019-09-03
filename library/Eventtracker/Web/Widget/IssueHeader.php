@@ -11,8 +11,10 @@ use Icinga\Module\Eventtracker\DbFactory;
 use Icinga\Module\Eventtracker\Hook\EventActionsHook;
 use Icinga\Module\Eventtracker\Issue;
 use Icinga\Module\Eventtracker\Priority;
+use Icinga\Module\Eventtracker\Web\Form\CloseIssueForm;
 use Icinga\Module\Eventtracker\Web\Form\GiveOwnerShipForm;
 use Icinga\Module\Eventtracker\Web\Form\LinkLikeForm;
+use Icinga\Module\Eventtracker\Web\Form\ReOpenIssueForm;
 use Icinga\Web\Hook;
 use Icinga\Web\Response;
 use ipl\Html\BaseHtmlElement;
@@ -257,12 +259,22 @@ class IssueHeader extends BaseHtmlElement
         });
         $give->handleRequest($this->request);
 
-
         if ($owner === $myUsername) {
             $result->add([" (that's me!) ", "\n", $give]);
         } else {
             $result->add([' ', $take, "\n", $give]);
         }
+
+        if ($issue->get('status') === 'closed') {
+            $openClose = new ReOpenIssueForm($issue, $db);
+        } else {
+            $openClose = new CloseIssueForm($issue, $db);
+        }
+        $openClose->on('success', function () {
+            $this->response->redirectAndExit($this->url());
+        });
+        $openClose->handleRequest($this->request);
+        $result->add($openClose);
 
         return $result;
     }
