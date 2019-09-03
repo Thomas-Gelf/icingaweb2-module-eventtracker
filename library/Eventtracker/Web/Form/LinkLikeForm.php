@@ -4,8 +4,6 @@ namespace Icinga\Module\Eventtracker\Web\Form;
 
 use gipfl\IcingaWeb2\Icon;
 use Icinga\Module\Eventtracker\Web\Form;
-use Psr\Http\Message\ResponseInterface;
-use Psr\Http\Message\ServerRequestInterface;
 
 class LinkLikeForm extends Form
 {
@@ -36,11 +34,6 @@ class LinkLikeForm extends Form
         $this->setMethod('POST');
         $this->addAttributes(['class' => 'inline']);
         $this->styleWithDirector();
-    }
-
-    public function __invoke(ServerRequestInterface $request, ResponseInterface $response = null)
-    {
-        $this->handleRequest($request);
     }
 
     protected function assemble()
