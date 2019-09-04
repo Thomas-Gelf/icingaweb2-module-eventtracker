@@ -10,6 +10,8 @@ class SeverityFilter extends BaseEnumPropertyFilter
 
     protected $enum = Severity::ENUM;
 
+    protected $skipMissing = true;
+
     protected function getDefaultSelection()
     {
         $selection = [
