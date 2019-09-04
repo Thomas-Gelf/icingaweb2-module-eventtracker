@@ -19,6 +19,8 @@ class EventsTable extends BaseTable
 
     protected $joinedSenders = false;
 
+    protected $compact = false;
+
     protected $searchColumns = [
         'i.host_name',
         'i.object_name',
@@ -31,6 +33,13 @@ class EventsTable extends BaseTable
     public function setNoHeader($setNoHeader = true)
     {
         $this->noHeader = (bool) $setNoHeader;
+
+        return $this;
+    }
+
+    public function showCompact($compact = true)
+    {
+        $this->compact = $compact;
 
         return $this;
     }
@@ -60,16 +69,12 @@ class EventsTable extends BaseTable
                 Priority::LOWEST  => 'down-big',
             ];
 
-            if ($row->priority === Priority::NORMAL) {
-                // return '';
-            }
-
             return Icon::create($icons[$row->priority], [
                 'title' => ucfirst($row->priority)
             ]);
         };
         $this->addAvailableColumns([
-            $this->createColumn('severity', $this->translate('Sev'), [
+            $this->createColumn('severity', $this->translate('Severity'), [
                 'severity'      => 'i.severity',
                 'priority'      => 'i.priority',
                 'status'        => 'i.status',
@@ -83,6 +88,15 @@ class EventsTable extends BaseTable
                 if ($row->status !== 'open') {
                     $classes[] = 'ack';
                 }
+
+                if ($this->compact) {
+                    return Html::tag('td', [
+                        'class' => $classes
+                    ], [
+                        Time::agoFormatted($row->timestamp)
+                    ]);
+                }
+
                 $link = Link::create(substr(strtoupper($row->severity), 0, 4), 'eventtracker/issue', [
                     'uuid' => Uuid::toHex($row->issue_uuid)
                 ], [
@@ -93,25 +107,25 @@ class EventsTable extends BaseTable
                     $link->add($prioIconRenderer($row));
                 }
 
-                return Html::tag('td', [
-                    'class' => $classes
-                ], [
-                    $link,
-                    Time::agoFormatted($row->timestamp)
-                ]);
+                $td = Html::tag('td', ['class' => $classes], $link);
+                if (! in_array('received', $this->getChosenColumnNames())) {
+                    $td->add(Time::agoFormatted($row->timestamp));
+                }
+
+                return $td;
             })->setSortExpression([
-                'severity',
-                'status',
-                'priority',
-                'timestamp'
+                'i.severity',
+                'i.status',
+                'i.priority',
+                'i.ts_first_event'
             ]),
             $this->createColumn('priority', $this->translate('Priority'), [
                 'priority' => 'i.priority'
             ])->setRenderer($prioIconRenderer),
-            $this->createColumn('ts_first_event', $this->translate('Received'), [
-                'ts_first_event' => 'i.ts_first_event'
+            $this->createColumn('received', $this->translate('Received'), [
+                'received' => 'i.ts_first_event'
             ])->setRenderer(function ($row) {
-                return Time::agoFormatted($row->ts_first_event);
+                return Time::agoFormatted($row->received);
             }),
             $this->createColumn('host_name', $this->translate('Host'), [
                 'host_name' => 'i.host_name'
@@ -124,7 +138,7 @@ class EventsTable extends BaseTable
             }),
             $this->createColumn('message', $this->translate('Message'), [
                 'severity'      => 'i.severity',
-                'issue_uuid' => 'i.issue_uuid',
+                'issue_uuid'    => 'i.issue_uuid',
                 'message'       => 'i.message',
                 'host_name'     => 'i.host_name',
                 'object_name'   => 'i.object_name',
@@ -158,7 +172,7 @@ class EventsTable extends BaseTable
                 } else {
                     return Html::tag('td', ['id' => $hex], [
                         $link,
-                        Html::tag('p', ['class' => 'output-line'], HtmlPurifier::process($message))
+                        $this->compact ? null : Html::tag('p', ['class' => 'output-line'], HtmlPurifier::process($message))
                     ]);
                 }
             }),
