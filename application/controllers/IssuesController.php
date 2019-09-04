@@ -32,6 +32,7 @@ class IssuesController extends CompatController
         $this->columnFilter($table, 'object_class', 'classes', $this->translate('Classes: %s'));
         $this->columnFilter($table, 'object_name', 'objects', $this->translate('Objects: %s'));
         $this->columnFilter($table, 'owner', 'owners', $this->translate('Owners: %s'));
+        $this->columnFilter($table, 'sender_name', 'senders', $this->translate('Sender: %s'));
     }
 
     protected function columnFilter(EventsTable $table, $column, $type, $title)
@@ -39,6 +40,12 @@ class IssuesController extends CompatController
         $compact = $this->showCompact();
         if ($this->params->has($column)) {
             $value = $this->params->get($column);
+
+            // TODO: move this elsewhere, here we shouldn't need to care about DB structure:
+            if ($column === 'sender_name') {
+                $table->joinSenders();
+                $column = "s.$column";
+            }
             if (strlen($value)) {
                 $table->getQuery()->where("$column = ?", $value);
             } else {

@@ -9,6 +9,7 @@ use Icinga\Module\Eventtracker\Web\Table\HostNameSummaryTable;
 use Icinga\Module\Eventtracker\Web\Table\ObjectClassSummaryTable;
 use Icinga\Module\Eventtracker\Web\Table\ObjectNameSummaryTable;
 use Icinga\Module\Eventtracker\Web\Table\OwnerSummaryTable;
+use Icinga\Module\Eventtracker\Web\Table\SenderSummaryTable;
 use Icinga\Module\Eventtracker\Web\Widget\SummaryTabs;
 use ipl\Html\Html;
 
@@ -46,6 +47,14 @@ class SummaryController extends CompatController
         $this->tabs(new SummaryTabs())->activate('objects');
     }
 
+    public function sendersAction()
+    {
+        $this->addTitleWithType($this->translate('Sender'));
+        $this->setAutorefreshInterval(10);
+        (new SenderSummaryTable(DbFactory::db()))->renderTo($this);
+        $this->tabs(new SummaryTabs())->activate('senders');
+    }
+
     public function top10Action()
     {
         if (! $this->showCompact()) {
@@ -60,6 +69,7 @@ class SummaryController extends CompatController
             $this->translate('Object Name')  => new ObjectNameSummaryTable($db),
             $this->translate('Hostname')     => new HostNameSummaryTable($db),
             $this->translate('Owner')        => new OwnerSummaryTable($db),
+            $this->translate('Sender')       => new SenderSummaryTable($db),
         ];
         /** @var BaseSummaryTable $table */
         foreach ($tables as $title => $table) {

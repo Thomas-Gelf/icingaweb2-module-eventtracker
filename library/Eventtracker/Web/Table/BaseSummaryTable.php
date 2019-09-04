@@ -21,6 +21,11 @@ abstract class BaseSummaryTable extends BaseTable
 
     abstract protected function getMainColumn();
 
+    protected function getMainColumnAlias()
+    {
+        return \preg_replace('/^.+\./', '', $this->getMainColumn());
+    }
+
     protected function getMainColumnTitle()
     {
         return $this->translate('Owner');
@@ -28,14 +33,15 @@ abstract class BaseSummaryTable extends BaseTable
 
     protected function initialize()
     {
-        $column = $this->getMainColumn();
+        $column = $this->getMainColumnAlias();
         $this->enableMultiSelect(
             'eventtracker/issues',
             'eventtracker/issues',
             [$column]
         );
+
         $this->addAvailableColumns([
-            $this->createColumn($column, $this->getMainColumnTitle())
+            $this->createColumn($this->getMainColumnAlias(), $this->getMainColumnTitle(), $this->getMainColumn())
                 ->setRenderer(function ($row) use ($column) {
                     return $this->linkToClass($row, $row->$column);
                 }),
@@ -54,7 +60,7 @@ abstract class BaseSummaryTable extends BaseTable
 
     protected function linkToClass($row, $label)
     {
-        $column = $this->getMainColumn();
+        $column = $this->getMainColumnAlias();
         if (\strlen($label) === 0) {
             $label = $this->translate('- none -');
         }
@@ -66,12 +72,13 @@ abstract class BaseSummaryTable extends BaseTable
     public function prepareQuery()
     {
         $column = $this->getMainColumn();
+        $order = $this->getMainColumnAlias();
 
         $query = $this->db()
             ->select()
-            ->from('issue', $this->getRequiredDbColumns())
+            ->from(['i' => 'issue'], $this->getRequiredDbColumns())
             ->order('COUNT(*) DESC')
-            ->order("$column ASC")
+            ->order("$order ASC")
             ->group($column);
 
         EventSummaryBySeverity::addAggregationColumnsToQuery($query);

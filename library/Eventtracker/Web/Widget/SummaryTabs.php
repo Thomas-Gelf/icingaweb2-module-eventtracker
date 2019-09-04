@@ -32,6 +32,9 @@ class SummaryTabs extends Tabs
         ])->add('owners', [
             'label' => $this->translate('Owner'),
             'url'   => 'eventtracker/summary/owners',
+        ])->add('senders', [
+            'label' => $this->translate('Sender'),
+            'url'   => 'eventtracker/summary/senders',
         ]);
     }
 }

@@ -17,6 +17,8 @@ class EventsTable extends BaseTable
     use TranslationHelper;
     use MultiSelect;
 
+    protected $joinedSenders = false;
+
     protected $searchColumns = [
         'i.host_name',
         'i.object_name',
@@ -190,5 +192,15 @@ class EventsTable extends BaseTable
     public function prepareQuery()
     {
         return $this->db()->select()->from(['i' => 'issue'], $this->getRequiredDbColumns());
+    }
+
+    public function joinSenders()
+    {
+        if ($this->joinedSenders === false) {
+            $this->getQuery()->join(['s' => 'sender'], 's.id = i.sender_id');
+            $this->joinedSenders = true;
+        }
+
+        return $this;
     }
 }

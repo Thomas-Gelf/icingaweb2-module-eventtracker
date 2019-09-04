@@ -7,10 +7,11 @@ use Icinga\Data\Db\DbConnection;
 
 class DbFactory
 {
+    /** @var \Zend_Db_Adapter_Pdo_Abstract */
     protected static $db;
 
     /**
-     * @return \Zend_Db_Adapter_Abstract
+     * @return \Zend_Db_Adapter_Pdo_Abstract
      */
     public static function db()
     {
