@@ -34,11 +34,11 @@ class AdditionalTableActions
     public function appendTo(HtmlDocument $parent)
     {
         $links = [];
-        if (false && $this->hasPermission('vspheredb/admin')) {
+        if (false && $this->hasPermission('eventtracker/admin')) {
             // TODO: not yet
-            // $links[] = $this->createDownloadJsonLink();
+            $links[] = $this->createDownloadJsonLink();
         }
-        if ($this->hasPermission('vspheredb/showsql')) {
+        if ($this->hasPermission('eventtracker/showsql')) {
             $links[] = $this->createShowSqlToggle();
         }
         $parent->add($this->moreOptions($links));
@@ -58,95 +58,25 @@ class AdditionalTableActions
 
     protected function createShowSqlToggle()
     {
-        if ($this->url->getParam('format') === 'sql') {
-            $link = Link::create(
-                $this->translate('Hide SQL'),
-                $this->url->without('format')
-            );
+        $url = $this->url;
+        if ($url->getParam('format') === 'sql') {
+            $link = Link::create($this->translate('Hide SQL'), $url->without('format'));
         } else {
-            $link = Link::create(
-                $this->translate('Show SQL'),
-                $this->url->with('format', 'sql')
-            );
+            $link = Link::create($this->translate('Show SQL'), $this->url->with('format', 'sql'));
         }
 
         return $link;
     }
 
-    protected function toggleColumnsOptions()
-    {
-        $links = [];
-        $table = $this->table;
-        $url = $this->url;
-
-        $enabled = $url->getParam('columns');
-        if ($enabled === null) {
-            $enabled = $table->getChosenColumnNames();
-        } else {
-            $links[] = Link::create(
-                $this->translate('Reset'),
-                $url->without('columns'),
-                null,
-                ['class' => 'icon-reply']
-            );
-            $enabled = preg_split('/,/', $enabled, -1, PREG_SPLIT_NO_EMPTY);
-            $table->chooseColumns($enabled);
-        }
-
-        $all = [];
-        $disabled = [];
-        foreach ($this->table->getAvailableColumns() as $column) {
-            $title = $column->getTitle();
-            $alias = $column->getAlias();
-            $all[] = $alias;
-            if (in_array($alias, $enabled)) {
-                $links[] = Link::create(
-                    $title,
-                    $url->with('columns', implode(',', array_diff($enabled, [
-                        $alias
-                    ]))),
-                    null,
-                    ['class' => 'icon-ok']
-                );
-            } else {
-                $disabled[] = $alias;
-                $links[] = Link::create(
-                    $title,
-                    $url->with('columns', implode(',', array_merge($enabled, [
-                        $alias
-                    ]))),
-                    null,
-                    ['class' => 'icon-plus']
-                );
-            }
-        }
-        if (! empty($disabled)) {
-            array_unshift($links, Link::create(
-                $this->translate('All'),
-                $url->with('columns', implode(',', $all)),
-                null,
-                [
-                    'class' => 'icon-resize-horizontal',
-                    'data-base-target' => '_main'
-                ]
-            ));
-        }
-
-        return $links;
-    }
-
     protected function moreOptions($links)
     {
-        $options = $this->ul([
-            $this->li([
-                Link::create('Columns', '#', null, ['class' => 'icon-th-list']),
-                $this->linkList($this->toggleColumnsOptions())
-            ]),
-            $this->li([
+        $options = Html::tag('ul', ['class' => 'nav'], [
+            new ToggleTableColumns($this->table, $this->url),
+            Html::tag('li', null, [
                 Link::create(Icon::create('down-open'), '#'),
                 $this->linkList($links)
             ]),
-        ], ['class' => 'nav']);
+        ]);
 
         return $options;
     }
@@ -156,25 +86,10 @@ class AdditionalTableActions
         $ul = Html::tag('ul');
 
         foreach ($links as $link) {
-            $ul->add($this->li($link));
+            $ul->add(Html::tag('li', $link));
         }
 
         return $ul;
-    }
-
-    protected function ulLi($content)
-    {
-        return $this->ul($this->li($content));
-    }
-
-    protected function ul($content, $attributes = null)
-    {
-        return Html::tag('ul', $attributes, $content);
-    }
-
-    protected function li($content)
-    {
-        return Html::tag('li', null, $content);
     }
 
     protected function hasPermission($permission)
