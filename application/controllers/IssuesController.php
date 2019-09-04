@@ -13,6 +13,8 @@ use Icinga\Module\Eventtracker\Web\Table\EventsTable;
 use Icinga\Module\Eventtracker\Web\Widget\AdditionalTableActions;
 use Icinga\Module\Eventtracker\Web\Widget\PriorityFilter;
 use Icinga\Module\Eventtracker\Web\Widget\SeverityFilter;
+use Icinga\Module\Eventtracker\Web\Widget\TogglePriorities;
+use Icinga\Module\Eventtracker\Web\Widget\ToggleSeverities;
 use Icinga\Web\Widget\Tabextension\DashboardAction;
 use ipl\Html\Html;
 
@@ -114,6 +116,12 @@ class IssuesController extends CompatController
         } else {
             $this->addSingleTab('Issues');
             $this->addTitle('Event Tracker');
+            $this->actions()->add([
+                Html::tag('ul', ['class' => 'nav'], [
+                    new TogglePriorities($this->url()),
+                    new ToggleSeverities($this->url()),
+                ])
+            ]);
             (new AdditionalTableActions($table, Auth::getInstance(), $this->url()))
                 ->appendTo($this->actions());
             $table->handleSortUrl($this->url());
