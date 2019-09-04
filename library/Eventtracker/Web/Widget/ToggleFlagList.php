@@ -7,6 +7,7 @@ use gipfl\IcingaWeb2\Url;
 use gipfl\Translation\TranslationHelper;
 use ipl\Html\BaseHtmlElement;
 use ipl\Html\Html;
+use Zend_Db_Select as DbSelect;
 
 abstract class ToggleFlagList extends BaseHtmlElement
 {
@@ -20,10 +21,24 @@ abstract class ToggleFlagList extends BaseHtmlElement
     /** @var string */
     private $param;
 
+    /** @var DbSelect|null */
+    private $originalQuery;
+
+    /** @var DbSelect|null */
+    private $query;
+
     public function __construct(Url $url, $param)
     {
         $this->url = $url;
         $this->param = $param;
+    }
+
+    public function applyToQuery(DbSelect $query)
+    {
+        $this->originalQuery = $query;
+        $this->query = clone $query;
+
+        return $this;
     }
 
     abstract protected function getListLabel();
@@ -38,6 +53,16 @@ abstract class ToggleFlagList extends BaseHtmlElement
     protected function setEnabled($enabled)
     {
         // You might want to override this method
+        if ($this->originalQuery) {
+            if (empty($enabled)) {
+                $this->originalQuery->where('1 = 0');
+            } else {
+                $this->originalQuery->where(
+                    $this->param . ' IN (?)',
+                    $enabled
+                );
+            }
+        }
     }
 
     protected function assemble()
@@ -47,8 +72,6 @@ abstract class ToggleFlagList extends BaseHtmlElement
             $link,
             $this->createLinkList($this->toggleColumnsOptions($link))
         ]);
-
-
     }
 
     protected function toggleColumnsOptions(Link $mainLink)
@@ -61,9 +84,12 @@ abstract class ToggleFlagList extends BaseHtmlElement
         $enabled = $url->getParam($param);
         if ($enabled === null) {
             $enabled = $default;
+            if ($enabled !== $default) {
+                $this->setEnabled($enabled);
+            }
         } else {
             $mainLink->getAttributes()->set(
-                'class', 'icon-filter'
+                'class', 'icon-flapping'
             );
             $links[] = $this->geturlReset();
             $enabled = $this->splitUrlOptions($enabled);
@@ -110,7 +136,7 @@ abstract class ToggleFlagList extends BaseHtmlElement
             $this->translate('Reset'),
             $this->url->without($this->param),
             null,
-            ['class' => 'icon-reply']
+            ['class' => 'icon-reply reset-action']
         );
     }
 
