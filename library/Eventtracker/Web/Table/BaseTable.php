@@ -2,6 +2,7 @@
 
 namespace Icinga\Module\Eventtracker\Web\Table;
 
+use Icinga\Module\Eventtracker\Web\Widget\ToggleTableColumns;
 use ipl\Html\BaseHtmlElement;
 use ipl\Html\Html;
 use ipl\Html\HtmlElement;
@@ -29,6 +30,8 @@ abstract class BaseTable extends ZfQueryBasedTable
 
     /** @var array */
     private $sortColums = [];
+
+    protected $allowToCustomizeColumns = true;
 
     public function chooseColumns(array $columnNames)
     {
@@ -301,9 +304,11 @@ abstract class BaseTable extends ZfQueryBasedTable
         // Hint: MUST be set
         $url = $this->sortUrl;
 
+        $lastTh = null;
         foreach ($this->getChosenColumns() as $column) {
+            $lastTh = Html::tag('th');
             $parent->add(
-                Html::tag('th')->setContent($this->addSortIcon(
+                $lastTh->setContent($this->addSortIcon(
                     $column,
                     Link::create(
                         $column->getTitle(),
@@ -311,6 +316,10 @@ abstract class BaseTable extends ZfQueryBasedTable
                     )
                 ))
             );
+        }
+
+        if ($this->allowToCustomizeColumns && $lastTh !== null) {
+            $lastTh->add(Html::tag('ul', ['class' => 'nav'], new ToggleTableColumns($this, $url)));
         }
 
         return $parent;

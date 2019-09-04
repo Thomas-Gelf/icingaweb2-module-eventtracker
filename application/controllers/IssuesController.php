@@ -93,7 +93,6 @@ class IssuesController extends CompatController
         }
         $filters = [
             // Order & ensureAssembled matters!
-            (new ToggleTableColumns($table, $this->url()))->ensureAssembled(),
             (new TogglePriorities($this->url()))->applyToQuery($table->getQuery())->ensureAssembled(),
             (new ToggleSeverities($this->url()))->applyToQuery($table->getQuery())->ensureAssembled(),
             (new ToggleStatus($this->url()))->applyToQuery($table->getQuery())->ensureAssembled(),
