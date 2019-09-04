@@ -4,6 +4,7 @@ namespace Icinga\Module\Eventtracker\Controllers;
 
 use gipfl\IcingaWeb2\CompatController;
 use Icinga\Module\Eventtracker\DbFactory;
+use Icinga\Module\Eventtracker\Status;
 use Icinga\Module\Eventtracker\Web\Table\BaseSummaryTable;
 use Icinga\Module\Eventtracker\Web\Table\HostNameSummaryTable;
 use Icinga\Module\Eventtracker\Web\Table\ObjectClassSummaryTable;
@@ -74,7 +75,10 @@ class SummaryController extends CompatController
         /** @var BaseSummaryTable $table */
         foreach ($tables as $title => $table) {
             // $this->content()->add(Html::tag('h2', $title));
-            $table->getQuery()->limit(10);
+            if ($this->showCompact()) {
+                $table->setAttribute('data-base-target', '_next');
+            }
+            $table->getQuery()->limit(10)->where('i.status = ?', Status::OPEN);
             $this->content()->add($table);
         }
     }

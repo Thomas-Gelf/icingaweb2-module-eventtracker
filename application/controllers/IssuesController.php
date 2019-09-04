@@ -15,6 +15,7 @@ use Icinga\Module\Eventtracker\Web\Widget\PriorityFilter;
 use Icinga\Module\Eventtracker\Web\Widget\SeverityFilter;
 use Icinga\Module\Eventtracker\Web\Widget\TogglePriorities;
 use Icinga\Module\Eventtracker\Web\Widget\ToggleSeverities;
+use Icinga\Module\Eventtracker\Web\Widget\ToggleStatus;
 use Icinga\Web\Widget\Tabextension\DashboardAction;
 use ipl\Html\Html;
 
@@ -117,6 +118,7 @@ class IssuesController extends CompatController
                 Html::tag('ul', ['class' => 'nav'], [
                     new TogglePriorities($this->url()),
                     new ToggleSeverities($this->url()),
+                    new ToggleStatus($this->url()),
                 ])
             ]);
             (new AdditionalTableActions($table, Auth::getInstance(), $this->url()))
