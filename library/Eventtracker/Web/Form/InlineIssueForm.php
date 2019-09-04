@@ -27,6 +27,11 @@ abstract class InlineIssueForm extends Form
         $this->styleWithDirector();
     }
 
+    public function getUniqueFormName()
+    {
+        return parent::getUniqueFormName() . ':' . $this->issue->getHexUuid();
+    }
+
     protected function provideAction($label, $title = null)
     {
         $next = new SubmitElement('next', [
