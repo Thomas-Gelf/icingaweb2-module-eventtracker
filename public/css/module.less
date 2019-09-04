@@ -158,6 +158,11 @@ table.common-table td {
   }
 }
 
+h1 .badge {
+ font-weight: normal;
+  font-size: 0.9em;
+}
+
 .filter-badges {
   background-color: @text-color;
   color: @text-color-inverted;
@@ -492,8 +497,8 @@ div.action-bar > ul ul {
   position: absolute;
   display: none;
   color: @text-color-inverted;
-  background-color: @icinga-blue;
-  border-radius: 0.4em;
+  background-color: @text-color;
+  border-radius: 0.1em;
   border-top-left-radius: 0;
   box-shadow: 1em 1em 1em 0 rgba(0, 0, 0, 0.2);
 
@@ -524,9 +529,9 @@ div.action-bar > ul > li > a {
   padding: 0.2em 0.5em;
 }
 div.action-bar > ul > li:hover {
-  background-color: @icinga-blue;
-  border-top-left-radius: 0.4em;
-  border-top-right-radius: 0.4em;
+  background-color: @text-color;
+  border-top-left-radius: 0.1em;
+  border-top-right-radius: 0.1em;
   & > a {
     color: @text-color-inverted;
     text-decoration: none;
