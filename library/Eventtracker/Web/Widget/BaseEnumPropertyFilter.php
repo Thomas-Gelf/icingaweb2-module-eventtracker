@@ -6,6 +6,7 @@ use gipfl\IcingaWeb2\Link;
 use gipfl\IcingaWeb2\Url;
 use gipfl\Translation\TranslationHelper;
 use ipl\Html\BaseHtmlElement;
+use ipl\Html\Html;
 
 class BaseEnumPropertyFilter extends BaseHtmlElement
 {
@@ -66,10 +67,12 @@ class BaseEnumPropertyFilter extends BaseHtmlElement
         $titleToggleOn = $this->translate('Show "%s"');
         $titleToggleOff = $this->translate('Hide "%s"');
         foreach ($options as $key) {
-            $count = $this->summary->{"cnt_$key"};
+            $count = (int) $this->summary->{"cnt_$key"};
             if ((int) $count === 0 && $this->skipMissing) {
                 continue;
             }
+            $countHandled = (int) $this->summary->{"cnt_${key}_handled"};
+            $countUnhandled = (int) $this->summary->{"cnt_${key}_unhandled"};
             $classes = ['badge', $param, "$param-$key"];
             if ($this->active === null) {
                 $isActive = true;
@@ -87,10 +90,24 @@ class BaseEnumPropertyFilter extends BaseHtmlElement
                 $chosen[$key] = $key;
                 $title = $titleToggleOn;
             }
-            $this->add(Link::create($count > 0 ? $count : '-', $this->url->with($param, \implode(',', $chosen)), null, [
-                'class' => $classes,
-                'title' => \sprintf($title, $key),
-            ]));
+
+            if ($countUnhandled === 0) {
+                $classes[] = 'handled';
+            }
+            $link = Link::create(
+                $countUnhandled > 0 ? $countUnhandled : '',
+                $this->url->with($param, \implode(',', $chosen)), // ->with('status', 'open')?
+                null,
+                [
+                    'class' => $classes,
+                    'title' => \sprintf($title, $key),
+                ])
+            ;
+
+            if ($countHandled > 0) {
+                $link->add(Html::tag('span', ['class' => 'handled'], "+$countHandled"));
+            }
+            $this->add($link);
         }
     }
 }
