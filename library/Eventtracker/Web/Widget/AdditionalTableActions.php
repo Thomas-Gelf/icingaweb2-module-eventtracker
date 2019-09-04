@@ -34,8 +34,7 @@ class AdditionalTableActions
     public function appendTo(HtmlDocument $parent)
     {
         $links = [];
-        if (false && $this->hasPermission('eventtracker/admin')) {
-            // TODO: not yet
+        if ($this->hasPermission('eventtracker/admin')) {
             $links[] = $this->createDownloadJsonLink();
         }
         if ($this->hasPermission('eventtracker/showsql')) {
@@ -71,7 +70,6 @@ class AdditionalTableActions
     protected function moreOptions($links)
     {
         $options = Html::tag('ul', ['class' => 'nav'], [
-            new ToggleTableColumns($this->table, $this->url),
             Html::tag('li', null, [
                 Link::create(Icon::create('down-open'), '#'),
                 $this->linkList($links)
