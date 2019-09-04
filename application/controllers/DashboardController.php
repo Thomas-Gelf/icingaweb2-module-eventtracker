@@ -22,12 +22,12 @@ class DashboardController extends CompatController
         ]);
         $subDash = Html::tag('div', ['class' => 'dashboard']);
         $subDash->add([
-            new Dashlet('eventtracker/issues?sort=severity%20DESC', 'Host-Probleme'),
-            new Dashlet('eventtracker/issues?sort=severity%20ASC', 'DB-Probleme'),
+            new Dashlet('eventtracker/issues?status=open', $this->translate('Unhandled Events')),
+            new Dashlet('eventtracker/issues?status=acknowledged,in_downtime', $this->translate('Handled Issues')),
             new Dashlet('eventtracker/summary/top10', $this->translate('Top Issue Summary by:')),
         ]);
         $zoom->add($subDash);
-
+        /*
         $subDash = Html::tag('div', ['class' => 'dashboard']);
         $subDash->add([
             new Dashlet('eventtracker/issues?sort=severity%20DESC&q=aha', 'Neue Probleme'),
@@ -35,7 +35,7 @@ class DashboardController extends CompatController
             new Dashlet('eventtracker/issues?q=UNIX&sort=severity%20DESC', 'UNIX'),
         ]);
         $zoom->add($subDash);
-
+        */
         $this->content()->add($zoom);
     }
 }
