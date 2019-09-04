@@ -12,6 +12,19 @@ class ToggleSeverities extends ToggleFlagList
         parent::__construct($url, 'severity');
     }
 
+    protected function getDefaultSelection()
+    {
+        $selection = [
+            Severity::EMERGENCY,
+            Severity::ALERT,
+            Severity::CRITICAL,
+            Severity::ERROR,
+            Severity::WARNING,
+        ];
+
+        return array_combine($selection, $selection);
+    }
+
     protected function getListLabel()
     {
         return $this->translate('Severities');
