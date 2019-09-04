@@ -86,22 +86,11 @@ class IssuesController extends CompatController
 
         $table = new EventsTable($db);
         $this->applyFilters($table);
-        $badgeFilters = Html::tag('div', ['class' => 'filter-badges']);
-
         $prioSummary = new EventSummaryByPriority($table->getQuery());
         $sevSummary = new EventSummaryBySeverity($table->getQuery());
+
         $prioSummary->filterByUrl($this->url());
         $sevSummary->filterByUrl($this->url());
-        if (! $this->showCompact()) {
-            $badgeFilters->add([
-                'Sev: ',
-                new SeverityFilter($sevSummary->fetch($db), $this->url()),
-                // 'Prio: ',
-                // new PriorityFilter($prioSummary->fetch($db), $this->url()),
-            ]);
-            $this->controls()->add($badgeFilters);
-        }
-
         if ($this->getRequest()->isApiRequest()) {
             $table->handleSortUrl($this->url());
             $result = $table->fetch();
@@ -122,7 +111,8 @@ class IssuesController extends CompatController
             $table->getQuery()->limit(10);
         } else {
             $this->addSingleTab('Issues');
-            $this->addTitle('Event Tracker');
+            $this->setTitle('Event Tracker');
+            $this->controls()->addTitle('Current Issues', new SeverityFilter($sevSummary->fetch($db), $this->url()));
             $this->actions()->add([
                 Html::tag('ul', ['class' => 'nav'], [
                     new TogglePriorities($this->url()),
