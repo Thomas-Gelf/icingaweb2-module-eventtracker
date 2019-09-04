@@ -87,8 +87,8 @@ class IssuesController extends CompatController
             $badgeFilters->add([
                 'Sev: ',
                 new SeverityFilter($sevSummary->fetch($db), $this->url()),
-                'Prio: ',
-                new PriorityFilter($prioSummary->fetch($db), $this->url()),
+                // 'Prio: ',
+                // new PriorityFilter($prioSummary->fetch($db), $this->url()),
             ]);
             $this->controls()->add($badgeFilters);
         }
