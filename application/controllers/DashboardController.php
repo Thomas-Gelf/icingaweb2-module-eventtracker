@@ -13,7 +13,7 @@ class DashboardController extends CompatController
         $this->setTitle($this->translate('Event Tracker Dashboard'));
         $this->content()->addAttributes(['class' => 'dashboard']);
         if (! $this->hasParam('showFullscreen')) {
-            $this->addSingleTab('Events');
+            $this->addSingleTab($this->translate('Dashboard'));
         }
 
         $zoomLevel = '100%';
@@ -24,7 +24,7 @@ class DashboardController extends CompatController
         $subDash->add([
             new Dashlet('eventtracker/issues?sort=severity%20DESC', 'Host-Probleme'),
             new Dashlet('eventtracker/issues?sort=severity%20ASC', 'DB-Probleme'),
-            new Dashlet('eventtracker/issues?q=ho&sort=severity%20DESC', 'Andere Probleme'),
+            new Dashlet('eventtracker/summary/top10', $this->translate('Top Issue Summary by:')),
         ]);
         $zoom->add($subDash);
 
