@@ -7,7 +7,7 @@
 @color-severity-error: #ff8800;
 @color-severity-error-fg: @text-color-inverted;
 @color-severity-warning: @color-warning; // same as @color-warning
-@color-severity-warning-fg: @text-color;
+@color-severity-warning-fg: @text-color-inverted;
 @color-severity-notice: @color-ok; // same as @color-ok;
 @color-severity-notice-fg: @text-color-inverted;
 @color-severity-informational: #aaaaff;
@@ -170,9 +170,8 @@ h1 .badge {
   border-radius: 0.5em;
 }
 
-.badge.priority.disabled {
-  background-color: @gray !important;
-  color: white;
+.badge.disabled {
+  color: @text-color;
 }
 
 .badge.active {
@@ -207,6 +206,22 @@ h1 .badge {
 
   &.severity-debug {
     background-color: @color-severity-debug;
+  }
+}
+
+.badge {
+  font-weight: bold;
+  .handled {
+    background-color: rgba(255, 255, 255, 25%);
+    font-weight: normal;
+    margin-left: 1em;
+    padding-left: 0.5em;
+    padding-right: 0.5em;
+    border-radius: 0.2em;
+    border-color: transparent;
+  }
+  &.handled .handled {
+    margin-left: 0;
   }
 }
 
@@ -296,6 +311,10 @@ table.common-table {
     display: block;
     font-weight: normal;
   }
+}
+
+.reset-action {
+  font-weight: bold;
 }
 
 div.output {
