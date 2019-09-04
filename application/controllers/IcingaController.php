@@ -243,7 +243,7 @@ class IcingaController extends CompatController
 
     protected function isValidSslCertificate()
     {
-        // TODO: getServerVar('SSL_CLIENT_VERIFY') === 'SUCCESS'?
+        // TODO: getServerVar('SSL_CLIENT_VERIFY') === 'SUCCESS'? Depends on config
         $allowed = \preg_split(
             '/\s*,\s*/',
             $this->Config('api')->get('ssl', 'allow_cn', ''),
