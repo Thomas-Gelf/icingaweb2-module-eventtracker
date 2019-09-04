@@ -5,18 +5,19 @@ namespace Icinga\Module\Eventtracker\Controllers;
 use gipfl\IcingaWeb2\CompatController;
 use gipfl\IcingaWeb2\Link;
 use Icinga\Authentication\Auth;
-use Icinga\Module\Eventtracker\Db\EventSummaryByPriority;
 use Icinga\Module\Eventtracker\Db\EventSummaryBySeverity;
 use Icinga\Module\Eventtracker\DbFactory;
 use Icinga\Module\Eventtracker\Uuid;
+use Icinga\Module\Eventtracker\Web\Table\BaseTable;
 use Icinga\Module\Eventtracker\Web\Table\EventsTable;
 use Icinga\Module\Eventtracker\Web\Widget\AdditionalTableActions;
-use Icinga\Module\Eventtracker\Web\Widget\PriorityFilter;
 use Icinga\Module\Eventtracker\Web\Widget\SeverityFilter;
 use Icinga\Module\Eventtracker\Web\Widget\TogglePriorities;
 use Icinga\Module\Eventtracker\Web\Widget\ToggleSeverities;
 use Icinga\Module\Eventtracker\Web\Widget\ToggleStatus;
+use Icinga\Module\Eventtracker\Web\Widget\ToggleTableColumns;
 use Icinga\Web\Widget\Tabextension\DashboardAction;
+use ipl\Html\DeferredText;
 use ipl\Html\Html;
 
 class IssuesController extends CompatController
@@ -87,48 +88,55 @@ class IssuesController extends CompatController
 
         $table = new EventsTable($db);
         $this->applyFilters($table);
-        $prioSummary = new EventSummaryByPriority($table->getQuery());
-        $sevSummary = new EventSummaryBySeverity($table->getQuery());
-
-        $prioSummary->filterByUrl($this->url());
-        $sevSummary->filterByUrl($this->url());
-        if ($this->getRequest()->isApiRequest()) {
-            $table->handleSortUrl($this->url());
-            $result = $table->fetch();
-            foreach ($result as & $row) {
-                $row->issue_uuid = Uuid::toHex($row->issue_uuid);
-            }
-            $flags = JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE;
-            echo json_encode($result, $flags);
-            exit;
-        }
         if (! $this->url()->getParam('sort')) {
             $this->url()->setParam('sort', 'severity DESC');
         }
+        $filters = [
+            // Order & ensureAssembled matters!
+            (new ToggleTableColumns($table, $this->url()))->ensureAssembled(),
+            (new TogglePriorities($this->url()))->applyToQuery($table->getQuery())->ensureAssembled(),
+            (new ToggleSeverities($this->url()))->applyToQuery($table->getQuery())->ensureAssembled(),
+            (new ToggleStatus($this->url()))->applyToQuery($table->getQuery())->ensureAssembled(),
+        ];
+        $table->handleSortUrl($this->url());
+        $sevSummary = new EventSummaryBySeverity($table->getQuery());
+        $summary = new SeverityFilter($sevSummary->fetch($db), $this->url());
+
         if ($this->showCompact()) {
             $table->setNoHeader();
+            $table->showCompact();
+            $table->getQuery()->limit(30);
             $this->content()->add($table);
-            $table->handleSortUrl($this->url());
-            $table->getQuery()->limit(10);
         } else {
             $this->addSingleTab('Issues');
             $this->setTitle('Event Tracker');
-            $this->controls()->addTitle('Current Issues', new SeverityFilter($sevSummary->fetch($db), $this->url()));
+            $this->controls()->addTitle('Current Issues', $summary);
             $this->actions()->add([
-                Html::tag('ul', ['class' => 'nav'], [
-                    new TogglePriorities($this->url()),
-                    new ToggleSeverities($this->url()),
-                    new ToggleStatus($this->url()),
-                ])
+                Html::tag('ul', ['class' => 'nav'], $filters)
             ]);
             (new AdditionalTableActions($table, Auth::getInstance(), $this->url()))
                 ->appendTo($this->actions());
-            $table->handleSortUrl($this->url());
+            $this->eventuallySendJson($table);
             $table->renderTo($this);
         }
 
         if (! $this->showCompact()) {
             $this->tabs()->extend(new DashboardAction());
+        }
+    }
+
+    protected function eventuallySendJson(BaseTable $table)
+    {
+        if ($this->getRequest()->isApiRequest() || $this->getParam('format') === 'json') {
+            $table->ensureAssembled();
+            $result = $table->fetch();
+            foreach ($result as & $row) {
+                $row->issue_uuid = Uuid::toHex($row->issue_uuid);
+            }
+            $flags = JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE;
+            $this->getResponse()->setHeader('Content-Type', 'application/json', true)->sendHeaders();
+            echo json_encode($result, $flags);
+            exit;
         }
     }
 }
