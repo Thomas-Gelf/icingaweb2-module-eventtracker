@@ -22,25 +22,6 @@ class EventSummaryByProperty
         $this->originalSelect = $select;
     }
 
-    public function filterByUrl(Url $url)
-    {
-        $property = static::PROPERTY;
-        if ($url->hasParam($property)) {
-            $values = preg_split(
-                '/,/',
-                $url->getParam($property),
-                -1,
-                PREG_SPLIT_NO_EMPTY
-            );
-            if (! empty($values)) {
-                $this->originalSelect->where(
-                    "$property IN (?)",
-                    $values
-                );
-            }
-        }
-    }
-
     public function fetch(DbAdapter $db)
     {
         return $db->fetchRow($this->prepareQuery());
@@ -52,7 +33,9 @@ class EventSummaryByProperty
         $class = static::CLASS_NAME;
         foreach ($class::ENUM as $value) {
             $query->columns([
-                "cnt_$value" => "COALESCE(SUM(CASE WHEN $property = '$value' THEN 1 ELSE 0 END), 0)"
+                "cnt_$value" => "COALESCE(SUM(CASE WHEN $property = '$value' THEN 1 ELSE 0 END), 0)",
+                "cnt_${value}_handled" => "COALESCE(SUM(CASE WHEN $property = '$value' AND status != 'open' THEN 1 ELSE 0 END), 0)",
+                "cnt_${value}_unhandled" => "COALESCE(SUM(CASE WHEN $property = '$value' AND status = 'open' THEN 1 ELSE 0 END), 0)",
             ]);
         }
     }
