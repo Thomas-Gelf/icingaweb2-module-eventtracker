@@ -90,7 +90,8 @@ abstract class ToggleFlagList extends BaseHtmlElement
             $enabled = $default;
         } else {
             $mainLink->getAttributes()->set(
-                'class', 'modified icon-' . $this->iconModified
+                'class',
+                'modified icon-' . $this->iconModified
             );
             $links[] = $this->geturlReset();
             $enabled = $this->splitUrlOptions($enabled);

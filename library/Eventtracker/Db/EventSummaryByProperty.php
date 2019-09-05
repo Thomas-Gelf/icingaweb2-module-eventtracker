@@ -34,8 +34,10 @@ class EventSummaryByProperty
         foreach ($class::ENUM as $value) {
             $query->columns([
                 "cnt_$value" => "COALESCE(SUM(CASE WHEN $property = '$value' THEN 1 ELSE 0 END), 0)",
-                "cnt_${value}_handled" => "COALESCE(SUM(CASE WHEN $property = '$value' AND status != 'open' THEN 1 ELSE 0 END), 0)",
-                "cnt_${value}_unhandled" => "COALESCE(SUM(CASE WHEN $property = '$value' AND status = 'open' THEN 1 ELSE 0 END), 0)",
+                "cnt_${value}_handled"   => "COALESCE(SUM(CASE WHEN $property = '$value'"
+                    . " AND status != 'open' THEN 1 ELSE 0 END), 0)",
+                "cnt_${value}_unhandled" => "COALESCE(SUM(CASE WHEN $property = '$value'"
+                    . " AND status = 'open' THEN 1 ELSE 0 END), 0)",
             ]);
         }
     }

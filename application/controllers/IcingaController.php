@@ -82,7 +82,8 @@ class IcingaController extends CompatController
         $db = $this->monitoringDb();
         $select = $db->select()->from(['o' => 'icinga_objects'], [
             'host'         => 'o.name1',
-            'state'        => "(CASE hs.current_state WHEN 0 THEN 'up' WHEN 1 THEN 'down' WHEN 2 THEN 'unreachable' ELSE 'pending' END)",
+            'state'        => "(CASE hs.current_state WHEN 0 THEN 'up'"
+                . " WHEN 1 THEN 'down' WHEN 2 THEN 'unreachable' ELSE 'pending' END)",
             'in_downtime'  => "(CASE WHEN hs.scheduled_downtime_depth > 0 THEN 'yes' ELSE 'no' END)",
             'acknowledged' => "(CASE WHEN hs.problem_has_been_acknowledged = 0 THEN 'no' ELSE 'yes' END)",
             'output'       => 'hs.output',
@@ -106,7 +107,8 @@ class IcingaController extends CompatController
         $select = $db->select()->from(['o' => 'icinga_objects'], [
             'host'         => 'o.name1',
             'service'      => 'o.name2',
-            'state'        => "(CASE ss.current_state WHEN 0 THEN 'ok' WHEN 1 THEN 'warning' WHEN 2 THEN 'critical' WHEN 3 THEN 'unknown' ELSE 'pending' END)",
+            'state'        => "(CASE ss.current_state WHEN 0 THEN 'ok' WHEN 1 THEN 'warning'"
+                . " WHEN 2 THEN 'critical' WHEN 3 THEN 'unknown' ELSE 'pending' END)",
             'in_downtime'  => "(CASE WHEN ss.scheduled_downtime_depth > 0 THEN 'yes' ELSE 'no' END)",
             'acknowledged' => "(CASE WHEN ss.problem_has_been_acknowledged = 0 THEN 'no' ELSE 'yes' END)",
             'output'       => 'ss.output',

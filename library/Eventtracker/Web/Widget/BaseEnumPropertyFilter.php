@@ -101,8 +101,8 @@ class BaseEnumPropertyFilter extends BaseHtmlElement
                 [
                     'class' => $classes,
                     'title' => \sprintf($title, $key),
-                ])
-            ;
+                ]
+            );
 
             if ($countHandled > 0) {
                 $link->add(Html::tag('span', ['class' => 'handled'], "+$countHandled"));
