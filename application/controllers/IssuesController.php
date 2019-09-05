@@ -86,7 +86,7 @@ class IssuesController extends CompatController
         $this->setAutorefreshInterval(5);
         $db = DbFactory::db();
 
-        $table = new EventsTable($db);
+        $table = new EventsTable($db, $this->url());
         $this->applyFilters($table);
         if (! $this->url()->getParam('sort')) {
             $this->url()->setParam('sort', 'severity DESC');
@@ -96,7 +96,6 @@ class IssuesController extends CompatController
             (new TogglePriorities($this->url()))->applyToQuery($table->getQuery())->ensureAssembled(),
             (new ToggleSeverities($this->url()))->applyToQuery($table->getQuery())->ensureAssembled(),
             (new ToggleStatus($this->url()))->applyToQuery($table->getQuery())->ensureAssembled(),
-        $table->handleSortUrl($this->url());
         ]);
         $sevSummary = new EventSummaryBySeverity($table->getQuery());
         $summary = new SeverityFilter($sevSummary->fetch($db), $this->url());

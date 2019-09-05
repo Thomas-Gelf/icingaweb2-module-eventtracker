@@ -24,7 +24,7 @@ abstract class BaseTable extends ZfQueryBasedTable
     private $isInitialized = false;
 
     /** @var Url */
-    private $sortUrl;
+    private $baseUrl;
 
     /** @var string */
     private $sortParam;
@@ -32,7 +32,19 @@ abstract class BaseTable extends ZfQueryBasedTable
     /** @var array */
     private $sortColums = [];
 
+    /** @var BaseHtmlElement|null */
+    private $columnToggle;
+
     protected $allowToCustomizeColumns = true;
+
+    public function __construct($db, Url $url = null)
+    {
+        parent::__construct($db);
+        if ($url !== null) {
+            $this->baseUrl = $url;
+            $this->handleUrl($url);
+        }
+    }
 
     public function chooseColumns(array $columnNames)
     {
@@ -108,7 +120,7 @@ abstract class BaseTable extends ZfQueryBasedTable
     {
         $columns = $this->getColumnsToBeRendered();
         if (isset($columns) && count($columns)) {
-            if ($this->sortUrl) {
+            if ($this->baseUrl) {
                 $tr = $this::tr()->setAttributes([
                     'data-base-target' => '_self'
                 ]);
@@ -225,16 +237,30 @@ abstract class BaseTable extends ZfQueryBasedTable
      * @param string $sortParam
      * @return $this
      */
-    public function handleSortUrl(Url $url, $sortParam = 'sort')
+    public function handleUrl(Url $url, $sortParam = 'sort')
     {
+        if ($this->isInitialized) {
+            throw new \RuntimeException('Sort Url is late');
+        }
+        $this->assertInitialized();
+        $this->prepareColumnToggle($url);
+
         $this->sortParam = $sortParam;
-        $this->sortUrl = $url;
+        $this->baseUrl = $url;
         $sort = $url->getParam($sortParam);
-        if (null !== $sort) {
+        if (null === $sort) {
+            $this->sortBy($this->getDefaultSortColumns());
+        } else {
             $this->sortBy($sort);
         }
 
         return $this;
+    }
+
+    protected function getDefaultSortColumns()
+    {
+        $columns = $this->getChosenColumnNames();
+        return $columns[0];
     }
 
     /**
@@ -243,6 +269,9 @@ abstract class BaseTable extends ZfQueryBasedTable
      */
     public function sortBy($columns)
     {
+        if ($columns === null) {
+            return $this;
+        }
         $this->assertInitialized();
         if (! is_array($columns)) {
             $columns = [$columns];
@@ -314,7 +343,7 @@ abstract class BaseTable extends ZfQueryBasedTable
     protected function addSortHeadersTo(HtmlElement $parent)
     {
         // Hint: MUST be set
-        $url = $this->sortUrl;
+        $url = $this->baseUrl;
 
         $lastTh = null;
         foreach ($this->getChosenColumns() as $column) {
@@ -330,10 +359,18 @@ abstract class BaseTable extends ZfQueryBasedTable
             );
         }
 
-        if ($this->allowToCustomizeColumns && $lastTh !== null) {
-            $lastTh->add(Html::tag('ul', ['class' => 'nav'], new ToggleTableColumns($this, $url)));
+        if ($this->columnToggle !== null && $lastTh !== null) {
+            $lastTh->add(Html::tag('ul', ['class' => 'nav'], $this->columnToggle));
+            $lastTh->addAttributes(['class' => 'with-column-selector']);
         }
 
         return $parent;
+    }
+
+    protected function prepareColumnToggle($url)
+    {
+        if ($this->allowToCustomizeColumns) {
+            $this->columnToggle = (new ToggleTableColumns($this, $url))->ensureAssembled();
+        }
     }
 }
