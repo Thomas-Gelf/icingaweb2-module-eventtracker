@@ -91,13 +91,13 @@ class IssuesController extends CompatController
         if (! $this->url()->getParam('sort')) {
             $this->url()->setParam('sort', 'severity DESC');
         }
-        $filters = [
+        $filters = Html::tag('ul', ['class' => 'nav'], [
             // Order & ensureAssembled matters!
             (new TogglePriorities($this->url()))->applyToQuery($table->getQuery())->ensureAssembled(),
             (new ToggleSeverities($this->url()))->applyToQuery($table->getQuery())->ensureAssembled(),
             (new ToggleStatus($this->url()))->applyToQuery($table->getQuery())->ensureAssembled(),
-        ];
         $table->handleSortUrl($this->url());
+        ]);
         $sevSummary = new EventSummaryBySeverity($table->getQuery());
         $summary = new SeverityFilter($sevSummary->fetch($db), $this->url());
 
@@ -110,9 +110,7 @@ class IssuesController extends CompatController
             $this->addSingleTab('Issues');
             $this->setTitle('Event Tracker');
             $this->controls()->addTitle('Current Issues', $summary);
-            $this->actions()->add([
-                Html::tag('ul', ['class' => 'nav'], $filters)
-            ]);
+            $this->actions()->add($filters);
             (new AdditionalTableActions($table, Auth::getInstance(), $this->url()))
                 ->appendTo($this->actions());
             $this->eventuallySendJson($table);
