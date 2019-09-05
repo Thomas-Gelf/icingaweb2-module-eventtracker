@@ -98,7 +98,7 @@ Full examples
 ### Host Example
 
 ```
-> GET https://icinga.example.com/icingaweb2/eventtracker/icinga2/status?object=host1.example.com
+> GET https://icinga.example.com/icingaweb2/eventtracker/icinga/status?object=host1.example.com
 
 < HTTP/1.1 200 OK
 < Date: Thu, 13 Jun 2019 08:48:58 GMT
@@ -117,7 +117,7 @@ Full examples
 ### Example with an unknown Host name
 
 ```
-> GET https://icinga.example.com/icingaweb2/eventtracker/icinga2/status?object=invalid.example.com
+> GET https://icinga.example.com/icingaweb2/eventtracker/icinga/status?object=invalid.example.com
 
 HTTP/1.1 404 Not Found
 Date: Thu, 13 Jun 2019 08:49:52 GMT
@@ -131,7 +131,7 @@ Content-Type: text/html; charset=UTF-8
 ### Service Example
 
 ```
-> GET https://icinga.example.com/icingaweb2/eventtracker/icinga2/status?object=host1.example.com!File%20Systems
+> GET https://icinga.example.com/icingaweb2/eventtracker/icinga/status?object=host1.example.com!File%20Systems
 ```
 
 Response Body:
