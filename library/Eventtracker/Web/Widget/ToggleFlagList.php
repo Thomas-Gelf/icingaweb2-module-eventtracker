@@ -103,12 +103,12 @@ abstract class ToggleFlagList extends BaseHtmlElement
             if (\in_array($option, $enabled)) {
                 $urlOptions = \array_diff($enabled, [$option]);
                 $icon = 'check';
-                $title = sprintf($this->translate('Hide %s'), $label);
+                $title = $this->translate('Click to hide');
             } else {
                 $disabled[] = $option;
                 $urlOptions = \array_merge($enabled, [$option]);
                 $icon = 'plus';
-                $title = sprintf($this->translate('Show %s'), $label);
+                $title = $this->translate('Click to show');
             }
             $links[] = Link::create($label, $this->getUrlWithOptions($urlOptions), null, [
                 'class' => "icon-$icon",
