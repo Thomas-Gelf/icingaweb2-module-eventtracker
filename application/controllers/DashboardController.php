@@ -23,8 +23,8 @@ class DashboardController extends CompatController
         $subDash = Html::tag('div', ['class' => 'dashboard']);
         $subDash->add([
             new Dashlet('eventtracker/issues?status=open', $this->translate('Unhandled Events')),
-            new Dashlet('eventtracker/issues?status=acknowledged,in_downtime', $this->translate('Handled Issues')),
             new Dashlet('eventtracker/summary/top10', $this->translate('Top Issue Summary by:')),
+            new Dashlet('eventtracker/issues?status=acknowledged,in_downtime', $this->translate('Handled Issues')),
         ]);
         $zoom->add($subDash);
         /*
