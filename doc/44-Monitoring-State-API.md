@@ -126,6 +126,7 @@ Content-Length: 43
 Content-Type: text/html; charset=UTF-8
 
 <error>No such object: invalid.example.com</error>
+```
 
 ### Service Example
 
