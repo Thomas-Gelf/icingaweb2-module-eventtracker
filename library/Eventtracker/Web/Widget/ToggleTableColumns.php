@@ -10,6 +10,10 @@ class ToggleTableColumns extends ToggleFlagList
     /** @var BaseTable */
     protected $table;
 
+    protected $iconMain = 'th-list';
+
+    protected $iconModified = 'th-list';
+
     public function __construct(BaseTable $table, Url $url)
     {
         parent::__construct($url, 'columns');
@@ -18,6 +22,7 @@ class ToggleTableColumns extends ToggleFlagList
 
     protected function getListLabel()
     {
+        return '';
         return $this->translate('Columns');
     }
 

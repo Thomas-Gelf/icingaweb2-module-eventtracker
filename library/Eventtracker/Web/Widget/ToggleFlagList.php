@@ -27,6 +27,10 @@ abstract class ToggleFlagList extends BaseHtmlElement
     /** @var DbSelect|null */
     private $query;
 
+    protected $iconMain = 'angle-double-down';
+
+    protected $iconModified = 'flapping';
+
     public function __construct(Url $url, $param)
     {
         $this->url = $url;
@@ -67,7 +71,7 @@ abstract class ToggleFlagList extends BaseHtmlElement
 
     protected function assemble()
     {
-        $link = Link::create($this->getListLabel(), '#', null, ['class' => 'icon-angle-double-down', 'noclass' => 'icon-th-list']);
+        $link = Link::create($this->getListLabel(), '#', null, ['class' => 'icon-' . $this->iconMain]);
         $this->add([
             $link,
             $this->createLinkList($this->toggleColumnsOptions($link))
@@ -89,7 +93,7 @@ abstract class ToggleFlagList extends BaseHtmlElement
             }
         } else {
             $mainLink->getAttributes()->set(
-                'class', 'icon-flapping'
+                'class', 'modified icon-' . $this->iconModified
             );
             $links[] = $this->geturlReset();
             $enabled = $this->splitUrlOptions($enabled);
@@ -122,7 +126,9 @@ abstract class ToggleFlagList extends BaseHtmlElement
                 null,
                 [
                     'class' => 'icon-resize-horizontal',
-                    'data-base-target' => '_main'
+                    // TODO: this is helpful with tables with many columns,
+                    // but irritating otherwise:
+                    // 'data-base-target' => '_main'
                 ]
             ));
         }
