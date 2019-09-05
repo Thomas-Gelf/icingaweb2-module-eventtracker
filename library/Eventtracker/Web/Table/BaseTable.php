@@ -20,6 +20,7 @@ abstract class BaseTable extends ZfQueryBasedTable
     /** @var TableColumn[] */
     private $chosenColumns;
 
+    /** @var bool */
     private $isInitialized = false;
 
     /** @var Url */
@@ -86,9 +87,13 @@ abstract class BaseTable extends ZfQueryBasedTable
 
     public function assertInitialized()
     {
-        if (! $this->isInitialized) {
-            $this->isInitialized = true;
+        if ($this->isInitialized === null) {
+            throw new \RuntimeException('Table initialization loop, this is a bug in your table');
+        }
+        if ($this->isInitialized === false) {
+            $this->isInitialized = null;
             $this->initialize();
+            $this->isInitialized = true;
         }
     }
 
@@ -162,6 +167,13 @@ abstract class BaseTable extends ZfQueryBasedTable
 
         foreach ($this->getChosenColumns() as $column) {
             foreach ($column->getRequiredDbColumns() as $alias => $dbExpression) {
+                if (isset($columns[$alias]) && $columns[$alias] !== $dbExpression) {
+                    throw new \RuntimeException(sprintf(
+                        'Setting the same table alias twice, once for %s and once for %s',
+                        $columns[$alias],
+                        $dbExpression
+                    ));
+                }
                 $columns[$alias] = $dbExpression;
             }
         }
