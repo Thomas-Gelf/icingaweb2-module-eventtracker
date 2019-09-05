@@ -28,6 +28,9 @@
 a:focus {
   outline: none;
   text-decoration: underline;
+  &:before {
+    text-decoration: none;
+  }
 }
 
 thead tr[href]:hover {
@@ -45,7 +48,11 @@ table.common-table td {
 }
 
 table.common-table th {
+  vertical-align: middle;
   white-space: nowrap;
+  > ul > li {
+    line-height: normal;
+  }
 }
 
 /** BEGIN of dropdown in table header **/
