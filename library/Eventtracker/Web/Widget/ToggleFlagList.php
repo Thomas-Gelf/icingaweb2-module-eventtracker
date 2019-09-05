@@ -88,16 +88,12 @@ abstract class ToggleFlagList extends BaseHtmlElement
         $enabled = $url->getParam($param);
         if ($enabled === null) {
             $enabled = $default;
-            if ($enabled !== $default) {
-                $this->setEnabled($enabled);
-            }
         } else {
             $mainLink->getAttributes()->set(
                 'class', 'modified icon-' . $this->iconModified
             );
             $links[] = $this->geturlReset();
             $enabled = $this->splitUrlOptions($enabled);
-            $this->setEnabled($enabled);
         }
 
         $all = [];
@@ -131,6 +127,9 @@ abstract class ToggleFlagList extends BaseHtmlElement
                     // 'data-base-target' => '_main'
                 ]
             ));
+        }
+        if ($enabled !== $all) {
+            $this->setEnabled($enabled);
         }
 
         return $links;
