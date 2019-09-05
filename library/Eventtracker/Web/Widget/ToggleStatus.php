@@ -17,6 +17,15 @@ class ToggleStatus extends ToggleFlagList
         return $this->translate('Status');
     }
 
+    protected function getDefaultSelection()
+    {
+        $selection = [
+            Status::OPEN,
+        ];
+
+        return array_combine($selection, $selection);
+    }
+
     protected function getOptions()
     {
         return \array_reverse(Status::ENUM, true);
