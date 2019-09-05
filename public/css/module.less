@@ -48,15 +48,23 @@ table.common-table td {
 }
 
 table.common-table th {
+  background-color: @gray-light;
+  padding: 0.2em 0.333em 0.2em 0.333em;
   vertical-align: middle;
   white-space: nowrap;
   > ul > li {
     line-height: normal;
   }
+
+  // Column selection dropdown
+  &.with-column-selector {
+    padding-right: 2.5em;
+  }
 }
 
 /** BEGIN of dropdown in table header **/
 table.common-table th {
+  position: relative;
   ul {
     font-weight: normal;
     padding: 0;
@@ -70,10 +78,15 @@ table.common-table th {
 
   > ul {
     display: inline-block;
-    position: relative;
-    float: right;
+    margin-left: 1em;
+    right: 0;
+    position: absolute;
     > li {
       display: inline-block;
+    }
+
+    .modified {
+      color: @color-severity-critical;
     }
   }
 
