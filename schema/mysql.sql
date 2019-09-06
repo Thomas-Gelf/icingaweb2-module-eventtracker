@@ -42,7 +42,7 @@ CREATE TABLE issue (
   sender_event_id VARBINARY(64) NOT NULL, -- mc_tool_key
   -- sha1(json([host_name, object_class, object_name, sender_id, sender_event_id])):
   sender_event_checksum VARBINARY(20) NOT NULL,
-  host_name VARCHAR(64) COLLATE utf8mb4_general_ci NOT NULL, -- mc_host
+  host_name VARCHAR(64) COLLATE utf8mb4_general_ci DEFAULT NULL, -- mc_host
   object_class VARCHAR(64) NOT NULL, --
   object_name VARCHAR(128) COLLATE utf8mb4_general_ci NOT NULL,
   ts_expiration BIGINT(20) NULL DEFAULT NULL,
