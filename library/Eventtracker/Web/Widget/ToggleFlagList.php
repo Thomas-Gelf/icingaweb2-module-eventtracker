@@ -54,8 +54,12 @@ abstract class ToggleFlagList extends BaseHtmlElement
         return \array_keys($this->getOptions());
     }
 
-    protected function setEnabled($enabled)
+    protected function setEnabled($enabled, $all)
     {
+        if ($all === $enabled) {
+            // No need to extend the query with useless overhead
+            return;
+        }
         // You might want to override this method
         if ($this->originalQuery) {
             if (empty($enabled)) {
@@ -129,9 +133,7 @@ abstract class ToggleFlagList extends BaseHtmlElement
                 ]
             ));
         }
-        if ($enabled !== $all) {
-            $this->setEnabled($enabled);
-        }
+        $this->setEnabled($enabled, $all);
 
         return $links;
     }

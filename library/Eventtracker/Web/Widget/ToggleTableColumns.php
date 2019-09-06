@@ -23,7 +23,7 @@ class ToggleTableColumns extends ToggleFlagList
     protected function getListLabel()
     {
         return '';
-        return $this->translate('Columns');
+        // return $this->translate('Columns');
     }
 
     protected function getDefaultSelection()
@@ -31,7 +31,7 @@ class ToggleTableColumns extends ToggleFlagList
         return $this->table->getChosenColumnNames();
     }
 
-    protected function setEnabled($enabled)
+    protected function setEnabled($enabled, $all)
     {
         $this->table->chooseColumns($enabled);
     }
