@@ -2,31 +2,25 @@
 
 namespace Icinga\Module\Eventtracker\Web\Form;
 
+use Icinga\Module\Eventtracker\Priority;
 use ipl\Html\FormElement\SelectElement;
 use ipl\Html\FormElement\SubmitElement;
-use ipl\Html\Html;
 
-class GiveOwnerShipForm extends InlineIssueForm
+class ChangePriorityForm extends InlineIssueForm
 {
     protected function assemble()
     {
         $next = new SubmitElement('next', [
             'class' => 'link-button',
-            'label' => $this->translate('[ Give ]'),
-            'title' => $this->translate('Give this issue to a specific user')
+            'label' => $this->issue->get('priority'),
+            'title' => $this->translate('Click to change priority')
         ]);
         $this->addElement($next);
 
         if ($this->hasBeenSent()) {
-            $label = Html::tag('strong', $this->translate('Give to:'));
-            $this->add($label);
-            $select = new SelectElement('new_owner', [
-                'options' => [
-                    'tom' => 'Thomas Gelf (tom)',
-                    'zsa' => 'Sàrosi Zoltàn (zsa)',
-                    null => $this->translate('Nobody in particular'),
-                ],
-                'value' => $this->issue->get('owner'),
+            $select = new SelectElement('new_priority', [
+                'options' => Priority::ENUM,
+                'value'   => $this->issue->get('priority'),
             ]);
             $submit = new SubmitElement('submit', [
                 'label' => $this->translate('Set'),
@@ -39,7 +33,6 @@ class GiveOwnerShipForm extends InlineIssueForm
             $this->addElement($submit);
             $this->addElement($cancel);
             if ($cancel->hasBeenPressed()) {
-                $this->remove($label);
                 $this->remove($select);
                 $this->remove($submit);
                 $this->remove($cancel);
@@ -56,7 +49,7 @@ class GiveOwnerShipForm extends InlineIssueForm
     public function onSuccess()
     {
         $issue = $this->issue;
-        $issue->setOwner($this->getValue('new_owner'));
+        $issue->set('priority', $this->getValue('new_priority'));
         $issue->storeToDb($this->db);
     }
 }

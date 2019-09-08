@@ -11,6 +11,7 @@ use Icinga\Module\Eventtracker\DbFactory;
 use Icinga\Module\Eventtracker\Hook\EventActionsHook;
 use Icinga\Module\Eventtracker\Issue;
 use Icinga\Module\Eventtracker\Priority;
+use Icinga\Module\Eventtracker\Web\Form\ChangePriorityForm;
 use Icinga\Module\Eventtracker\Web\Form\CloseIssueForm;
 use Icinga\Module\Eventtracker\Web\Form\GiveOwnerShipForm;
 use Icinga\Module\Eventtracker\Web\Form\LinkLikeForm;
@@ -165,50 +166,18 @@ class IssueHeader extends BaseHtmlElement
 
     protected function renderPriority(Issue $issue)
     {
-        $result = new HtmlDocument();
         $db = DbFactory::db();
-
-        $priority = $issue->get('priority');
-        $result->add(sprintf('%-8s', $priority));
-
         if (! $this->isOperator || $issue->isClosed()) {
-            return $result;
+            return  $issue->get('priority');
         }
 
-        $lower = new LinkLikeForm(
-            $this->translate('[ Lower ]'),
-            $this->translate('Lower priority for this issue'),
-            'down-big'
-        );
-        $lower->on('success', function () use ($issue, $db) {
-            $issue->lowerPriority();
-            $issue->storeToDb($db);
+        $form = new ChangePriorityForm($issue, $db);
+        $form->on('success', function () {
             $this->response->redirectAndExit($this->url());
         });
-        $lower->handleRequest($this->request);
-        if (Priority::isLowest($priority)) {
-            $lower->getElement('submit')->getAttributes()->add('disabled', 'disabled');
-        }
+        $form->handleRequest($this->request);
 
-        $raise = new LinkLikeForm(
-            $this->translate('[ Raise ]'),
-            $this->translate('Raise priority for this issue'),
-            'up-big'
-        );
-        $raise->on('success', function () use ($issue, $db) {
-            $issue->raisePriority();
-            $issue->storeToDb($db);
-            $this->response->redirectAndExit($this->url());
-        });
-        $raise->handleRequest($this->request);
-
-        if (Priority::isHighest($priority)) {
-            $raise->getElement('submit')->getAttributes()->add('disabled', 'disabled');
-        }
-
-        $result->add([$lower, $raise]);
-
-        return $result;
+        return $form;
     }
 
     protected function url()
@@ -247,9 +216,9 @@ class IssueHeader extends BaseHtmlElement
         $give = $this->createGiveOwnerShipForm($issue, $db);
 
         if ($owner === $me) {
-            $result->add([" (that's me!) ", "\n", $give]);
+            $result->add([" (that's me!) ", $give]);
         } else {
-            $result->add([' ', $take, "\n", $give]);
+            $result->add([' ', $take, $give]);
         }
 
         return $result;
