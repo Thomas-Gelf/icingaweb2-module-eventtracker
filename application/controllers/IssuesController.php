@@ -15,9 +15,8 @@ use Icinga\Module\Eventtracker\Web\Widget\SeverityFilter;
 use Icinga\Module\Eventtracker\Web\Widget\TogglePriorities;
 use Icinga\Module\Eventtracker\Web\Widget\ToggleSeverities;
 use Icinga\Module\Eventtracker\Web\Widget\ToggleStatus;
-use Icinga\Module\Eventtracker\Web\Widget\ToggleTableColumns;
 use Icinga\Web\Widget\Tabextension\DashboardAction;
-use ipl\Html\DeferredText;
+use ipl\Html\BaseHtmlElement;
 use ipl\Html\Html;
 
 class IssuesController extends CompatController
@@ -30,15 +29,27 @@ class IssuesController extends CompatController
     protected function applyFilters(EventsTable $table)
     {
         $table->search($this->params->get('q'));
-        $this->columnFilter($table, 'host_name', 'hosts', $this->translate('Hosts: %s'));
-        $this->columnFilter($table, 'object_class', 'classes', $this->translate('Classes: %s'));
-        $this->columnFilter($table, 'object_name', 'objects', $this->translate('Objects: %s'));
-        $this->columnFilter($table, 'owner', 'owners', $this->translate('Owners: %s'));
-        $this->columnFilter($table, 'sender_name', 'senders', $this->translate('Sender: %s'));
+        $main = Html::tag('ul', ['class' => 'nav']);
+        $sub = Html::tag('ul');
+        $main->add(Html::tag('li', null, [Link::create('Filters', '#', null, [
+            'class' => 'icon-angle-double-down'
+        ]), $sub]));
+        $this->columnFilter($table, $sub, 'host_name', 'hosts', $this->translate('Hosts: %s'));
+        $this->columnFilter($table, $sub, 'object_class', 'classes', $this->translate('Classes: %s'));
+        $this->columnFilter($table, $sub, 'object_name', 'objects', $this->translate('Objects: %s'));
+        $this->columnFilter($table, $sub, 'owner', 'owners', $this->translate('Owners: %s'));
+        $this->columnFilter($table, $sub, 'sender_name', 'senders', $this->translate('Sender: %s'));
+        if (! $this->showCompact()) {
+            $this->actions()->add($main);
+        }
     }
 
-    protected function columnFilter(EventsTable $table, $column, $type, $title)
+    protected function columnFilter(EventsTable $table, BaseHtmlElement $parent, $column, $type, $title)
     {
+        // $parent = $this->content();
+        $li = Html::tag('li');
+        $parent->add($li);
+        $parent = $li;
         $compact = $this->showCompact();
         if ($this->params->has($column)) {
             $value = $this->params->get($column);
@@ -57,7 +68,7 @@ class IssuesController extends CompatController
             if ($compact) {
                 return;
             }
-            $this->content()->add(
+            $parent->add(
                 Link::create(
                     sprintf($title, $value),
                     $this->url()->without($column),
@@ -69,7 +80,7 @@ class IssuesController extends CompatController
             if ($compact) {
                 return;
             }
-            $this->content()->add(
+            $parent->add(
                 Link::create(
                     sprintf($title, $this->translate('all')),
                     "eventtracker/summary/$type",
@@ -78,6 +89,7 @@ class IssuesController extends CompatController
                 )
             );
         }
+        return;
         $this->content()->add(Html::tag('br'));
     }
 
