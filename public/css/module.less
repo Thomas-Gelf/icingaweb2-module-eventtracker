@@ -47,8 +47,13 @@ table.common-table td {
   }
 }
 
-table.common-table th {
-  background-color: @gray-light;
+table.common-table thead th {
+  border-bottom: 1px solid @text-color;
+}
+table.common-table tbody td {
+  border-bottom: 1px solid @gray-lighter;
+}
+table.common-table thead th {
   padding: 0.2em 0.333em 0.2em 0.333em;
   vertical-align: middle;
   white-space: nowrap;
@@ -59,6 +64,9 @@ table.common-table th {
   // Column selection dropdown
   &.with-column-selector {
     padding-right: 2.5em;
+  }
+  a:hover, a:focus {
+    text-decoration: underline;
   }
 }
 
@@ -425,7 +433,7 @@ div.output {
   border-width: 1px;
   border-style: solid;
   border-left-width: 2em;
-  border-radius: 1em 0 0 1em;
+  border-radius: 0.3em 0 0 0.3em;
   margin-bottom: 0.5em;
   h2 {
     margin: 0;
