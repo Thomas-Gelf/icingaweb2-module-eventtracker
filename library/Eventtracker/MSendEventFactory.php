@@ -60,8 +60,8 @@ class MSendEventFactory
             'CRITICAL'      => 'critical',
             'MINOR'         => 'error',
             'WARNING'       => 'warning',
-            'INFORMATIONAL' => 'notice',
-            'INFO'          => 'notice',        // !?!?!?!
+            'INFORMATIONAL' => 'informational', // was: 'notice',
+            'INFO'          => 'informational', // was: 'notice',        // !?!?!?!
             'NORMAL'        => 'informational', // !?!?!?!
             'OK'            => 'informational', // !?!?!?!
         ];
@@ -76,16 +76,18 @@ class MSendEventFactory
     protected function mapPriority($priority)
     {
         $priorities = [
-            'PRIORITY_1' => Priority::LOWEST,
-            'lowest'     => Priority::LOWEST,
+            // we do not accept lowest on our input channel, mapping to low
+            'PRIORITY_1' => Priority::LOW,
+            'lowest'     => Priority::LOW,
             'PRIORITY_2' => Priority::LOW,
             'low'        => Priority::LOW,
             'PRIORITY_3' => Priority::NORMAL,
             'normal'     => Priority::NORMAL,
             'PRIORITY_4' => Priority::HIGH,
             'high'       => Priority::HIGH,
-            'PRIORITY_5' => Priority::HIGHEST,
-            'highest'    => Priority::HIGHEST,
+            // we do not accept highest on our input channel, mapping to high
+            'PRIORITY_5' => Priority::HIGH,
+            'highest'    => Priority::HIGH,
         ];
 
         if (isset($priorities[$priority])) {
