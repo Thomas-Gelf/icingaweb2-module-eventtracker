@@ -45,7 +45,7 @@ class SummaryController extends CompatController
         $this->addTitleWithType($this->translate('Owner'));
         $this->setAutorefreshInterval(10);
         (new OwnerSummaryTable(DbFactory::db()))->renderTo($this);
-        $this->tabs(new SummaryTabs())->activate('objects');
+        $this->tabs(new SummaryTabs())->activate('owners');
     }
 
     public function sendersAction()
