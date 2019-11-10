@@ -20,6 +20,8 @@ class DaemonDb
 {
     use EventEmitter;
 
+    const TABLE_NAME = 'daemon_info';
+
     /** @var LoopInterface */
     private $loop;
 
@@ -299,7 +301,7 @@ class DaemonDb
 
         return (int) $db->fetchOne(
             $db->select()
-                ->from('director_daemon_info', 'COUNT(*)')
+                ->from(self::TABLE_NAME, 'COUNT(*)')
                 ->where('ts_stopped IS NULL')
         ) > 0;
     }
@@ -307,13 +309,13 @@ class DaemonDb
     protected function wipeOrphanedInstances(Db $connection)
     {
         $db = $connection->getDbAdapter();
-        $db->delete('director_daemon_info', 'ts_stopped IS NOT NULL');
-        $db->delete('director_daemon_info', $db->quoteInto(
+        $db->delete(self::TABLE_NAME, 'ts_stopped IS NOT NULL');
+        $db->delete(self::TABLE_NAME, $db->quoteInto(
             'instance_uuid_hex = ?',
             $this->details->getInstanceUuid()
         ));
         $count = $db->delete(
-            'director_daemon_info',
+            self::TABLE_NAME,
             'ts_stopped IS NULL AND ts_last_update < ' . (
                 DaemonUtil::timestampWithMilliseconds() - (60 * 1000)
             )
@@ -330,14 +332,14 @@ class DaemonDb
         }
         try {
             $updated = $this->db->update(
-                'director_daemon_info',
+                self::TABLE_NAME,
                 $this->details->getPropertiesToUpdate(),
                 $this->db->quoteInto('instance_uuid_hex = ?', $this->details->getInstanceUuid())
             );
 
             if (! $updated) {
                 $this->db->insert(
-                    'director_daemon_info',
+                    self::TABLE_NAME,
                     $this->details->getPropertiesToInsert()
                 );
             }
@@ -354,7 +356,7 @@ class DaemonDb
                 return;
             }
             $this->db->update(
-                'director_daemon_info',
+                self::TABLE_NAME,
                 ['ts_stopped' => DaemonUtil::timestampWithMilliseconds()],
                 $this->db->quoteInto('instance_uuid_hex = ?', $this->details->getInstanceUuid())
             );

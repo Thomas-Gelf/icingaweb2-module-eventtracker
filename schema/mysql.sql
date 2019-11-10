@@ -84,7 +84,7 @@ CREATE TABLE issue_activity (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE utf8mb4_bin;
 
 
-CREATE TABLE director_daemon_info (
+CREATE TABLE daemon_info (
   instance_uuid_hex VARCHAR(32) NOT NULL, -- random by daemon
   schema_version SMALLINT UNSIGNED NOT NULL,
   fqdn VARCHAR(255) NOT NULL,
