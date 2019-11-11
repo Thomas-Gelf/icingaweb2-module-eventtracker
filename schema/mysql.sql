@@ -13,6 +13,37 @@ CREATE TABLE sender (
   UNIQUE INDEX(sender_name)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE utf8mb4_bin;
 
+CREATE TABLE icinga_ci (
+  object_id BIGINT(20) UNSIGNED NOT NULL,
+  host_id BIGINT(20) UNSIGNED NULL DEFAULT NULL,
+  object_type ENUM('host', 'service') NOT NULL,
+  checksum VARBINARY(20) NOT NULL,
+  host_name VARCHAR(128) NOT NULL,
+  service_name VARCHAR(128) NULL DEFAULT NULL,
+  display_name VARCHAR(255) COLLATE utf8mb4_general_ci NOT NULL,
+  PRIMARY KEY (object_id),
+  INDEX idx_search (display_name(172)),
+  CONSTRAINT icinga_ci_host
+    FOREIGN KEY icinga_ci_host_id (host_id)
+      REFERENCES icinga_ci (object_id)
+      ON DELETE CASCADE
+      ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE utf8mb4_bin;
+
+CREATE TABLE icinga_ci_var (
+  object_id BIGINT(20) UNSIGNED NOT NULL,
+  varname VARCHAR(128) NOT NULL,
+  varvalue TEXT NOT NULL,
+  varformat ENUM ('string', 'json') NOT NULL,
+  PRIMARY KEY (object_id, varname),
+  INDEX idx_varname (varname),
+  CONSTRAINT icinga_ci_var_ci
+    FOREIGN KEY icinga_ci_var_ci_object_id (object_id)
+      REFERENCES icinga_ci (object_id)
+      ON DELETE CASCADE
+      ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE utf8mb4_bin;
+
 CREATE TABLE issue (
   issue_uuid VARBINARY(16) NOT NULL,
   status ENUM (
