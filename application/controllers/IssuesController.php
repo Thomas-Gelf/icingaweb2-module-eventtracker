@@ -35,7 +35,6 @@ class IssuesController extends CompatController
         $main->add(Html::tag('li', null, [Link::create('Filters', '#', null, [
             'class' => 'icon-angle-double-down'
         ]), $sub]));
-        $main->add($this->createViewToggle());
         $this->columnFilter($table, $sub, 'host_name', 'hosts', $this->translate('Hosts: %s'));
         $this->columnFilter($table, $sub, 'object_class', 'classes', $this->translate('Classes: %s'));
         $this->columnFilter($table, $sub, 'object_name', 'objects', $this->translate('Objects: %s'));
@@ -153,6 +152,7 @@ class IssuesController extends CompatController
             $this->setTitle('Event Tracker');
             $this->controls()->addTitle('Current Issues', $summary);
             $this->actions()->add($filters);
+            $this->actions()->add($this->createViewToggle());
             (new AdditionalTableActions($table, Auth::getInstance(), $this->url()))
                 ->appendTo($this->actions());
             $this->eventuallySendJson($table);
