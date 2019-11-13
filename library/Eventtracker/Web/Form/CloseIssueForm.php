@@ -14,6 +14,6 @@ class CloseIssueForm extends InlineIssueForm
      */
     public function onSuccess()
     {
-        $this->issue->set('status', 'closed')->storeToDb($this->db);
+        $this->issue->close($this->db);
     }
 }
