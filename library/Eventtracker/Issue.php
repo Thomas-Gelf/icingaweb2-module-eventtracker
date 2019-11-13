@@ -2,6 +2,7 @@
 
 namespace Icinga\Module\Eventtracker;
 
+use Icinga\Authentication\Auth;
 use Icinga\Exception\NotFoundError;
 use Zend_Db_Adapter_Abstract as Db;
 use Zend_Db_Expr as DbExpr;
@@ -13,7 +14,7 @@ class Issue
     protected static $tableName = 'issue';
 
     protected $properties = [
-        'issue_uuid'         => null,
+        'issue_uuid'            => null,
         'sender_event_checksum' => null,
         'status'                => null,
         'severity'              => null,
@@ -24,6 +25,7 @@ class Issue
         'sender_id'             => null,
         'sender_event_id'       => null,
         'message'               => null,
+        'attributes'            => null,
         'owner'                 => null,
         'ticket_ref'            => null,
         'cnt_events'            => null,
@@ -75,6 +77,22 @@ class Issue
         }
     }
 
+    public static function loadBySenderEventId($id, $senderId, Db $db)
+    {
+        $result = $db->fetchRow(
+            $db->select()
+                ->from(self::$tableName)
+                ->where('sender_event_id = ?', $id)
+                ->where('sender_id = ?', $senderId)
+        );
+
+        if ($result) {
+            return static::createStored($result);
+        } else {
+            throw new NotFoundError('There is no such issue');
+        }
+    }
+
     protected static function createStored($result)
     {
         $issue = new static();
@@ -103,7 +121,19 @@ class Issue
     {
         $properties = $event->getProperties();
         $timeout = $properties['event_timeout'];
-        unset($properties['event_timeout']);
+        $attributes = $properties['attributes'];
+        unset($properties['event_timeout'], $properties['attributes']);
+        $attributes = array_filter($attributes, function ($key) {
+            if ($key === 'severity' || $key === 'msg') {
+                return false;
+            }
+            if (substr($key, 0, 3) === 'mc_') {
+                return false;
+            }
+
+            return true;
+        },  ARRAY_FILTER_USE_KEY);
+        $this->setAttributes($attributes);
 
         // Priority can be customized, source will not be allowed to change it
         // We might however check whether we want to allow this for issues with
@@ -162,6 +192,24 @@ class Issue
         return $result;
     }
 
+    public function getAttributes()
+    {
+        if (empty($this->properties['attributes'])) {
+            return (object) [];
+        } else {
+            return \json_decode($this->properties['attributes']);
+        }
+    }
+
+    public function setAttributes($attributes)
+    {
+        if (\is_string($attributes)) {
+            $this->properties['attributes'] = $attributes;
+        } else {
+            $this->properties['attributes'] = \json_encode($attributes);
+        }
+    }
+
     public function setOwner($owner)
     {
         $this->properties['owner'] = $owner;
@@ -207,7 +255,7 @@ class Issue
     {
         $now = static::now();
         $this->setProperties([
-            'issue_uuid'    => Uuid::generate(),
+            'issue_uuid'       => Uuid::generate(),
             'cnt_events'       => 1,
             'status'           => 'open',
             'ts_first_event'   => $now,
@@ -238,19 +286,54 @@ class Issue
         $db->update(self::$tableName, [
             'cnt_events' => new DbExpr('cnt_events + 1'),
         ] + $this->getProperties(), $where);
-        $db->insert('issue_activity', [
-            'activity_uuid' => Uuid::generate(),
-            'issue_uuid' => $this->getUuid(),
-            'ts_modified'   => $this::now(),
-            'modifications' => json_encode($modifications)
-        ]);
+        unset($modifications['ts_expiration']);
+        if (! empty($modifications)) {
+            $db->insert('issue_activity', [
+                'activity_uuid' => Uuid::generate(),
+                'issue_uuid'    => $this->getUuid(),
+                'ts_modified'   => $this::now(),
+                'modifications' => \json_encode($modifications)
+            ]);
+        }
 
         return true;
     }
 
-    public static function resolve(Event $event)
+    public function close(\Zend_Db_Adapter_Abstract $db, Auth $auth = null)
     {
+        if ($auth === null) {
+            $auth = Auth::getInstance();
+        }
+
+        return static::closeIssue(
+            $this,
+            $db,
+            IssueHistory::REASON_MANUAL,
+            $auth->getUser()->getUsername()
+        );
+    }
+
+    public static function eventuallyRecover(Event $event, \Zend_Db_Adapter_Abstract $db)
+    {
+        $issue = Issue::loadIfEventExists($event, $db);
+        if ($issue) {
+            return static::closeIssue($issue, $db, IssueHistory::REASON_RECOVERY);
+        } else {
+            return false;
+        }
+    }
+
+    public static function expire($uuid, \Zend_Db_Adapter_Abstract $db)
+    {
+        return static::closeIssue(Issue::load($uuid, $db), $db, IssueHistory::REASON_EXPIRATION);
+    }
+
+    public static function closeIssue(Issue $issue, \Zend_Db_Adapter_Abstract $db, $reason, $closedBy = null)
+    {
+        IssueHistory::persist($issue, $db, $reason, $closedBy);
+        $db->delete(static::$tableName, $db->quoteInto('issue_uuid = ?', $issue->getUuid()));
         // TODO: delete from issue, store to issue_history
+        return true;
     }
 
     protected static function now()

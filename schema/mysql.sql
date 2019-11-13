@@ -115,6 +115,53 @@ CREATE TABLE issue_activity (
       ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE utf8mb4_bin;
 
+CREATE TABLE issue_history (
+  issue_uuid VARBINARY(16) NOT NULL,
+  severity ENUM (
+    'debug',
+    'informational',
+    'notice',
+    'warning',
+    'error',
+    'critical',
+    'alert',
+    'emergency'
+  ) NOT NULL,
+  priority ENUM (
+    'lowest',
+    'low',
+    'normal',
+    'high',
+    'highest'
+  ) NOT NULL,
+  close_reason ENUM (
+    'recovery',
+    'manual',
+    'expiration'
+  ) NOT NULL,
+  closed_by VARCHAR(64) COLLATE utf8mb4_general_ci NULL DEFAULT NULL,
+  sender_id INT(10) UNSIGNED NOT NULL,
+  sender_event_id VARBINARY(64) NOT NULL, -- mc_tool_key
+  -- sha1(json([host_name, object_class, object_name, sender_id, sender_event_id])):
+  sender_event_checksum VARBINARY(20) NOT NULL,
+  host_name VARCHAR(128) COLLATE utf8mb4_general_ci DEFAULT NULL, -- mc_host
+  object_class VARCHAR(128) NOT NULL, --
+  object_name VARCHAR(128) COLLATE utf8mb4_general_ci NOT NULL,
+  ts_expiration BIGINT(20) NULL DEFAULT NULL,
+  ts_first_event BIGINT(20) NOT NULL, -- milliseconds since epoch
+  ts_last_modified BIGINT(20) NOT NULL, -- milliseconds since epoch
+  cnt_events INT(10) NOT NULL,
+  owner VARCHAR(64) COLLATE utf8mb4_general_ci NULL DEFAULT NULL,
+  ticket_ref VARCHAR(64) COLLATE utf8mb4_general_ci NULL DEFAULT NULL,
+  message TEXT COLLATE utf8mb4_general_ci NOT NULL,
+  attributes TEXT COLLATE utf8mb4_general_ci NOT NULL,
+  activities MEDIUMTEXT NOT NULL, -- json([{ts:123,modifications:{}]) ggf: username:"",ip:""?
+  PRIMARY KEY (issue_uuid),
+  UNIQUE INDEX sender_event (sender_event_checksum),
+  INDEX host_name (host_name),
+  INDEX sort_first_event (ts_first_event)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE utf8mb4_bin;
+
 
 CREATE TABLE daemon_info (
   instance_uuid_hex VARCHAR(32) NOT NULL, -- random by daemon

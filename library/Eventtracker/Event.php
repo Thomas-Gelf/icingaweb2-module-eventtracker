@@ -16,6 +16,7 @@ class Event
         'event_timeout'   => null,
         'sender_event_id' => null,
         'sender_id'       => null,
+        'attributes'      => null,
     ];
 
     public function getChecksum()
@@ -32,13 +33,12 @@ class Event
     public function isProblem()
     {
         // TODO: OK is not a problem.
-        return true;
         $ok = [
             'notice',
             'informational',
             'debug',
         ];
 
-        return ! in_array($this->get('severity'), $ok);
+        return ! \in_array($this->get('severity'), $ok);
     }
 }
