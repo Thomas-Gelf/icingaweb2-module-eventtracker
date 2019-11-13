@@ -89,14 +89,14 @@ CREATE TABLE issue (
   INDEX sort_first_event (ts_first_event),
   CONSTRAINT issue_objectclass
     FOREIGN KEY issue_objectclass_class (object_class)
-    REFERENCES object_class (class_name)
-    ON DELETE RESTRICT
-    ON UPDATE RESTRICT,
+      REFERENCES object_class (class_name)
+      ON DELETE RESTRICT
+      ON UPDATE RESTRICT,
   CONSTRAINT issue_sender
     FOREIGN KEY issue_sender_id (sender_id)
-    REFERENCES sender (id)
-    ON DELETE RESTRICT
-    ON UPDATE RESTRICT
+      REFERENCES sender (id)
+      ON DELETE RESTRICT
+      ON UPDATE RESTRICT
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE utf8mb4_bin;
 
 CREATE TABLE issue_activity (
@@ -110,8 +110,8 @@ CREATE TABLE issue_activity (
   CONSTRAINT issue_activity_uuid
   FOREIGN KEY property_issue_uuid (issue_uuid)
     REFERENCES issue (issue_uuid)
-    ON DELETE CASCADE
-    ON UPDATE CASCADE
+      ON DELETE CASCADE
+      ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE utf8mb4_bin;
 
 
