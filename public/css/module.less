@@ -148,6 +148,23 @@ table.common-table th {
 }
 /** END of dropdown in table header **/
 
+h1 {
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+table.compact-table td {
+  text-overflow: ellipsis;
+  height: 1.5em;
+  overflow: hidden;
+  white-space: nowrap;
+  &:not(:first-of-type) {
+    max-width: 0;
+  }
+}
+
+
 div.square-color {
   display: inline-block;
   height: 0.75em;

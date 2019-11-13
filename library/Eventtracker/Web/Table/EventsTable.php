@@ -40,6 +40,9 @@ class EventsTable extends BaseTable
     public function showCompact($compact = true)
     {
         $this->compact = $compact;
+        if ($compact) {
+            $this->addAttributes(['class' => 'compact-table']);
+        }
 
         return $this;
     }
@@ -197,7 +200,9 @@ class EventsTable extends BaseTable
         } else {
             return Html::tag('td', ['id' => $id], [
                 $link,
-                $this->compact ? null : Html::tag('p', ['class' => 'output-line'], HtmlPurifier::process($message))
+                $this->compact
+                    ? ': ' . preg_replace('/\n.+/s', '', $message)
+                    : Html::tag('p', ['class' => 'output-line'], HtmlPurifier::process($message))
             ]);
         }
     }
@@ -216,7 +221,7 @@ class EventsTable extends BaseTable
         // [Skype] Centralized Logging Service Agent Local logs being deleted and unable to move to network share
         // -> Skype
         // TODO: this doesn't belong here, should happen at event processing timem
-        return \preg_replace('/^\[([^\]?]+)\].*/', '\1', $objectName);
+        return \preg_replace('/^\[([^]?]+)].*/', '\1', $objectName);
     }
 
     public function getDefaultColumnNames()
