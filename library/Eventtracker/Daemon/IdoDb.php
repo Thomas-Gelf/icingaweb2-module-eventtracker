@@ -3,6 +3,7 @@
 namespace Icinga\Module\Eventtracker\Daemon;
 
 use Icinga\Data\ResourceFactory;
+use Icinga\Exception\NotFoundError;
 use Icinga\Module\Monitoring\Backend\MonitoringBackend;
 use Zend_Db_Adapter_Abstract as DbAdapter;
 use Zend_Db_Select as DbSelect;
@@ -20,6 +21,8 @@ class IdoDb
     /** @var string */
     protected $lastHostsChecksum;
 
+    protected $lastCheckedHost;
+
     /**
      * IdoDb constructor.
      * @param DbAdapter $db
@@ -35,6 +38,46 @@ class IdoDb
     public function getDb()
     {
         return $this->db;
+    }
+
+    public function hasHost($hostname)
+    {
+        if ($host = $this->eventuallyGetHost($hostname)) {
+            $this->lastCheckedHost = $host;
+
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    /**
+     * @param $hostname
+     * @return mixed
+     * @throws NotFoundError
+     */
+    public function getHost($hostname)
+    {
+        if ($this->lastCheckedHost !== null && $this->lastCheckedHost->host_name === $hostname) {
+            return $this->lastCheckedHost;
+        } else {
+            $host = $this->eventuallyGetHost($hostname);
+            if ($host) {
+                return $host;
+            } else {
+                throw new NotFoundError("Host '$hostname' not found");
+            }
+        }
+    }
+
+    protected function eventuallyGetHost($hostname)
+    {
+        $query = $this->db
+            ->select()
+            ->from('icinga_ci')
+            ->where('host_name = ?', $hostname);
+
+        return $this->db->fetchRow($query);
     }
 
     public function coreIsRunning()
