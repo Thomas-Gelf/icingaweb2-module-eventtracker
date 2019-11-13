@@ -201,7 +201,7 @@ class EventsTable extends BaseTable
             return Html::tag('td', ['id' => $id], [
                 $link,
                 $this->compact
-                    ? ': ' . preg_replace('/\n.+/s', '', $message)
+                    ? ': ' . preg_replace('/\n.+/s', '', \strip_tags($message))
                     : Html::tag('p', ['class' => 'output-line'], HtmlPurifier::process($message))
             ]);
         }
