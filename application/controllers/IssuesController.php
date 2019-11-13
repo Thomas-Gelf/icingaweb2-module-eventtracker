@@ -3,6 +3,7 @@
 namespace Icinga\Module\Eventtracker\Controllers;
 
 use gipfl\IcingaWeb2\CompatController;
+use gipfl\IcingaWeb2\Icon;
 use gipfl\IcingaWeb2\Link;
 use Icinga\Authentication\Auth;
 use Icinga\Module\Eventtracker\Db\EventSummaryBySeverity;
@@ -34,6 +35,7 @@ class IssuesController extends CompatController
         $main->add(Html::tag('li', null, [Link::create('Filters', '#', null, [
             'class' => 'icon-angle-double-down'
         ]), $sub]));
+        $main->add($this->createViewToggle());
         $this->columnFilter($table, $sub, 'host_name', 'hosts', $this->translate('Hosts: %s'));
         $this->columnFilter($table, $sub, 'object_class', 'classes', $this->translate('Classes: %s'));
         $this->columnFilter($table, $sub, 'object_name', 'objects', $this->translate('Objects: %s'));
@@ -41,6 +43,32 @@ class IssuesController extends CompatController
         $this->columnFilter($table, $sub, 'sender_name', 'senders', $this->translate('Sender: %s'));
         if (! $this->showCompact()) {
             $this->actions()->add($main);
+        }
+    }
+
+    protected function createViewToggle()
+    {
+        $wide = $this->params->get('wide');
+        if ($wide) {
+            return Link::create(
+                $this->translate('Compact'),
+                $this->url()->without('wide'),
+                null,
+                [
+                    'title' => $this->translate('Switch to compact mode'),
+                    'class' => 'icon-resize-small'
+                ]
+            );
+        } else {
+            return Link::create(
+                $this->translate('Full'),
+                $this->url()->with('wide', true),
+                null,
+                [
+                    'title' => $this->translate('Switch to compact mode'),
+                    'class' => 'icon-resize-full'
+                ]
+            );
         }
     }
 
@@ -118,6 +146,9 @@ class IssuesController extends CompatController
             $table->getQuery()->limit(30);
             $this->content()->add($table);
         } else {
+            if (! $this->params->get('wide')) {
+                $table->showCompact();
+            }
             $this->addSingleTab('Issues');
             $this->setTitle('Event Tracker');
             $this->controls()->addTitle('Current Issues', $summary);
