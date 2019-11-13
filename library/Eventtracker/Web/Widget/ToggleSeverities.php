@@ -3,6 +3,8 @@
 namespace Icinga\Module\Eventtracker\Web\Widget;
 
 use gipfl\IcingaWeb2\Url;
+use Icinga\Application\Config;
+use Icinga\Module\Eventtracker\ConfigHelper;
 use Icinga\Module\Eventtracker\Severity;
 use ipl\Html\Html;
 
@@ -27,15 +29,25 @@ class ToggleSeverities extends ToggleFlagList
 
     protected function getDefaultSelection()
     {
-        $selection = [
-            Severity::EMERGENCY,
-            Severity::ALERT,
-            Severity::CRITICAL,
-            Severity::ERROR,
-            Severity::WARNING,
-        ];
+        $selection = ConfigHelper::getList(
+            Config::module('eventtracker')->get('default-filters', 'severity')
+        );
 
-        return array_combine($selection, $selection);
+        if (empty($selection)) {
+            $selection = [
+                Severity::EMERGENCY,
+                Severity::ALERT,
+                Severity::CRITICAL,
+                Severity::ERROR,
+                Severity::WARNING,
+            ];
+        } else {
+            foreach ($selection as $severity) {
+                Severity::assertValid($severity);
+            }
+        }
+
+        return \array_combine($selection, $selection);
     }
 
     protected function getListLabel()
