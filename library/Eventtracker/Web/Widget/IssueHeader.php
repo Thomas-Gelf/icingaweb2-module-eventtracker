@@ -16,6 +16,7 @@ use Icinga\Module\Eventtracker\Web\Form\CloseIssueForm;
 use Icinga\Module\Eventtracker\Web\Form\GiveOwnerShipForm;
 use Icinga\Module\Eventtracker\Web\Form\LinkLikeForm;
 use Icinga\Module\Eventtracker\Web\Form\ReOpenIssueForm;
+use Icinga\Module\Eventtracker\Web\HtmlPurifier;
 use Icinga\Web\Hook;
 use Icinga\Web\Response;
 use ipl\Html\BaseHtmlElement;
@@ -123,7 +124,7 @@ class IssueHeader extends BaseHtmlElement
 
     protected function showObjectDetails(Issue $issue)
     {
-        return [
+        $result = [
             Html::tag('strong', 'Host:   '),
             Link::create(
                 $issue->get('host_name'),
@@ -148,6 +149,31 @@ class IssueHeader extends BaseHtmlElement
                 ['data-base-target' => 'col1']
             ),
         ];
+
+        $attributes = (array) $issue->getAttributes();
+        ksort($attributes);
+        if (! empty($attributes)) {
+            $result[] = "\n";
+        }
+        foreach ($attributes as $name => $value) {
+            $name = preg_replace('/^[A-Za-z]+_([A-Za-z])/', '\1', $name);
+            $name = str_replace('_', ' ', $name);
+            if (preg_match('#^https?://[^ ]+$#', $value)) {
+                if (false !== ($pos = strrpos($value, '='))) {
+                    $label = substr($value, $pos + 1);
+                } else {
+                    $label = substr($value, strrpos(rtrim($value, '/'), '/') + 1);
+                }
+                $value = Html::tag('a', [
+                    'href'   => $value,
+                    'target' => '_blank'
+                ], $label);
+            }
+            $result[] = Html::tag('strong', "$name: ");
+            $result[] = HtmlPurifier::process($value);
+            $result[] = "\n";
+        }
+        return $result;
     }
 
     protected function renderExpiration($expiration)
