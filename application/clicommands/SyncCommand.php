@@ -17,8 +17,12 @@ class SyncCommand extends Command
             $scom->syncFromPlainObjects($this->readJsonFile($filename));
         } elseif ($resource = $this->params->get('db-resource')) {
             $scom->syncFromDb($this->requireMssqlResource($resource));
+        } elseif ($filename = $this->Config()->get('scom', 'simulation_file')) {
+            $scom->syncFromPlainObjects($this->readJsonFile($filename));
+        } elseif ($resource = $this->Config()->get('scom', 'db_resource')) {
+            $scom->syncFromDb($this->requireMssqlResource($resource));
         } else {
-            $this->failNice('Either --db-resource or --json is required');
+            $this->failNice('Either --db-resource, --json or a config setting is required');
         }
     }
 
