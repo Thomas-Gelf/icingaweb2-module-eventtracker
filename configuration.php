@@ -8,6 +8,7 @@ $section = $this->menuSection(N_('Event Tracker'))
 $section->add(N_('Issues'))->setUrl('eventtracker/issues');
 $section->add(N_('Summaries'))->setUrl('eventtracker/summary/top10');
 
+$this->provideSearchUrl('EventTracker', 'eventtracker/issues', 110);
 $this->providePermission(
     'eventtracker/admin',
     $this->translate('Eventtracker admin')
