@@ -7,6 +7,9 @@ use Icinga\Exception\ConfigurationError;
 use Icinga\Module\Monitoring\Backend\MonitoringBackend;
 use ipl\Html\Html;
 
+/**
+ * @deprecated: please use the Incentage module
+ */
 class IcingaController extends CompatController
 {
     protected $requiresAuthentication = false;
