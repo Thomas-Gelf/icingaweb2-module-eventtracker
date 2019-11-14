@@ -109,12 +109,14 @@ class EventsTable extends BaseTable
             ])->setSortExpression([
                 'i.host_name',
                 'i.object_name',
-            ]),
+            ])->setRenderer(function ($row) {
+                return $this->linkToObject($row, $row->host_name);
+            }),
             $this->createColumn('object_name', $this->translate('Object'), [
                 'object_name'   => 'i.object_name',
                 'issue_uuid' => 'i.issue_uuid'
             ])->setRenderer(function ($row) {
-                return $row->object_name;
+                return $this->linkToObject($row, $row->object_name);
             }),
             $this->createColumn('message', $this->translate('Message'), [
                 'severity'      => 'i.severity', // Used by linkToObject
