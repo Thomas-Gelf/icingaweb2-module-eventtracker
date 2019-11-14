@@ -247,7 +247,7 @@ class IcingaCiSync
             return $deleted;
         }
 
-        foreach (array_chunk($ids, 1000)  as $chunk) {
+        foreach (array_chunk($ids, 1000) as $chunk) {
             $deleted += $this->db->delete(
                 self::TBL_CI,
                 $this->db->quoteInto('object_id IN (?)', $chunk)

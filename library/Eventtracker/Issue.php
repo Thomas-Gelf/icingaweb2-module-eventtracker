@@ -128,7 +128,7 @@ class Issue
             }
 
             return true;
-        },  ARRAY_FILTER_USE_KEY);
+        }, ARRAY_FILTER_USE_KEY);
         $this->setAttributes($attributes);
 
         // Priority can be customized, source will not be allowed to change it
