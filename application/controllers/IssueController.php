@@ -3,6 +3,7 @@
 namespace Icinga\Module\Eventtracker\Controllers;
 
 use gipfl\IcingaWeb2\CompatController;
+use Icinga\Exception\NotFoundError;
 use Icinga\Module\Eventtracker\DbFactory;
 use Icinga\Module\Eventtracker\Hook\EventActionsHook;
 use Icinga\Module\Eventtracker\Issue;
@@ -44,6 +45,18 @@ class IssueController extends CompatController
                 new IssueDetails($issue)
             ]);
         }
+    }
+
+    /**
+     * @throws NotFoundError
+     */
+    public function acknowledgeAction()
+    {
+        if (! $this->getRequest()->isApiRequest()) {
+            throw new NotFoundError('Not found');
+        }
+
+        // TODO: implement.
     }
 
     protected function issueHeader(Issue $issue)
