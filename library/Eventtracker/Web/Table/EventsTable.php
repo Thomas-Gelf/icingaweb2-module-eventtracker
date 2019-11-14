@@ -114,7 +114,7 @@ class EventsTable extends BaseTable
                 'object_name'   => 'i.object_name',
                 'issue_uuid' => 'i.issue_uuid'
             ])->setRenderer(function ($row) {
-                return $this->fixObjectName($row->object_name);
+                return $row->object_name;
             }),
             $this->createColumn('message', $this->translate('Message'), [
                 'severity'      => 'i.severity', // Used by linkToObject
@@ -175,16 +175,16 @@ class EventsTable extends BaseTable
         if (\in_array('object_name', $this->getChosenColumnNames())) {
             $object = null;
         } else {
-            $object = $this->fixObjectName($row->object_name);
+            $object = $row->object_name;
         }
 
         if ($host === null && $object === null) {
             $link = null;
         } else {
             if ($host === null) {
-                $link = $this->linkToObject($row, $host);
-            } elseif ($object === null) {
                 $link = $this->linkToObject($row, $object);
+            } elseif ($object === null) {
+                $link = $this->linkToObject($row, $host);
             } else {
                 $link = $this->linkToObject($row, "$object on $host");
             }
@@ -214,14 +214,6 @@ class EventsTable extends BaseTable
         ], [
             'title' => \ucfirst($row->severity)
         ]);
-    }
-
-    protected function fixObjectName($objectName)
-    {
-        // [Skype] Centralized Logging Service Agent Local logs being deleted and unable to move to network share
-        // -> Skype
-        // TODO: this doesn't belong here, should happen at event processing timem
-        return \preg_replace('/^\[([^]?]+)].*/', '\1', $objectName);
     }
 
     public function getDefaultColumnNames()
