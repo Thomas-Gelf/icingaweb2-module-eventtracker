@@ -189,3 +189,7 @@ CREATE TABLE eventtracker_schema_migration (
   migration_time DATETIME NOT NULL,
   PRIMARY KEY(schema_version)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE utf8mb4_bin;
+
+INSERT INTO eventtracker_schema_migration
+  (schema_version, migration_time)
+VALUES (1, NOW());
