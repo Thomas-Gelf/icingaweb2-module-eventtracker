@@ -27,11 +27,12 @@ class EventReceiver
             } else {
                 $issue = Issue::create($event, $this->db);
             }
-        } else {
-            $issue->resolve($event);
-        }
+            $issue->storeToDb($this->db);
+        } elseif ($issue) {
+            $issue->recover($event, $this->db);
 
-        $issue->storeToDb($this->db);
+            return null;
+        }
 
         return $issue;
     }
