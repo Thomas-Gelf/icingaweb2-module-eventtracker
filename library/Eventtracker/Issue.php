@@ -171,6 +171,11 @@ class Issue
         return bin2hex($this->get('issue_uuid'));
     }
 
+    public function getNiceUuid()
+    {
+        return Uuid::toHex($this->get('issue_uuid'));
+    }
+
     /**
      * @param Db $db
      * @return bool
