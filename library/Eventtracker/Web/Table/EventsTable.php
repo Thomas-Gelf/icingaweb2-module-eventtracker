@@ -145,7 +145,9 @@ class EventsTable extends BaseTable
             return Html::tag('td', [
                 'class' => $classes
             ], [
-                Time::agoFormatted($row->timestamp)
+                Time::agoFormatted($row->timestamp)->add(
+                    $prioIconRenderer($row)
+                )
             ]);
         }
 
