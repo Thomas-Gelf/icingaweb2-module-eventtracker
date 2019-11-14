@@ -110,18 +110,14 @@ class Issue
         return $issue;
     }
 
-    public static function resolveIfExists(Event $event, Db $db)
-    {
-        if ($issue = Issue::loadIfEventExists($event, $db)) {
-            $issue->resolve($event);
-        }
-    }
-
     public function setPropertiesFromEvent(Event $event)
     {
         $properties = $event->getProperties();
         $timeout = $properties['event_timeout'];
         $attributes = $properties['attributes'];
+        if ($attributes === null) {
+            $attributes = [];
+        }
         unset($properties['event_timeout'], $properties['attributes']);
         $attributes = array_filter($attributes, function ($key) {
             if ($key === 'severity' || $key === 'msg') {
@@ -323,7 +319,17 @@ class Issue
         }
     }
 
-    public static function expire($uuid, \Zend_Db_Adapter_Abstract $db)
+    public function recover(Event $event, \Zend_Db_Adapter_Abstract $db)
+    {
+        return static::closeIssue($this, $db, IssueHistory::REASON_RECOVERY);
+    }
+
+    public static function recoverUuid($uuid, \Zend_Db_Adapter_Abstract $db)
+    {
+        return static::closeIssue(Issue::load($uuid, $db), $db, IssueHistory::REASON_RECOVERY);
+    }
+
+    public static function expireUuid($uuid, \Zend_Db_Adapter_Abstract $db)
     {
         return static::closeIssue(Issue::load($uuid, $db), $db, IssueHistory::REASON_EXPIRATION);
     }
