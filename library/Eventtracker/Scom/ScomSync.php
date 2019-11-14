@@ -71,13 +71,12 @@ class ScomSync
             }
         }
 
-        if ($cntIgnored + $cntRecovered + $cntNew === 0) {
-            Logger::debug('Got nothing new from SCOM');
+        if ($cntRecovered + $cntNew === 0) {
+            // Logger::debug('Got nothing new from SCOM');
         } else {
             Logger::info(\sprintf(
-                'SCOM sync: %d new, %d ignored, %d recoverd',
+                'SCOM sync: %d new, %d recoverd',
                 $cntNew,
-                $cntIgnored,
                 $cntRecovered
             ));
         }
