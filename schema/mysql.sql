@@ -157,7 +157,6 @@ CREATE TABLE issue_history (
   attributes TEXT COLLATE utf8mb4_general_ci NOT NULL,
   activities MEDIUMTEXT NOT NULL, -- json([{ts:123,modifications:{}]) ggf: username:"",ip:""?
   PRIMARY KEY (issue_uuid),
-  UNIQUE INDEX sender_event (sender_event_checksum),
   INDEX host_name (host_name),
   INDEX sort_first_event (ts_first_event)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE utf8mb4_bin;
