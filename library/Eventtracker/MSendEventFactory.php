@@ -46,7 +46,8 @@ class MSendEventFactory
                 $cmd->getSlotValue('mc_tool_class', 'NO-CLASS')
                 // $this->getRequiredSlotValue('mc_tool'),
                 // $this->getRequiredSlotValue('mc_tool_class')
-            )
+            ),
+            'attributes'      => $cmd->getSlotValues(),
         ]);
 
         return $event;

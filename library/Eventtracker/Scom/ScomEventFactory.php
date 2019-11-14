@@ -28,7 +28,8 @@ class ScomEventFactory
             'priority'        => $obj->alert_priority,
             'message'         => $obj->description ? $obj->description : '-',
             'sender_event_id' => $obj->alert_id,
-            'sender_id'       => $this->senderId
+            'sender_id'       => $this->senderId,
+            // TODO: 'attributes' ?
         ]);
 
         return $event;
