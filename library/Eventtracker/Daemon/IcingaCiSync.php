@@ -44,6 +44,10 @@ class IcingaCiSync
         }
     }
 
+    /**
+     * @param $idoHosts
+     * @throws \Exception
+     */
     protected function replaceHosts($idoHosts)
     {
         $current = $this->fetchHosts();
@@ -81,14 +85,23 @@ class IcingaCiSync
             $this->db->commit();
         } catch (\Exception $e) {
             try {
+                Logger::error($e->getMessage());
                 $this->db->rollBack();
             } catch (\Exception $rollbackError) {
-                // There isn't much we can do right now. Log?
+                Logger::error($rollbackError->getMessage());
             }
 
             throw $e;
-
-            throw new \RuntimeException($e->getMessage(), $e->getCode(), $e);
+        }
+        if (\count($create) + \count($modify) + \count($delete) > 0) {
+            Logger::info(\sprintf(
+                'IDO sync: %d created, %d modified, %d deleted',
+                \count($create),
+                \count($modify),
+                \count($delete)
+            ));
+        } else {
+            // Logger::debug('IDO sync: nothing has been changed');
         }
     }
 
