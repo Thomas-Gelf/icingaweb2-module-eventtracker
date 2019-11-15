@@ -1,0 +1,21 @@
+[Unit]
+Description=Icinga Eventtracker Daemon
+Documentation=https://github.com/Thomas-Gelf/icingaweb2-module-eventtracker
+Wants=network.target
+
+[Service]
+EnvironmentFile=-/etc/default/icinga-eventtracker
+EnvironmentFile=-/etc/sysconfig/icinga-eventtracker
+ExecStart=/usr/bin/icingacli eventtracker daemon run
+ExecReload=/bin/kill -HUP ${MAINPID}
+User=eventtracker
+SyslogIdentifier=eventtracker
+Type=notify
+
+NotifyAccess=main
+WatchdogSec=10
+RestartSec=30
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
