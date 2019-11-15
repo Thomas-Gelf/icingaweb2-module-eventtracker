@@ -3,7 +3,6 @@
 namespace Icinga\Module\Eventtracker\Scom;
 
 use Icinga\Module\Eventtracker\Daemon\Logger;
-use Icinga\Module\Eventtracker\Event;
 use Icinga\Module\Eventtracker\EventReceiver;
 use Icinga\Module\Eventtracker\Issue;
 use Icinga\Module\Eventtracker\ObjectClassInventory;
@@ -55,7 +54,7 @@ class ScomSync
             $event = $factory->fromPlainObject($scomEvent);
             $issue = $receiver->processEvent($event);
             if ($issue) {
-                if ($issue->isNew()) {
+                if ($issue->hasBeenCreatedNow()) {
                     $cntNew++;
                 }
                 $issuesFromScom[$event->get('sender_event_id')] = $issue->getUuid();

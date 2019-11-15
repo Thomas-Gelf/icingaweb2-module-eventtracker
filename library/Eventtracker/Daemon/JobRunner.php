@@ -19,11 +19,11 @@ class JobRunner implements DbBasedComponent
     /** @var LoopInterface */
     protected $loop;
 
-    /** @var int[] */
-    protected $scheduledIds = [];
+    /** @var array */
+    protected $scheduledTasks = [];
 
     /** @var Promise[] */
-    protected $runningIds = [];
+    protected $runningTasks = [];
 
     protected $checkInterval = 10;
 
@@ -58,10 +58,25 @@ class JobRunner implements DbBasedComponent
         $this->db = $db;
         $check = function () {
             try {
-                $this->checkForPendingJobs();
-                $this->runNextPendingJob();
+                $this->runNextPendingTask();
+                if (! isset($this->scheduledTasks['scom']) && ! isset($this->scheduledTasks['scom'])) {
+
+                }
             } catch (\Exception $e) {
                 Logger::error($e->getMessage());
+            }
+        };
+        $schedule = function () {
+            $taskNames = [
+                'scom',
+                'ido'
+            ];
+            foreach ($taskNames as $taskName) {
+                if (! isset($this->scheduledTasks[$taskName])
+                    && ! isset($this->scheduledTasks[$taskName])
+                ) {
+                    $this->scheduledTasks[$taskName] = $taskName;
+                }
             }
         };
         if ($this->timer === null) {
@@ -72,6 +87,7 @@ class JobRunner implements DbBasedComponent
             $this->loop->cancelTimer($this->timer);
         }
         $this->timer = $this->loop->addPeriodicTimer($this->checkInterval, $check);
+        $this->timer = $this->loop->addPeriodicTimer(3, $schedule);
 
         return new FulfilledPromise();
     }
@@ -81,106 +97,59 @@ class JobRunner implements DbBasedComponent
      */
     public function stopDb()
     {
-        $this->scheduledIds = [];
+        $this->scheduledTasks = [];
         if ($this->timer !== null) {
             $this->loop->cancelTimer($this->timer);
             $this->timer = null;
         }
         $allFinished = $this->running->killOrTerminate();
-        foreach ($this->runningIds as $id => $promise) {
+        foreach ($this->runningTasks as $id => $promise) {
             $promise->cancel();
         }
-        $this->runningIds = [];
+        $this->runningTasks = [];
 
         return $allFinished;
     }
 
-    protected function hasBeenDisabled()
-    {
-        return true;
-
-        $db = $this->db->getDbAdapter();
-        return $db->fetchOne(
-            $db->select()
-                ->from('director_setting', 'setting_value')
-                ->where('setting_name = ?', 'disable_all_jobs')
-        ) === 'y';
-    }
-
-    protected function checkForPendingJobs()
-    {
-        if ($this->hasBeenDisabled()) {
-            $this->scheduledIds = [];
-            // TODO: disable jobs currently going on?
-            return;
-        }
-        if (empty($this->scheduledIds)) {
-            $this->loadNextIds();
-        }
-    }
-
-    protected function runNextPendingJob()
+    protected function runNextPendingTask()
     {
         if ($this->timer === null) {
             // Reset happened. Stopping?
             return;
         }
 
-        if (! empty($this->runningIds)) {
+        if (! empty($this->runningTasks)) {
             return;
         }
-        while (! empty($this->scheduledIds)) {
-            if ($this->runNextJob()) {
+        while (! empty($this->scheduledTasks)) {
+            if ($this->runNextTask()) {
                 break;
             }
         }
     }
 
-    protected function loadNextIds()
-    {
-        $db = $this->db->getDbAdapter();
-
-        foreach ($db->fetchCol(
-            $db->select()->from('director_job', 'id')->where('disabled = ?', 'n')
-        ) as $id) {
-            $this->scheduledIds[] = (int) $id;
-        };
-    }
-
     /**
      * @return bool
      */
-    protected function runNextJob()
+    protected function runNextTask()
     {
-        return;
-        $id = \array_shift($this->scheduledIds);
+        $name = \array_shift($this->scheduledTasks);
         try {
-            $job =  DirectorJob::loadWithAutoIncId((int) $id, $this->db);
-            if ($job->shouldRun()) {
-                $this->runJob($job);
-                return true;
-            }
+            $this->runSync($name);
         } catch (\Exception $e) {
-            Logger::error('Trying to schedule Job failed: ' . $e->getMessage());
+            Logger::error("Trying to schedule '$name' failed: " . $e->getMessage());
         }
 
         return false;
     }
 
-    /**
-     * @param DirectorJob $job
-     */
-    protected function runJob(DirectorJob $job)
+    protected function runSync($what)
     {
-        $id = $job->get('id');
-        $jobName = $job->get('job_name');
-        Logger::debug("Job ($jobName) starting");
+        Logger::debug("Sync ($what) starting");
         $arguments = [
-            'director',
-            'job',
-            'run',
-            '--id',
-            $job->get('id'),
+            'eventtracker',
+            'sync',
+            $what,
             '--debug',
             '--rpc'
         ];
@@ -196,20 +165,20 @@ class JobRunner implements DbBasedComponent
         });
         if ($this->logProxy) {
             $logger = clone($this->logProxy);
-            $logger->setPrefix("Job ($jobName): ");
+            $logger->setPrefix("Sync ($what): ");
             $cli->rpc()->setHandler($logger, 'logger');
         }
-        unset($this->scheduledIds[$id]);
-        $this->runningIds[$id] = $cli->run($this->loop)->then(function () use ($id, $jobName) {
-            Logger::debug("Job ($jobName) finished");
-        })->otherwise(function (\Exception $e) use ($id, $jobName) {
-            Logger::error("Job ($jobName) failed: " . $e->getMessage());
-        })->otherwise(function (FinishedProcessState $state) use ($jobName) {
-            Logger::error("Job ($jobName) failed: " . $state->getReason());
-        })->always(function () use ($id) {
-            unset($this->runningIds[$id]);
+        unset($this->scheduledTasks[$what]);
+        $this->runningTasks[$what] = $cli->run($this->loop)->then(function () use ($what) {
+            Logger::debug("Job ($what) finished");
+        })->otherwise(function (\Exception $e) use ($what) {
+            Logger::error("Job ($what) failed: " . $e->getMessage());
+        })->otherwise(function (FinishedProcessState $state) use ($what) {
+            Logger::error("Job ($what) failed: " . $state->getReason());
+        })->always(function () use ($what) {
+            unset($this->runningTasks[$what]);
             $this->loop->futureTick(function () {
-                $this->runNextPendingJob();
+                $this->runNextPendingTask();
             });
         });
     }

@@ -36,6 +36,8 @@ class Issue
 
     protected $objectClass;
 
+    protected $createdNow = false;
+
     /**
      * @param $uuid
      * @param Db $db
@@ -105,6 +107,7 @@ class Issue
     public static function create(Event $event, Db $db)
     {
         $issue = new Issue();
+        $issue->createdNow = true;
         $issue->setPropertiesFromEvent($event);
 
         return $issue;
@@ -144,6 +147,11 @@ class Issue
         $this->setProperties($properties);
 
         return $this;
+    }
+
+    public function hasBeenCreatedNow()
+    {
+        return $this->createdNow;
     }
 
     public function isNew()
