@@ -15,6 +15,34 @@ class Issues
     }
 
     /**
+     * @return Issue[]
+     * @throws NotFoundError
+     */
+    public function fetchExpiredUuids()
+    {
+        $select = $this->db->select()
+            ->from('issue', 'issue_uuid')
+            ->where('ts_expiration < ?', time() * 1000);
+
+        return $this->db->fetchCol($select);
+    }
+
+    /**
+     * @param $uuids
+     * @return array
+     * @throws NotFoundError
+     */
+    public function fetchByUuids($uuids)
+    {
+        $issues = [];
+        foreach ($uuids as $uuid) {
+            $issues[] = Issue::load($uuid, $this->db);
+        }
+
+        return $issues;
+    }
+
+    /**
      * @param $host
      * @param null $object
      * @return Issue[]
@@ -31,12 +59,6 @@ class Issues
             $select->where('object_name = ?', $object);
         }
 
-        $issues = [];
-        $uuids = $this->db->fetchCol($select);
-        foreach ($uuids as $uuid) {
-            $issues[] = Issue::load($uuid, $this->db);
-        }
-
-        return $issues;
+        return $this->fetchByUuids($this->db->fetchCol($select));
     }
 }

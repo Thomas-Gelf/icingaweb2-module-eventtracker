@@ -11,6 +11,8 @@ use Icinga\Module\Eventtracker\Daemon\IdoDb;
 use Icinga\Module\Eventtracker\Daemon\JsonRpcLogWriter as JsonRpcLogWriterAlias;
 use Icinga\Module\Eventtracker\Daemon\Logger;
 use Icinga\Module\Eventtracker\DbFactory;
+use Icinga\Module\Eventtracker\Issue;
+use Icinga\Module\Eventtracker\Issues;
 use Icinga\Module\Eventtracker\Scom\ScomSync;
 use React\EventLoop\Factory as Loop;
 use React\EventLoop\LoopInterface;
@@ -45,6 +47,13 @@ class SyncCommand extends Command
     {
         $this->runWithLoop(function () {
             $this->runIdo();
+        });
+    }
+
+    public function expireAction()
+    {
+        $this->runWithLoop(function () {
+            $this->runExpirations();
         });
     }
 
@@ -84,6 +93,22 @@ class SyncCommand extends Command
             }
         }
         $sync->sync();
+
+        return new FulfilledPromise();
+    }
+
+    public function runExpirations()
+    {
+        $db = DbFactory::db();
+        $issues = new Issues($db);
+        $expired = $issues->fetchExpiredUuids();
+        foreach ($expired as $uuid) {
+            Issue::expireUuid($uuid, $db);
+        }
+        $count = count($expired);
+        if ($count > 0) {
+            Logger::info(sprintf('Expired %d outdated issues', $count));
+        }
 
         return new FulfilledPromise();
     }

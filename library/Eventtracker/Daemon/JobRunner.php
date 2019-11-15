@@ -59,9 +59,6 @@ class JobRunner implements DbBasedComponent
         $check = function () {
             try {
                 $this->runNextPendingTask();
-                if (! isset($this->scheduledTasks['scom']) && ! isset($this->scheduledTasks['scom'])) {
-
-                }
             } catch (\Exception $e) {
                 Logger::error($e->getMessage());
             }
@@ -69,7 +66,8 @@ class JobRunner implements DbBasedComponent
         $schedule = function () {
             $taskNames = [
                 'scom',
-                'ido'
+                'ido',
+                'expire',
             ];
             foreach ($taskNames as $taskName) {
                 if (! isset($this->scheduledTasks[$taskName])

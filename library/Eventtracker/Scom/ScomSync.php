@@ -74,7 +74,7 @@ class ScomSync
             // Logger::debug('Got nothing new from SCOM');
         } else {
             Logger::info(\sprintf(
-                'SCOM sync: %d new, %d recoverd',
+                'SCOM sync: %d new, %d recovered',
                 $cntNew,
                 $cntRecovered
             ));
