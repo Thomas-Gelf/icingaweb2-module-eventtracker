@@ -2,6 +2,7 @@
 
 namespace Icinga\Module\Eventtracker\Controllers;
 
+use Icinga\Application\Logger;
 use Icinga\Module\Eventtracker\MSendEventFactory;
 use Icinga\Module\Eventtracker\Uuid;
 use ipl\Html\Html;
@@ -59,10 +60,30 @@ class PushController extends CompatController
             $eventFactory = new MSendEventFactory($senders, $classes);
             $event = $eventFactory->fromCommandLine($mSend);
             $issue = $receiver->processEvent($event);
-            echo 'Message #1 - Evtid = ';
-            echo Uuid::toHex($issue->getUuid()) . "\n";
+            if ($issue) {
+                $uuid = $issue->getNiceUuid();
+            } else {
+                $uuid = 0;
+            }
+            echo "Message #1 - Evtid = $uuid\n";
+
+            $error = false;
         } catch (\Exception $e) {
+            $error = $e->getMessage();
             echo $e->getMessage() . "\n";
+        }
+        if ($this->Config()->get('msend', 'force_log') === 'yes') {
+            if ($error) {
+                Logger::error("msend (ERR: $error): $cmd");
+            } else {
+                Logger::error("msend ($uuid): $cmd");
+            }
+        } else {
+            if ($error) {
+                Logger::error("msend (ERR: $error): $cmd");
+            } else {
+                Logger::debug("msend ($uuid): $cmd");
+            }
         }
         exit;
     }
