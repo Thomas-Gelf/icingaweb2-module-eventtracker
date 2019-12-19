@@ -1,9 +1,29 @@
 Event Tracker
 =============
 
-> **Please do not use this module**. It's an early prototype for a specific
-> migration project, designed to replace a BMC Event Manager. Breaking changes
-> will take place with no prior announcement.
+This module has been implemented for a migration project with the purpose to
+replace a BMC Event Manager installation. It therefore does not aim to be a
+one-size-fits-all solution.
+
+...serves the following purposes:
+
+- provide a drop-in replacement for `msend`
+- sync issues from SCOM
+- sync objects from the Icinga IDO
+- provide Hooks to allow to implement various kinds of back-channels
+
+In said project, we used the following modules combined with this one:
+
+- [BEM module](https://github.com/Thomas-Gelf/icingaweb2-module-bem): an
+  integration with the **BMC (ProactiveNet) Event Manager©**. Originally used
+  to send events to BMC, still in use to prove that EventTracker behaves the
+  same way BMC used to work
+- [iET module](https://github.com/Thomas-Gelf/icingaweb2-module-iet): hooks
+  into various modules:
+  - as an Import Source into Icinga Director
+  - as Host/ServiceAction into the Monitoring module (to create tickets)
+  - as an EventAction into the EventTracker, mainly to create Operational
+    Requests
 
 Purpose
 -------
@@ -86,10 +106,17 @@ dedicated section:
 [scom]
 db_resource = "MSSQL SCOM"
 ; simulation_file = /tmp/scomtest.json
-poll_interval = 5
-cmd_update = "/usr/bin/ssh icinga@scom.example.com 'c:\\Scripts\\UpdateScomAlertTicketIdV1.ps1' '{sender_event_id}' '{ticket_ref}' '{owner}'"
-cmd_close = "/usr/bin/ssh icinga@scom.example.com 'c:\\Scripts\\ResetScomMonitorV3.ps1' '{sender_event_id}'"
+; poll_interval = 5
+; cmd_update = "/usr/bin/ssh icinga@scom.example.com 'c:\\Scripts\\UpdateScomAlertTicketIdV1.ps1' '{sender_event_id}' '{ticket_ref}' '{owner}'"
+; cmd_close = "/usr/bin/ssh icinga@scom.example.com 'c:\\Scripts\\ResetScomMonitorV3.ps1' '{sender_event_id}'"
 ```
 
 Usually you want to fetch from the MSSQL database populated by SCOM, so please
-provide a related `db_resource`.
+provide a related `db_resource`. For testing reasons one might also want to use
+a JSON-encoded file, that's what the `simulation_file` setting is for.
+
+### Back-Channel to SCOM
+
+You might want to automatically close issues in SCOM once they're being closed
+in the EventTracker or to update a reference to created tickets when this module
+creates such.
