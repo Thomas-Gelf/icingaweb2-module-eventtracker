@@ -142,7 +142,7 @@ class IssuesController extends CompatController
         if ($this->showCompact()) {
             $table->setNoHeader();
             $table->showCompact();
-            $table->getQuery()->limit(30);
+            $table->getQuery()->limit(1000);
             $this->content()->add($table);
         } else {
             if (! $this->params->get('wide')) {
@@ -153,6 +153,7 @@ class IssuesController extends CompatController
             $this->controls()->addTitle('Current Issues', $summary);
             $this->actions()->add($filters);
             $this->actions()->add($this->createViewToggle());
+            $table->getQuery()->limit(1000);
             (new AdditionalTableActions($table, Auth::getInstance(), $this->url()))
                 ->appendTo($this->actions());
             $this->eventuallySendJson($table);
