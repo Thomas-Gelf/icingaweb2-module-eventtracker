@@ -132,7 +132,8 @@ class IssuesController extends CompatController
         }
         $filters = Html::tag('ul', ['class' => 'nav'], [
             // Order & ensureAssembled matters!
-            (new TogglePriorities($this->url()))->applyToQuery($table->getQuery())->ensureAssembled(),
+            // temporarily disabled, should be configurable:
+            // (new TogglePriorities($this->url()))->applyToQuery($table->getQuery())->ensureAssembled(),
             (new ToggleSeverities($this->url()))->applyToQuery($table->getQuery())->ensureAssembled(),
             (new ToggleStatus($this->url()))->applyToQuery($table->getQuery())->ensureAssembled(),
         ]);
