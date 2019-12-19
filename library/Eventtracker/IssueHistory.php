@@ -10,6 +10,24 @@ class IssueHistory
     const REASON_MANUAL = 'manual';
     const REASON_EXPIRATION = 'expiration';
 
+    protected static $tableName = 'issue_history';
+
+    /**
+     * @param $uuid
+     * @param Db $db
+     * @return string
+     */
+    public static function exists($uuid, Db $db)
+    {
+        $result = $db->fetchOne(
+            $db->select()
+                ->from(self::$tableName, 'COUNT(*)')
+                ->where('issue_uuid = ?', $uuid)
+        );
+
+        return $result;
+    }
+
     public static function persist(Issue $issue, Db $db, $reason, $closedBy = null)
     {
         $blacklist = ['status'];
@@ -36,6 +54,6 @@ class IssueHistory
         }
         $properties['activities'] = \json_encode($activities);
 
-        $db->insert('issue_history', $properties);
+        $db->insert(self::$tableName, $properties);
     }
 }

@@ -41,6 +41,22 @@ class Issue
     /**
      * @param $uuid
      * @param Db $db
+     * @return string
+     */
+    public static function exists($uuid, Db $db)
+    {
+        $result = $db->fetchOne(
+            $db->select()
+                ->from(self::$tableName, 'COUNT(*)')
+                ->where('issue_uuid = ?', $uuid)
+        );
+
+        return $result;
+    }
+
+    /**
+     * @param $uuid
+     * @param Db $db
      * @return Issue
      * @throws NotFoundError
      */
@@ -56,6 +72,26 @@ class Issue
             return static::createStored($result);
         } else {
             throw new NotFoundError('There is no such issue');
+        }
+    }
+
+    /**
+     * @param $uuid
+     * @param Db $db
+     * @return Issue|null
+     */
+    public static function loadIfExists($uuid, Db $db)
+    {
+        $result = $db->fetchRow(
+            $db->select()
+                ->from(self::$tableName)
+                ->where('issue_uuid = ?', $uuid)
+        );
+
+        if ($result) {
+            return static::createStored($result);
+        } else {
+            return null;
         }
     }
 
