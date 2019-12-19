@@ -12,7 +12,7 @@ use Icinga\Module\Eventtracker\Uuid;
 use Icinga\Module\Eventtracker\Web\HtmlPurifier;
 use ipl\Html\Html;
 
-class EventsTable extends BaseTable
+class IssuesTable extends BaseTable
 {
     use TranslationHelper;
     use MultiSelect;

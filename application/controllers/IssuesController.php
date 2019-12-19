@@ -10,7 +10,7 @@ use Icinga\Module\Eventtracker\Db\EventSummaryBySeverity;
 use Icinga\Module\Eventtracker\DbFactory;
 use Icinga\Module\Eventtracker\Uuid;
 use Icinga\Module\Eventtracker\Web\Table\BaseTable;
-use Icinga\Module\Eventtracker\Web\Table\EventsTable;
+use Icinga\Module\Eventtracker\Web\Table\IssuesTable;
 use Icinga\Module\Eventtracker\Web\Widget\AdditionalTableActions;
 use Icinga\Module\Eventtracker\Web\Widget\SeverityFilter;
 use Icinga\Module\Eventtracker\Web\Widget\TogglePriorities;
@@ -27,7 +27,7 @@ class IssuesController extends CompatController
         return $this->params->get('view') === 'compact';
     }
 
-    protected function applyFilters(EventsTable $table)
+    protected function applyFilters(IssuesTable $table)
     {
         $table->search($this->params->get('q'));
         $main = Html::tag('ul', ['class' => 'nav']);
@@ -71,7 +71,7 @@ class IssuesController extends CompatController
         }
     }
 
-    protected function columnFilter(EventsTable $table, BaseHtmlElement $parent, $column, $type, $title)
+    protected function columnFilter(IssuesTable $table, BaseHtmlElement $parent, $column, $type, $title)
     {
         // $parent = $this->content();
         $li = Html::tag('li');
@@ -125,7 +125,7 @@ class IssuesController extends CompatController
         $this->setAutorefreshInterval(5);
         $db = DbFactory::db();
 
-        $table = new EventsTable($db, $this->url());
+        $table = new IssuesTable($db, $this->url());
         $this->applyFilters($table);
         if (! $this->url()->getParam('sort')) {
             $this->url()->setParam('sort', 'severity DESC');
