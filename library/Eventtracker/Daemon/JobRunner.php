@@ -70,9 +70,7 @@ class JobRunner implements DbBasedComponent
                 'expire',
             ];
             foreach ($taskNames as $taskName) {
-                if (! isset($this->scheduledTasks[$taskName])
-                    && ! isset($this->scheduledTasks[$taskName])
-                ) {
+                if (! isset($this->scheduledTasks[$taskName])) {
                     $this->scheduledTasks[$taskName] = $taskName;
                 }
             }
