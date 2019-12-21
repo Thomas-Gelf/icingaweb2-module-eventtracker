@@ -10,6 +10,7 @@ use Icinga\Module\Eventtracker\Issue;
 use Icinga\Module\Eventtracker\IssueHistory;
 use Icinga\Module\Eventtracker\SetOfIssues;
 use Icinga\Module\Eventtracker\Uuid;
+use Icinga\Module\Eventtracker\Web\Widget\IdoDetails;
 use Icinga\Module\Eventtracker\Web\Widget\IssueActivities;
 use Icinga\Module\Eventtracker\Web\Widget\IssueDetails;
 use Icinga\Module\Eventtracker\Web\Widget\IssueHeader;
@@ -63,6 +64,7 @@ class IssueController extends CompatController
         // $this->addHookedActions($issue);
         $this->content()->add([
             $this->issueHeader($issue),
+            new IdoDetails($issue, $db),
             new IssueActivities($issue, $db),
             new IssueDetails($issue)
         ]);
