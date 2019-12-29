@@ -14,4 +14,14 @@ class ConfigHelper
             return [];
         }
     }
+
+    public static function fillPlaceholders($string, Issue $issue)
+    {
+        return \preg_replace_callback('/({[^}]+})/', function ($match) use ($issue) {
+            $property = \trim($match[1], '{}');
+
+            // TODO: check whether Issue has such property
+            return $issue->get($property);
+        }, $string);
+    }
 }
