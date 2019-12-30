@@ -1,5 +1,7 @@
 <?php
 
+use Icinga\Module\Eventtracker\ProvidedHook\Eventtracker\ScomIssueHook;
+
 /** @var \Icinga\Application\Modules\Module $this */
 $section = $this->menuSection(N_('Event Tracker'))
     ->setIcon('attention-circled')
@@ -21,3 +23,4 @@ $this->providePermission(
     'eventtracker/operator',
     $this->translate('Operators are allowed to modify issues (Priority, Owner...)')
 );
+$this->provideHook('eventtracker/Issue', ScomIssueHook::class);
