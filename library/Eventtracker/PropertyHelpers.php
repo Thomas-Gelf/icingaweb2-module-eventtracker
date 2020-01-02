@@ -72,6 +72,15 @@ trait PropertyHelpers
         return $modified;
     }
 
+    public function hasModifiedProperty($key)
+    {
+        if ($this->isNew()) {
+            return true;
+        }
+
+        return $this->storedProperties[$key] !== $this->properties[$key];
+    }
+
     public function getStoredProperty($key)
     {
         if (\array_key_exists($key, $this->storedProperties)) {
