@@ -2,8 +2,10 @@
 
 namespace Icinga\Module\Eventtracker;
 
+use Icinga\Application\Hook;
 use Icinga\Authentication\Auth;
 use Icinga\Exception\NotFoundError;
+use Icinga\Module\Eventtracker\Hook\IssueHook;
 use Zend_Db_Adapter_Abstract as Db;
 use Zend_Db_Expr as DbExpr;
 
@@ -220,6 +222,16 @@ class Issue
         return Uuid::toHex($this->get('issue_uuid'));
     }
 
+    protected function triggerHooks($action, Db $db)
+    {
+        /** @var IssueHook[] $handlers */
+        $handlers = Hook::all('eventtracker/issue');
+        foreach ($handlers as $handler) {
+            $handler->setDb($db);
+            $handler->$action($this);
+        }
+    }
+
     /**
      * @param Db $db
      * @return bool
@@ -227,14 +239,53 @@ class Issue
      */
     public function storeToDb(Db $db)
     {
+        $action = $this->detectEventualHookAction();
         if ($this->isNew()) {
             $result = $this->insertIntoDb($db);
         } else {
+            // Will be fired in addition to more specific actions:
+            $this->triggerHooks('onUpdate', $db);
             $result = $this->updateDb($db);
+        }
+        if ($action !== null) {
+            $this->triggerHooks($action, $db);
         }
         $this->setStored();
 
         return $result;
+    }
+
+    /**
+     * Could be externalized
+     *
+     * @return string|null
+     */
+    protected function detectEventualHookAction()
+    {
+        if ($this->isNew()) {
+            return 'onCreate';
+        } else {
+            $modified = $this->getModifiedProperties();
+            if (isset($modified['status'])) {
+                $newStatus = $modified['status'];
+                $oldStatus = $this->getStoredProperty('status');
+                if ($oldStatus === 'closed') {
+                    return 'onReOpen';
+                } else {
+                    switch ($newStatus) {
+                        case 'closed':
+                            return 'onClose';
+                        case 'in_downtime':
+                            return 'onDowntime';
+                        case 'acknowledged':
+                            return 'onAcknowledge';
+                    }
+                }
+            }
+        }
+
+        // acknowledgement removed, downtime finished
+        return null;
     }
 
     public function getAttributes()
