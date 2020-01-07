@@ -73,7 +73,7 @@ class IssuesTable extends BaseTable
             ];
 
             return Icon::create($icons[$row->priority], [
-                'title' => ucfirst($row->priority)
+                'title' => \ucfirst($row->priority)
             ]);
         };
         $this->addAvailableColumns([
@@ -145,7 +145,7 @@ class IssuesTable extends BaseTable
             return Html::tag('td', [
                 'class' => $classes
             ], [
-                Time::agoFormatted($row->timestamp)->add(
+                $this->formatTime($row->timestamp)->add(
                     $prioIconRenderer($row)
                 )
             ]);
@@ -163,10 +163,20 @@ class IssuesTable extends BaseTable
 
         $td = Html::tag('td', ['class' => $classes], $link);
         if (! \in_array('received', $this->getChosenColumnNames())) {
-            $td->add(Time::agoFormatted($row->timestamp));
+            $td->add($this->formatTime($row->timestamp));
         }
 
         return $td;
+    }
+
+    protected function formatTime($timestamp)
+    {
+        $usTime = true;
+        if ($usTime) {
+            return Time::usFormatter($timestamp);
+        } else {
+            return Time::agoFormatted($timestamp);
+        }
     }
 
     protected function formatMessageColumn($row)

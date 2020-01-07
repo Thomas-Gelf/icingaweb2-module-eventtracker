@@ -17,6 +17,15 @@ class Time
         return DateFormatter::timeSince($ms / 1000);
     }
 
+    public static function usFormatter($ms)
+    {
+        // 12/11/2019 11:41PM
+        return Html::tag('span', [
+            'class' => 'time-ago',
+            'title' => DateFormatter::formatDateTime($ms / 1000)
+        ], \strftime('%D %I:%M%p', $ms / 1000));
+    }
+
     public static function agoFormatted($ms)
     {
         return Html::tag('span', [
