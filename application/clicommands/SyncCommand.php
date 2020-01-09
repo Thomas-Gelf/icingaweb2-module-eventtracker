@@ -36,6 +36,9 @@ class SyncCommand extends Command
         }
     }
 
+    /**
+     * Daemon/JobRunner is running this action
+     */
     public function scomAction()
     {
         $this->runWithLoop(function () {
@@ -43,6 +46,9 @@ class SyncCommand extends Command
         });
     }
 
+    /**
+     * Daemon/JobRunner is running this action
+     */
     public function idoAction()
     {
         $this->runWithLoop(function () {
@@ -50,6 +56,9 @@ class SyncCommand extends Command
         });
     }
 
+    /**
+     * Daemon/JobRunner is running this action
+     */
     public function expireAction()
     {
         $this->runWithLoop(function () {
