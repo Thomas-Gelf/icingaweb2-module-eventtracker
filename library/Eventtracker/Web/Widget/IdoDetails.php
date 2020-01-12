@@ -2,11 +2,14 @@
 
 namespace Icinga\Module\Eventtracker\Web\Widget;
 
+use gipfl\IcingaWeb2\Link;
 use gipfl\Translation\TranslationHelper;
+use Icinga\Application\Hook;
 use Icinga\Module\Eventtracker\IcingaCi;
 use Icinga\Module\Eventtracker\Issue;
 use Icinga\Module\Monitoring\Backend\MonitoringBackend;
 use Icinga\Module\Monitoring\Object\Host;
+use Icinga\Module\Monitoring\Object\MonitoredObject;
 use Icinga\Module\Monitoring\Object\Service;
 use ipl\Html\BaseHtmlElement;
 use ipl\Html\Html;
@@ -58,11 +61,63 @@ class IdoDetails extends BaseHtmlElement
         }
     }
 
+    protected function getHostLink()
+    {
+        return Link::create($this->host->getName(), 'monitoring/host/show', [
+            'host' => $this->host->getName()
+        ], [
+            'data-base-target' => '_next'
+        ]);
+    }
+
+    protected function getServiceLink()
+    {
+        return Link::create($this->service->getName(), 'monitoring/service/show', [
+            'host'    => $this->host->getName(),
+            'service' => $this->service->getName(),
+        ], [
+            'data-base-target' => '_next'
+        ]);
+    }
+
+    protected function getHookActions($hookName, MonitoredObject $object)
+    {
+        $actions = [];
+        foreach (Hook::all($hookName) as $hook) {
+            foreach ($hook->getActionsForObject($object) as $label => $url) {
+                $actions[] = Link::create($label, $url, null, [
+                    'data-base-target' => '_next'
+                ]);
+            }
+        }
+
+        return $actions;
+    }
+
     protected function assemble()
     {
         $content = [
             Html::tag('h2', 'ICINGA'),
         ];
+        if ($this->service) {
+            $actions = \array_merge([Html::sprintf(
+                $this->translate('Service: %s (on %s)'),
+                $this->getServiceLink(),
+                $this->getHostLink()
+            )], $this->getHookActions('Monitoring\\ServiceActions', $this->service));
+        } elseif ($this->host) {
+            $actions = \array_merge([Html::sprintf(
+                $this->translate('Host: %s'),
+                $this->getHostLink()
+            )], $this->getHookActions('Monitoring\\HostActions', $this->host));
+        } else {
+            $actions = [];
+        }
+        if (empty($actions)) {
+            $content[] = $this->translate('No related host is known to Icinga');
+        } else {
+            $content[] = Html::tag('ul', Html::wrapEach($actions, 'li'));
+        }
         $this->add(Html::tag('div', [
             'class' => 'output comment'
         ], $content));
