@@ -19,9 +19,22 @@ class ConfigHelper
     {
         return \preg_replace_callback('/({[^}]+})/', function ($match) use ($issue) {
             $property = \trim($match[1], '{}');
-
             // TODO: check whether Issue has such property
-            return $issue->get($property);
+            $modifier = null;
+            // TODO: make property modifiers dynamic
+            if (\preg_match('/:lower$/', $property)) {
+                $modifier = 'lower';
+            }
+            // TODO: check whether Issue has such property
+            $value = $issue->get($property);
+
+            switch ($modifier) {
+                case 'lower':
+                    $value = \strtolower($value);
+                    break;
+            }
+
+            return $value;
         }, $string);
     }
 }
