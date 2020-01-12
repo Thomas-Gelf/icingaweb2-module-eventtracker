@@ -111,6 +111,13 @@ db_resource = "MSSQL SCOM"
 ; cmd_close = "/usr/bin/ssh icinga@scom.example.com 'c:\\Scripts\\ResetScomMonitorV3.ps1' '{sender_event_id}'"
 ```
 
+You might want to enrich issues with custom attributes:
+
+```ini
+[scom_attributes]
+my_SPECIAL = "https://wiki.example.com/RedirectPage.aspx?id=Windows-{rule_monitor_id:lower}"
+```
+
 Usually you want to fetch from the MSSQL database populated by SCOM, so please
 provide a related `db_resource`. For testing reasons one might also want to use
 a JSON-encoded file, that's what the `simulation_file` setting is for.
