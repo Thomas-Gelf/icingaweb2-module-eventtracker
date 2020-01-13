@@ -27,7 +27,9 @@ class ScomIssueHook extends IssueHook
 
     public function onClose(Issue $issue)
     {
-        $this->eventuallyRun('cmd_close', $issue);
+        if ($this->isScomIssue($issue)) {
+            $this->eventuallyRun('cmd_close', $issue);
+        }
     }
 
     protected function isScomIssue(Issue $issue)
