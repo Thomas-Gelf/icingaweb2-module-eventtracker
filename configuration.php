@@ -23,4 +23,3 @@ $this->providePermission(
     'eventtracker/operator',
     $this->translate('Operators are allowed to modify issues (Priority, Owner...)')
 );
-$this->provideHook('eventtracker/Issue', ScomIssueHook::class);

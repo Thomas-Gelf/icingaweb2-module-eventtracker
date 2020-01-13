@@ -107,7 +107,7 @@ dedicated section:
 db_resource = "MSSQL SCOM"
 ; simulation_file = /tmp/scomtest.json
 ; poll_interval = 5
-; cmd_update = "/usr/bin/ssh icinga@scom.example.com 'c:\\Scripts\\UpdateScomAlertTicketIdV1.ps1' '{sender_event_id}' '{ticket_ref}' '{owner}'"
+; cmd_ticket_ref = "/usr/bin/ssh icinga@scom.example.com 'c:\\Scripts\\UpdateScomAlertTicketIdV1.ps1' '{sender_event_id}' '{ticket_ref}' '{owner}'"
 ; cmd_close = "/usr/bin/ssh icinga@scom.example.com 'c:\\Scripts\\ResetScomMonitorV3.ps1' '{sender_event_id}'"
 ```
 

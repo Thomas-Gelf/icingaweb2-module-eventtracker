@@ -38,26 +38,34 @@ class ScomIssueHook extends IssueHook
             ->where('implementation = ?', 'new-scom');
 
         $id = $db->fetchOne($query);
-        return $id ?: null;
+
+        if ($id) {
+            return (int) $issue->get('sender_id') === (int) $id;
+        } else {
+            return null;
+        }
     }
 
     protected function eventuallyRun($cmdConfigName, Issue $issue)
     {
         $cmd = Config::module('eventtracker')->get('scom', $cmdConfigName);
         if ($cmd === null) {
-            return;
+            return null;
         }
+        $cmd = ConfigHelper::fillPlaceholders($cmd, $issue);
         $loop = Factory::create();
-        $loop->futureTick(function () use ($loop, $issue, $cmd) {
+        $succeeded = null;
+        $loop->futureTick(function () use ($loop, $issue, $cmd, & $succeeded) {
             $cmd = ConfigHelper::fillPlaceholders($cmd, $issue);
             $process = new Process($cmd);
             $process->start($loop);
-            $succeeded = null;
             $process->on('exit', function ($code, $term) use ($loop, & $succeeded) {
                 $succeeded = ($term === null && $code === 0);
                 $loop->stop();
             });
         });
         $loop->run();
+
+        return $succeeded;
     }
 }
