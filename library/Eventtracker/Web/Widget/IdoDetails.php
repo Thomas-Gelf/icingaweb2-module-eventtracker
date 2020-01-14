@@ -84,6 +84,11 @@ class IdoDetails extends BaseHtmlElement
     {
         $actions = [];
         foreach (Hook::all($hookName) as $hook) {
+            $hookActions = $hook->getActionsForObject($object);
+            if (! \is_array($hookActions)) {
+                // TODO: instanceof Navigation
+                continue;
+            }
             foreach ($hook->getActionsForObject($object) as $label => $url) {
                 $actions[] = Link::create($label, $url, null, [
                     'data-base-target' => '_next'
