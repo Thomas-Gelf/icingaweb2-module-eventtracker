@@ -122,7 +122,7 @@ class IssuesController extends CompatController
 
     public function indexAction()
     {
-        $this->setAutorefreshInterval(5);
+        $this->setAutorefreshInterval(20);
         $db = DbFactory::db();
 
         $table = new IssuesTable($db, $this->url());
