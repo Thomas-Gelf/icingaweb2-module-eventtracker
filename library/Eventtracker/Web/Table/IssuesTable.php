@@ -30,6 +30,8 @@ class IssuesTable extends BaseTable
 
     protected $noHeader = false;
 
+    protected $disablePrio = true;
+
     public function setNoHeader($setNoHeader = true)
     {
         $this->noHeader = (bool) $setNoHeader;
@@ -64,6 +66,10 @@ class IssuesTable extends BaseTable
             ['uuid']
         );
         $prioIconRenderer = function ($row) {
+            if ($this->disablePrio) {
+                return null;
+            }
+
             $icons = [
                 Priority::HIGHEST => 'up-big',
                 Priority::HIGH    => 'up-small',
@@ -85,12 +91,18 @@ class IssuesTable extends BaseTable
                 'issue_uuid' => 'i.issue_uuid',
             ])->setRenderer(function ($row) use ($prioIconRenderer) {
                 return $this->formatSeverityColumn($row, $prioIconRenderer);
-            })->setSortExpression([
-                'i.severity',
-                'i.status',
-                'i.priority',
-                'i.ts_first_event'
-            ])->setDefaultSortDirection('DESC'),
+            })->setSortExpression($this->disablePrio
+                ? [
+                    'i.severity',
+                    'i.status',
+                    'i.ts_first_event'
+                ]
+                : [
+                    'i.severity',
+                    'i.status',
+                    'i.priority',
+                    'i.ts_first_event'
+                ])->setDefaultSortDirection('DESC'),
             $this->createColumn('priority', $this->translate('Priority'), [
                 'priority' => 'i.priority'
             ])->setRenderer(function ($row) use ($prioIconRenderer) {
