@@ -215,11 +215,14 @@ class IssueHeader extends BaseHtmlElement
 
     protected function renderTicket(Issue $issue)
     {
-        if ($ref = $issue->get('ticket_ref')) {
-            return $ref;
-        } else {
-            return $this->getHookedActions($issue);
+        $actions = $this->getHookedActions($issue);
+        if (empty($actions)) {
+            if ($ref = $issue->get('ticket_ref')) {
+                return $ref;
+            }
         }
+
+        return $actions;
     }
 
     protected function renderOwner(Issue $issue)
