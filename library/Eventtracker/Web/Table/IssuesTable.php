@@ -246,6 +246,7 @@ class IssuesTable extends BaseTable
     {
         return [
             'severity',
+            'host_name',
             'message',
         ];
     }
