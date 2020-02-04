@@ -30,7 +30,9 @@ class ConfigHelper
                 $property = \preg_replace('/:lower$/', '', $property);
                 $modifier = 'lower';
             }
-            if ($issue instanceof Issue && \preg_match('/^attributes\.(.+)$/', $property, $pMatch)) {
+            if ($issue instanceof Issue && $property === 'uuid') {
+                $value = $issue->getNiceUuid();
+            } elseif ($issue instanceof Issue && \preg_match('/^attributes\.(.+)$/', $property, $pMatch)) {
                 $value = $issue->getAttribute($pMatch[1]);
             } elseif ($issue instanceof Issue || $issue instanceof Event) {
                 // TODO: check whether Issue has such property, and eventually use an interface
