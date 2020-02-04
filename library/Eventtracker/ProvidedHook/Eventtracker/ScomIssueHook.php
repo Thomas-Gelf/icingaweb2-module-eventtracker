@@ -57,11 +57,11 @@ class ScomIssueHook extends IssueHook
         $cmd = ConfigHelper::fillPlaceholders($cmd, $issue);
         $loop = Factory::create();
         $succeeded = null;
-        $loop->futureTick(function () use ($loop, $issue, $cmd, & $succeeded) {
+        $loop->futureTick(function () use ($loop, $issue, $cmd, &$succeeded) {
             $cmd = ConfigHelper::fillPlaceholders($cmd, $issue);
             $process = new Process($cmd);
             $process->start($loop);
-            $process->on('exit', function ($code, $term) use ($loop, & $succeeded) {
+            $process->on('exit', function ($code, $term) use ($loop, &$succeeded) {
                 $succeeded = ($term === null && $code === 0);
                 $loop->stop();
             });

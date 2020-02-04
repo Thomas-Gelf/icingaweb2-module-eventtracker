@@ -15,7 +15,6 @@ class Logger extends IcingaLogger
             if ($level !== null) {
                 self::$instance->setLevel($level);
             }
-
         } catch (ConfigurationError $e) {
             self::$instance->error($e->getMessage());
         }
