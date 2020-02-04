@@ -8,12 +8,14 @@ use Icinga\Exception\ConfigurationError;
 
 class Logger extends IcingaLogger
 {
-    public static function replaceRunningInstance(LogWriter $writer, $level = self::DEBUG)
+    public static function replaceRunningInstance(LogWriter $writer, $level = null)
     {
         try {
-            self::$instance
-                ->setLevel($level)
-                ->writer = $writer;
+            self::$instance->writer = $writer;
+            if ($level !== null) {
+                self::$instance->setLevel($level);
+            }
+
         } catch (ConfigurationError $e) {
             self::$instance->error($e->getMessage());
         }
