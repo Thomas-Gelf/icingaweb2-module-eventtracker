@@ -446,11 +446,15 @@ class Issue
 
     public static function closeIssue(Issue $issue, \Zend_Db_Adapter_Abstract $db, $reason, $closedBy = null)
     {
-        IssueHistory::persist($issue, $db, $reason, $closedBy);
-        $issue->set('status', 'closed');
-        $action = $issue->detectEventualHookAction();
-        if ($action !== null) {
-            $issue->triggerHooks($action, $db);
+        // TODO: Update? Log warning? Merge actions?
+        //       -> This happens only when closing the issue formerly failed badly
+        if (! IssueHistory::exists($issue->getUuid(), $db)) {
+            IssueHistory::persist($issue, $db, $reason, $closedBy);
+            $issue->set('status', 'closed');
+            $action = $issue->detectEventualHookAction();
+            if ($action !== null) {
+                $issue->triggerHooks($action, $db);
+            }
         }
 
         $db->delete(static::$tableName, $db->quoteInto('issue_uuid = ?', $issue->getUuid()));
