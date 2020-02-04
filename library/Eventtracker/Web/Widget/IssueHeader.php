@@ -245,13 +245,14 @@ class IssueHeader extends BaseHtmlElement
             return $result;
         }
 
-        $take = $this->createTakeOwnerShipForm($issue, $db);
-        $give = $this->createGiveOwnerShipForm($issue, $db);
+        // Disabled for now.
+        // $take = $this->createTakeOwnerShipForm($issue, $db);
+        // $give = $this->createGiveOwnerShipForm($issue, $db);
 
         if ($owner === $me) {
-            $result->add([" (that's me!) ", $give]);
-        } else {
-            $result->add([' ', $take, $give]);
+            $result->add([" (that's me!) "/*, $give*/]);
+        // } else {
+        //     $result->add([' ', $take, $give]);
         }
 
         return $result;
