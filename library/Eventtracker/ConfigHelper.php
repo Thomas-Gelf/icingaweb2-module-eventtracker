@@ -30,8 +30,10 @@ class ConfigHelper
                 $property = \preg_replace('/:lower$/', '', $property);
                 $modifier = 'lower';
             }
-            // TODO: check whether Issue has such property, and eventually use an interface
-            if ($issue instanceof Issue || $issue instanceof Event) {
+            if ($issue instanceof Issue && \preg_match('/^attributes\.(.+)$/', $property, $pMatch)) {
+                $value = $issue->getAttribute($pMatch[1]);
+            } elseif ($issue instanceof Issue || $issue instanceof Event) {
+                // TODO: check whether Issue has such property, and eventually use an interface
                 $value = $issue->get($property);
             } else {
                 $value = $issue->$property;

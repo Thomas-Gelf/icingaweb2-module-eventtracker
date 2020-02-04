@@ -297,6 +297,16 @@ class Issue
         }
     }
 
+    public function getAttribute($name, $default = null)
+    {
+        $attrs = $this->getAttributes();
+        if (\property_exists($attrs, $name)) {
+            return $attrs->$name;
+        } else {
+            return $default;
+        }
+    }
+
     public function setAttributes($attributes)
     {
         if (\is_string($attributes)) {
