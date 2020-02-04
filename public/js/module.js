@@ -1,4 +1,4 @@
-(function(Icinga) {
+(function (Icinga) {
 
     var Eventtracker = function (module) {
         this.module = module;

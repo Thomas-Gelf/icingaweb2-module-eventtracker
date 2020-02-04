@@ -233,9 +233,11 @@ class MSendCommandLine
 
                 if ($inQuote === "'") {
                     // we're within a 'single quoted' string
-                    if ($c === '\\'
+                    if (
+                        $c === '\\'
                         && isset($command[$i + 1])
-                        && ($command[$i + 1] === "'" || $command[$i + 1] === '\\')) {
+                        && ($command[$i + 1] === "'" || $command[$i + 1] === '\\')
+                    ) {
                         // escaped single quote or backslash ends up as char in argument
                         $part .= $command[++$i];
                         continue;
@@ -302,7 +304,7 @@ class MSendCommandLine
                 $argument .= stripcslashes($part);
             }
 
-            $args []= $argument;
+            $args[] = $argument;
         }
 
         return $args;

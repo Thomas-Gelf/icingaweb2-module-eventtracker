@@ -3,7 +3,6 @@
 namespace Icinga\Module\Eventtracker\Controllers;
 
 use gipfl\IcingaWeb2\CompatController;
-use gipfl\IcingaWeb2\Icon;
 use gipfl\IcingaWeb2\Link;
 use Icinga\Authentication\Auth;
 use Icinga\Module\Eventtracker\Db\EventSummaryBySeverity;
@@ -13,7 +12,6 @@ use Icinga\Module\Eventtracker\Web\Table\BaseTable;
 use Icinga\Module\Eventtracker\Web\Table\IssuesTable;
 use Icinga\Module\Eventtracker\Web\Widget\AdditionalTableActions;
 use Icinga\Module\Eventtracker\Web\Widget\SeverityFilter;
-use Icinga\Module\Eventtracker\Web\Widget\TogglePriorities;
 use Icinga\Module\Eventtracker\Web\Widget\ToggleSeverities;
 use Icinga\Module\Eventtracker\Web\Widget\ToggleStatus;
 use Icinga\Web\Widget\Tabextension\DashboardAction;
@@ -73,7 +71,6 @@ class IssuesController extends CompatController
 
     protected function columnFilter(IssuesTable $table, BaseHtmlElement $parent, $column, $type, $title)
     {
-        // $parent = $this->content();
         $li = Html::tag('li');
         $parent->add($li);
         $parent = $li;
@@ -116,8 +113,6 @@ class IssuesController extends CompatController
                 )
             );
         }
-        return;
-        $this->content()->add(Html::tag('br'));
     }
 
     public function indexAction()
@@ -174,7 +169,7 @@ class IssuesController extends CompatController
             foreach ($result as & $row) {
                 $row->issue_uuid = Uuid::toHex($row->issue_uuid);
             }
-            $flags = JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE;
+            $flags = JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE;
             $this->getResponse()->setHeader('Content-Type', 'application/json', true)->sendHeaders();
             echo json_encode($result, $flags);
             exit;
