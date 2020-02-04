@@ -75,7 +75,7 @@ class IcingaCiSync
 
         $this->db->beginTransaction();
         try {
-            $this->deleteIds($delete);
+            $this->deleteIds(\array_keys($delete));
             foreach ($create as $ci) {
                 $this->createCi($ci);
             }
