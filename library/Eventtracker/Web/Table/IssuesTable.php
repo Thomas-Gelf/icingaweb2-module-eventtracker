@@ -103,14 +103,14 @@ class IssuesTable extends BaseTable
                     'i.priority',
                     'i.ts_first_event'
                 ])->setDefaultSortDirection('DESC'),
-            $this->createColumn('priority', $this->translate('Priority'), [
+            /* $this->createColumn('priority', $this->translate('Priority'), [
                 'priority' => 'i.priority'
             ])->setRenderer(function ($row) use ($prioIconRenderer) {
                 return Html::tag('td', ['style' => 'white-space: nowrap'], [
                     $prioIconRenderer($row),
                     $row->priority
                 ]);
-            })->setDefaultSortDirection('DESC'),
+            })->setDefaultSortDirection('DESC'), */
             $this->createColumn('received', $this->translate('Received'), [
                 'received' => 'i.ts_first_event'
             ])->setRenderer(function ($row) {
