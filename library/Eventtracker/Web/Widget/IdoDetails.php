@@ -59,7 +59,7 @@ class IdoDetails extends BaseHtmlElement
     {
         $domain = \trim(Config::module('eventtracker')->get('ido-sync', 'search_domain'), '.');
         if ($domain) {
-            $this->eventuallyCheckForFqdn("$hostname.$domain", $objectName);
+            $this->checkForObject("$hostname.$domain", $objectName);
         }
     }
 
