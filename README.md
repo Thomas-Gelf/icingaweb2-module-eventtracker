@@ -73,6 +73,8 @@ then:
 ```ini
 [ido-sync]
 vars = location, priority
+; Optionally look up hostnames with this domain:
+; search_domain = example.com
 ```
 
 ### Force msend command logging

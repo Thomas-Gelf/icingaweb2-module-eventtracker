@@ -4,6 +4,7 @@ namespace Icinga\Module\Eventtracker\Web\Widget;
 
 use gipfl\IcingaWeb2\Link;
 use gipfl\Translation\TranslationHelper;
+use Icinga\Application\Config;
 use Icinga\Application\Hook;
 use Icinga\Module\Eventtracker\IcingaCi;
 use Icinga\Module\Eventtracker\Issue;
@@ -13,6 +14,7 @@ use Icinga\Module\Monitoring\Object\MonitoredObject;
 use Icinga\Module\Monitoring\Object\Service;
 use ipl\Html\BaseHtmlElement;
 use ipl\Html\Html;
+use Zend_Db_Adapter_Abstract as ZfDb;
 
 class IdoDetails extends BaseHtmlElement
 {
@@ -26,8 +28,11 @@ class IdoDetails extends BaseHtmlElement
     /** @var Issue */
     protected $issue;
 
+    /** @var ZfDb */
+    protected $db;
+
     /** @var MonitoringBackend */
-    protected $backend;
+    protected $ido;
 
     /** @var Host */
     protected $host;
@@ -37,13 +42,33 @@ class IdoDetails extends BaseHtmlElement
 
     public function __construct(
         Issue $issue,
-        \Zend_Db_Adapter_Abstract $db
+        ZfDb $db
     ) {
         $hostname = $issue->get('host_name');
         $objectName = $issue->get('object_name');
         $this->issue = $issue;
-        $ido = MonitoringBackend::instance();
-        if (IcingaCi::exists($db, $hostname, $objectName)) {
+        $this->ido = MonitoringBackend::instance();
+        $this->db = $db;
+        $this->checkForObject($hostname, $objectName);
+        if ($this->host === null && \strpos($hostname, '.') === false) {
+            $this->eventuallyCheckForFqdn($hostname, $objectName);
+        }
+    }
+
+    protected function eventuallyCheckForFqdn($hostname, $objectName = null)
+    {
+        $domain = \trim(Config::module('eventtracker')->get('ido-sync', 'search_domain'), '.');
+        if ($domain) {
+            $this->eventuallyCheckForFqdn("$hostname.$domain", $objectName);
+        }
+    }
+
+    protected function checkForObject($hostname, $objectName = null)
+    {
+        $db = $this->db;
+        $ido = $this->ido;
+
+        if ($objectName && IcingaCi::exists($db, $hostname, $objectName)) {
             $service = new Service($ido, $hostname, $objectName);
             $host = new Host($ido, $hostname);
             if ($service->fetch()) {
@@ -53,7 +78,6 @@ class IdoDetails extends BaseHtmlElement
                 $this->host = $host;
             }
         } elseif (IcingaCi::exists($db, $hostname)) {
-            $ido = MonitoringBackend::instance();
             $host = new Host($ido, $hostname);
             if ($host->fetch()) {
                 $this->host = $host;
