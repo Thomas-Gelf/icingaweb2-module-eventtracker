@@ -3,6 +3,7 @@
 namespace Icinga\Module\Eventtracker\Web\Form;
 
 use Icinga\Module\Eventtracker\Issue;
+use Icinga\Module\Eventtracker\SetOfIssues;
 use Icinga\Module\Eventtracker\Web\Form;
 use ipl\Html\FormElement\SubmitElement;
 use Zend_Db_Adapter_Abstract as DbAdapter;
@@ -12,24 +13,45 @@ abstract class InlineIssueForm extends Form
     /** @var DbAdapter */
     protected $db;
 
-    /** @var Issue */
-    protected $issue;
+    /** @var Issue[] */
+    protected $issues;
 
     /** @var boolean|null */
     protected $hasBeenSubmitted;
 
-    public function __construct(Issue $issue, DbAdapter $db)
+    /**
+     * InlineIssueForm constructor.
+     * @param Issue|Issue[]|SetOfIssues $issues
+     * @param DbAdapter $db
+     */
+    public function __construct($issues, DbAdapter $db)
     {
-        $this->issue = $issue;
+        if ($issues instanceof SetOfIssues) {
+            $this->issues = $issues->getIssues();
+        } elseif (\is_array($issues)) {
+            $this->issues = $issues;
+        } else {
+            $this->issues = [$issues];
+        }
         $this->db = $db;
         $this->setMethod('POST');
         $this->addAttributes(['class' => 'inline']);
         $this->styleWithDirector();
     }
 
+    protected function getUuidChecksum()
+    {
+        $string = '';
+        foreach ($this->issues as $issue) {
+            $string .= $issue->getHexUuid();
+        }
+
+        return \sha1($string);
+    }
+
     public function getUniqueFormName()
     {
-        return parent::getUniqueFormName() . ':' . $this->issue->getHexUuid();
+        return parent::getUniqueFormName() . ':' . $this->getUuidChecksum();
     }
 
     protected function provideAction($label, $title = null)

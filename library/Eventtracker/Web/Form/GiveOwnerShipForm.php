@@ -16,6 +16,11 @@ class GiveOwnerShipForm extends InlineIssueForm
             'title' => $this->translate('Give this issue to a specific user')
         ]);
         $this->addElement($next);
+        if (count($this->issues) === 1) {
+            $current = \current($this->issues)->get('owner');
+        } else {
+            $current = null;
+        }
 
         if ($this->hasBeenSent()) {
             $label = Html::tag('strong', $this->translate('Give to:'));
@@ -26,7 +31,7 @@ class GiveOwnerShipForm extends InlineIssueForm
                     'zsa' => 'Sàrosi Zoltàn (zsa)',
                     null => $this->translate('Nobody in particular'),
                 ],
-                'value' => $this->issue->get('owner'),
+                'value' => $current,
             ]);
             $submit = new SubmitElement('submit', [
                 'label' => $this->translate('Set'),
@@ -55,8 +60,9 @@ class GiveOwnerShipForm extends InlineIssueForm
      */
     public function onSuccess()
     {
-        $issue = $this->issue;
-        $issue->setOwner($this->getValue('new_owner'));
-        $issue->storeToDb($this->db);
+        foreach ($this->issues as $issue) {
+            $issue->setOwner($this->getValue('new_owner'));
+            $issue->storeToDb($this->db);
+        }
     }
 }

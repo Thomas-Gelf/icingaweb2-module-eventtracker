@@ -48,8 +48,9 @@ class ChangePriorityForm extends InlineIssueForm
      */
     public function onSuccess()
     {
-        $issue = $this->issue;
-        $issue->set('priority', $this->getValue('new_priority'));
-        $issue->storeToDb($this->db);
+        foreach ($this->issues as $issue) {
+            $issue->set('priority', $this->getValue('new_priority'));
+            $issue->storeToDb($this->db);
+        }
     }
 }

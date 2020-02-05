@@ -14,6 +14,8 @@ class ReOpenIssueForm extends InlineIssueForm
      */
     public function onSuccess()
     {
-        $this->issue->set('status', 'open')->storeToDb($this->db);
+        foreach ($this->issues as $issue) {
+            $issue->set('status', 'open')->storeToDb($this->db);
+        }
     }
 }

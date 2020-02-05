@@ -14,6 +14,8 @@ class CloseIssueForm extends InlineIssueForm
      */
     public function onSuccess()
     {
-        $this->issue->close($this->db);
+        foreach ($this->issues as $issue) {
+            $issue->close($this->db);
+        }
     }
 }
