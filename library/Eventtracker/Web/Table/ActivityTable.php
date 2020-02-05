@@ -4,6 +4,7 @@ namespace Icinga\Module\Eventtracker\Web\Table;
 
 use Icinga\Module\Eventtracker\Issue;
 use Icinga\Module\Eventtracker\Time;
+use Icinga\Module\Eventtracker\Web\Widget\ConfigDiff;
 use ipl\Html\Html;
 
 class ActivityTable extends BaseTable
@@ -55,7 +56,21 @@ class ActivityTable extends BaseTable
         } elseif ($new === null) {
             $result->add([Html::tag('del', $old), ' (removed)']);
         } else {
-            $result->add("$old -> $new");
+            if ($property === 'attributes') {
+                $oldA = '';
+                $newA = '';
+                foreach (\json_decode($old) as $name => $value) {
+                    $oldA .= "$name = $value\n";
+                }
+                foreach (\json_decode($new) as $name => $value) {
+                    $newA .= "$name = $value\n";
+                }
+                $old = trim($oldA);
+                $new = trim($newA);
+                $result->add(ConfigDiff::create($old, $new));
+            } else {
+                $result->add("$old -> $new");
+            }
         }
 
         return $result;
