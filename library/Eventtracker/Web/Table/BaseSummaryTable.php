@@ -64,6 +64,11 @@ abstract class BaseSummaryTable extends BaseTable
         if (\strlen($label) === 0) {
             $label = $this->translate('- none -');
         }
+        $label = \preg_replace(
+            '/([A-z]{4,})\.([A-z]{4,})/',
+            '\1.' . \html_entity_decode('&#8203;') . '\2', // zero-length whitespace
+            $label
+        );
         return Link::create($label, 'eventtracker/issues', [
             $column => $row->$column
         ]);
