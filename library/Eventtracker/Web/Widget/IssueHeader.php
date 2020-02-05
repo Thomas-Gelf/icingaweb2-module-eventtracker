@@ -10,7 +10,6 @@ use Icinga\Date\DateFormatter;
 use Icinga\Module\Eventtracker\DbFactory;
 use Icinga\Module\Eventtracker\Hook\EventActionsHook;
 use Icinga\Module\Eventtracker\Issue;
-use Icinga\Module\Eventtracker\Priority;
 use Icinga\Module\Eventtracker\Web\Form\ChangePriorityForm;
 use Icinga\Module\Eventtracker\Web\Form\CloseIssueForm;
 use Icinga\Module\Eventtracker\Web\Form\GiveOwnerShipForm;
@@ -44,6 +43,9 @@ class IssueHeader extends BaseHtmlElement
     /** @var Response */
     protected $response;
 
+    /** @var \Zend_Db_Adapter_Pdo_Abstract */
+    protected $db;
+
     public function __construct(
         Issue $issue,
         ServerRequestInterface $request,
@@ -54,6 +56,7 @@ class IssueHeader extends BaseHtmlElement
         $this->request = $request;
         $this->response = $response;
         $this->isOperator = $auth->hasPermission('eventtracker/operator');
+        $this->db = DbFactory::db();
     }
 
     protected function assemble()
@@ -91,11 +94,13 @@ class IssueHeader extends BaseHtmlElement
         return [
             Html::tag('strong', 'Status: '),
             $issue->get('status'),
-            $this->createOpenCloseForm($issue, DbFactory::db()),
+            $this->createOpenCloseForm($issue, $this->db),
             "\n",
+            /*
             Html::tag('strong', 'Priority: '),
             $this->renderPriority($issue),
             "\n",
+            */
             Html::tag('strong', 'Owner: '),
             $this->renderOwner($issue),
             "\n",
@@ -192,12 +197,11 @@ class IssueHeader extends BaseHtmlElement
 
     protected function renderPriority(Issue $issue)
     {
-        $db = DbFactory::db();
         if (! $this->isOperator || $issue->isClosed()) {
             return  $issue->get('priority');
         }
 
-        $form = new ChangePriorityForm($issue, $db);
+        $form = new ChangePriorityForm($issue, $this->db);
         $form->on('success', function () {
             $this->response->redirectAndExit($this->url());
         });
@@ -234,9 +238,8 @@ class IssueHeader extends BaseHtmlElement
         } else {
             $result->add($owner);
         }
-        $me = $this->getMyUsername();
-        $db = DbFactory::db();
 
+        $me = $this->getMyUsername();
         if (! $this->isOperator) {
             if ($owner === $me) {
                 $result->add(" (that's me!) ");
