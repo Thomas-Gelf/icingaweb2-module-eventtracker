@@ -65,8 +65,8 @@ class IssueController extends CompatController
         $this->content()->add([
             $this->issueHeader($issue),
             new IdoDetails($issue, $db),
+            new IssueDetails($issue),
             new IssueActivities($issue, $db),
-            new IssueDetails($issue)
         ]);
     }
 
