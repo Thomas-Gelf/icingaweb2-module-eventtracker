@@ -7,8 +7,9 @@ $section = $this->menuSection(N_('Event Tracker'))
     ->setIcon('attention-circled')
     ->setUrl('eventtracker/dashboard')
     ->setPriority(62);
-$section->add(N_('Issues'))->setUrl('eventtracker/issues');
-$section->add(N_('Summaries'))->setUrl('eventtracker/summary/top10');
+$section->add(N_('Issues'))->setUrl('eventtracker/issues')->setPriority(10);
+$section->add(N_('Handled Issues'))->setUrl('eventtracker/issues?status=acknowledged,in_downtime')->setPriority(20);
+$section->add(N_('Summaries'))->setUrl('eventtracker/summary/top10')->setPriority(30);
 
 $this->provideSearchUrl('EventTracker', 'eventtracker/issues', 110);
 $this->providePermission(
