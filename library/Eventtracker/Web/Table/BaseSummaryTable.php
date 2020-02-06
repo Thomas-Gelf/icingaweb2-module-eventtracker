@@ -65,12 +65,17 @@ abstract class BaseSummaryTable extends BaseTable
             $label = $this->translate('- none -');
         }
         $zeroSpace = \html_entity_decode('&#8203;');
-        $label = \preg_replace(
-            '/([A-z]{4,})\.([A-z]{4,})/',
-            '\1.' . $zeroSpace . '\2', // zero-length whitespace
-            $label
-        );
-        $label = \wordwrap($label, 60, $zeroSpace);
+        $label = \wordwrap($label, 60, $zeroSpace, true);
+        $parts = \preg_split('/\./', $label);
+        foreach ($parts as & $part) {
+            if (\strlen($part) > 64) {
+                $part = \wordwrap($part, 32, $zeroSpace, true);
+            } elseif (\strlen($part) > 10) {
+                $part .= $zeroSpace;
+            }
+        }
+        $label = \implode('.', $parts);
+
         return Link::create($label, 'eventtracker/issues', [
             $column => $row->$column
         ]);
