@@ -88,7 +88,7 @@ class ConfigDiff implements ValidHtml
 
         $class = 'Diff_Renderer_Html_' . $this->htmlRenderer;
 
-        return new $class;
+        return new $class();
     }
 
     public function __toString()
