@@ -67,6 +67,7 @@ class JobRunner implements DbBasedComponent
             $taskNames = [
                 'scom',
                 'ido',
+                'idoState',
                 'expire',
             ];
             foreach ($taskNames as $taskName) {
@@ -83,7 +84,7 @@ class JobRunner implements DbBasedComponent
             $this->loop->cancelTimer($this->timer);
         }
         $this->timer = $this->loop->addPeriodicTimer($this->checkInterval, $check);
-        $this->timer = $this->loop->addPeriodicTimer(3, $schedule);
+        $this->timer = $this->loop->addPeriodicTimer(7, $schedule);
 
         return new FulfilledPromise();
     }

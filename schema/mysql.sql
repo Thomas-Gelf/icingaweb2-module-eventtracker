@@ -30,6 +30,32 @@ CREATE TABLE icinga_ci (
       ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE utf8mb4_bin;
 
+CREATE TABLE icinga_ci_status (
+  object_id BIGINT(20) UNSIGNED NOT NULL,
+  severity TINYINT UNSIGNED NOT NULL,
+  -- inverted_severity TINYINT UNSIGNED NOT NULL,
+  -- hard_severity TINYINT UNSIGNED NOT NULL,
+  status ENUM(
+    'critical', -- and down
+    'unknown',
+    'warning',
+    'pending',
+    'ok' -- and up
+  ) NOT NULL,
+  is_problem ENUM('y', 'n') NOT NULL,
+  is_pending ENUM('y', 'n') NOT NULL,
+  is_in_downtime ENUM('y', 'n') NOT NULL,
+  is_acknowledged ENUM('y', 'n') NOT NULL,
+  is_reachable ENUM('y', 'n') NOT NULL,
+  -- TODO: is_soft_state ENUM('y', 'n') NOT NULL,
+  -- last_state_change
+  PRIMARY KEY (object_id),
+  INDEX sort_severity (severity)
+  -- INDEX sort_severity_rev (severity DESC), -- Not yet, requires MySQL 8
+  -- INDEX sort_inverted_severity (inverted_severity),
+  -- INDEX sort_hard_severity (hard_severity)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE utf8mb4_bin;
+
 CREATE TABLE icinga_ci_var (
   object_id BIGINT(20) UNSIGNED NOT NULL,
   varname VARCHAR(128) NOT NULL,

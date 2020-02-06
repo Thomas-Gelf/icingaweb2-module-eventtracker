@@ -7,6 +7,7 @@ use gipfl\Protocol\NetString\StreamWrapper;
 use Icinga\Cli\Command;
 use Icinga\Data\Db\DbConnection;
 use Icinga\Module\Eventtracker\Daemon\IcingaCiSync;
+use Icinga\Module\Eventtracker\Daemon\IcingaStateSync;
 use Icinga\Module\Eventtracker\Daemon\IdoDb;
 use Icinga\Module\Eventtracker\Daemon\JsonRpcLogWriter as JsonRpcLogWriterAlias;
 use Icinga\Module\Eventtracker\Daemon\Logger;
@@ -59,6 +60,16 @@ class SyncCommand extends Command
     /**
      * Daemon/JobRunner is running this action
      */
+    public function idostateAction()
+    {
+        $this->runWithLoop(function () {
+            $this->runIdoState();
+        });
+    }
+
+    /**
+     * Daemon/JobRunner is running this action
+     */
     public function expireAction()
     {
         $this->runWithLoop(function () {
@@ -101,6 +112,19 @@ class SyncCommand extends Command
                 $sync->setCustomVarNames($vars);
             }
         }
+        $sync->sync();
+
+        return new FulfilledPromise();
+    }
+
+    /**
+     * @return FulfilledPromise
+     * @throws \Icinga\Exception\ConfigurationError
+     */
+    public function runIdoState()
+    {
+        $ido = IdoDb::fromMonitoringModule();
+        $sync = new IcingaStateSync(DbFactory::db(), $ido);
         $sync->sync();
 
         return new FulfilledPromise();
