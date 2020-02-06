@@ -62,8 +62,8 @@ class IssueHeader extends BaseHtmlElement
     protected function assemble()
     {
         $issue = $this->issue;
-        $preRight = $this->halfPre($this->showObjectDetails($issue), 'right');
-        $preLeft = $this->halfPre($this->showStatusDetails($issue), 'left');
+        $preRight = $this->halfPre($this->showAdditionalObjectDetails($issue), 'right');
+        $preLeft = $this->halfPre($this->showMainDetails($issue), 'left');
         $classes = [
             'output border-' . $issue->get('severity')
         ];
@@ -89,9 +89,33 @@ class IssueHeader extends BaseHtmlElement
         ]);
     }
 
-    protected function showStatusDetails(Issue $issue)
+    protected function showMainDetails(Issue $issue)
     {
         return [
+            Html::tag('strong', 'Host:   '),
+            Link::create(
+                $issue->get('host_name'),
+                'eventtracker/issues',
+                ['host_name' => $issue->get('host_name')],
+                ['data-base-target' => 'col1']
+            ),
+            "\n",
+            Html::tag('strong', 'Object: '),
+            Link::create(
+                $this->shorten($issue->get('object_name'), 64),
+                'eventtracker/issues',
+                ['object_name' => $issue->get('object_name')],
+                ['data-base-target' => 'col1']
+            ),
+            "\n",
+            Html::tag('strong', 'Class:  '),
+            Link::create(
+                $this->shorten($issue->get('object_class'), 64),
+                'eventtracker/issues',
+                ['object_class' => $issue->get('object_class')],
+                ['data-base-target' => 'col1']
+            ),
+            "\n",
             Html::tag('strong', 'Status: '),
             $issue->get('status'),
             $this->createOpenCloseForm($issue, $this->db),
@@ -127,33 +151,9 @@ class IssueHeader extends BaseHtmlElement
         }
     }
 
-    protected function showObjectDetails(Issue $issue)
+    protected function showAdditionalObjectDetails(Issue $issue)
     {
-        $result = [
-            Html::tag('strong', 'Host:   '),
-            Link::create(
-                $issue->get('host_name'),
-                'eventtracker/issues',
-                ['host_name' => $issue->get('host_name')],
-                ['data-base-target' => 'col1']
-            ),
-            "\n",
-            Html::tag('strong', 'Object: '),
-            Link::create(
-                $this->shorten($issue->get('object_name'), 64),
-                'eventtracker/issues',
-                ['object_name' => $issue->get('object_name')],
-                ['data-base-target' => 'col1']
-            ),
-            "\n",
-            Html::tag('strong', 'Class:  '),
-            Link::create(
-                $this->shorten($issue->get('object_class'), 64),
-                'eventtracker/issues',
-                ['object_class' => $issue->get('object_class')],
-                ['data-base-target' => 'col1']
-            ),
-        ];
+        $result = [];
 
         $attributes = (array) $issue->getAttributes();
         ksort($attributes);
