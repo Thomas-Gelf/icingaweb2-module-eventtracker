@@ -2,6 +2,7 @@
 
 namespace Icinga\Module\Eventtracker;
 
+use Icinga\Application\Config;
 use InvalidArgumentException;
 
 class MSendEventFactory
@@ -10,10 +11,18 @@ class MSendEventFactory
 
     protected $classes;
 
+    protected $severityMap;
+
     public function __construct(SenderInventory $senders, ObjectClassInventory $classes)
     {
         $this->senders = $senders;
         $this->classes = $classes;
+        $config = Config::module('eventtracker');
+        if ($config->hasSection('msend-severity-map')) {
+            $this->severityMap = $config->getSection('msend-severity-map')->toArray();
+        } else {
+            $this->severityMap = $this->getDefaultSeverityMap();
+        }
     }
 
     /**
@@ -55,7 +64,18 @@ class MSendEventFactory
 
     protected function mapSeverity($severity)
     {
-        $severities = [
+        $severities = $this->severityMap;
+
+        if (isset($severities[$severity])) {
+            return $severities[$severity];
+        } else {
+            throw new InvalidArgumentException("Got invalid severity $severity");
+        }
+    }
+
+    protected function getDefaultSeverityMap()
+    {
+        return [
             // 'emergency',
             'MAJOR'         => 'alert',
             'CRITICAL'      => 'critical',
@@ -66,12 +86,6 @@ class MSendEventFactory
             'NORMAL'        => 'informational', // !?!?!?!
             'OK'            => 'informational', // !?!?!?!
         ];
-
-        if (isset($severities[$severity])) {
-            return $severities[$severity];
-        } else {
-            throw new InvalidArgumentException("Got invalid severity $severity");
-        }
     }
 
     protected function mapPriority($priority)

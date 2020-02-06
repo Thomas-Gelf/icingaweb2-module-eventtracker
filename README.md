@@ -64,6 +64,20 @@ default setting as follows:
 severity = emergency, alert, critical, error
 ```
 
+## Eventually override default msend severity mappings:
+
+```ini
+[msend-severity-map]
+MAJOR         = alert
+CRITICAL      = critical
+MINOR         = error
+WARNING       = warning
+INFORMATIONAL = informational
+INFO          = informational
+NORMAL        = informational
+OK            = informational
+```
+
 ### Synchronize custom variables from the IDO database
 
 This module replicates available Icinga Object names from the IDO database, and
