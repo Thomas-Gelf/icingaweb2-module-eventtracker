@@ -40,6 +40,11 @@ class IssueController extends CompatController
                     );
                 })->handleRequest($this->getServerRequest())
             );
+            $result = [];
+            /** @var EventActionsHook $impl */
+            foreach (Hook::all('eventtracker/EventActions') as $impl) {
+                $this->actions()->add($impl->getIssuesActions($issues));
+            }
             foreach ($issues->getIssues() as $issue) {
                 $this->content()->add($this->issueHeader($issue));
             }
