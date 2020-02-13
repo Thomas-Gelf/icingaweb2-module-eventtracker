@@ -65,6 +65,9 @@ class IdoDetails extends BaseHtmlElement
 
     protected function checkForObject($hostname, $objectName = null)
     {
+        if (! $hostname) {
+            return;
+        }
         $db = $this->db;
         $ido = $this->ido;
 
