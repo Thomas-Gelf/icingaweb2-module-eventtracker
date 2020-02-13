@@ -12,6 +12,8 @@ use Icinga\Module\Eventtracker\IssueHistory;
 use Icinga\Module\Eventtracker\SetOfIssues;
 use Icinga\Module\Eventtracker\Uuid;
 use Icinga\Module\Eventtracker\Web\Form\CloseIssueForm;
+use Icinga\Module\Eventtracker\Web\Form\LinkLikeForm;
+use Icinga\Module\Eventtracker\Web\Form\TakeIssueForm;
 use Icinga\Module\Eventtracker\Web\Widget\IdoDetails;
 use Icinga\Module\Eventtracker\Web\Widget\IssueActivities;
 use Icinga\Module\Eventtracker\Web\Widget\IssueDetails;
@@ -33,14 +35,20 @@ class IssueController extends CompatController
             $issues = SetOfIssues::fromUrl($this->url(), $db);
             $count = \count($issues);
             $this->addTitle($this->translate('%d issues'), $count);
-            $this->actions()->add(
-                (new CloseIssueForm($issues, $db))->on('success', function () use ($count) {
-                    $this->getResponse()->redirectAndExit(
-                        Url::fromPath('eventtracker/issue/closed', ['cnt' => $count])
-                    );
-                })->handleRequest($this->getServerRequest())
-            );
-            $result = [];
+            if ($this->Auth()->hasPermission('eventtracker/operator')) {
+                $this->actions()->add(
+                    (new CloseIssueForm($issues, $db))->on('success', function () use ($count) {
+                        $this->getResponse()->redirectAndExit(
+                            Url::fromPath('eventtracker/issue/closed', ['cnt' => $count])
+                        );
+                    })->handleRequest($this->getServerRequest())
+                );
+
+                $this->actions()->add((new TakeIssueForm($issues, $db))->on('success', function () {
+                    $this->getResponse()->redirectAndExit($this->url());
+                })->handleRequest($this->getServerRequest()));
+            }
+
             /** @var EventActionsHook $impl */
             foreach (Hook::all('eventtracker/EventActions') as $impl) {
                 $this->actions()->add($impl->getIssuesActions($issues));

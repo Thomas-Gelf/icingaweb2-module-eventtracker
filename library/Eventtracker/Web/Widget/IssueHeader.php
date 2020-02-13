@@ -15,6 +15,7 @@ use Icinga\Module\Eventtracker\Web\Form\CloseIssueForm;
 use Icinga\Module\Eventtracker\Web\Form\GiveOwnerShipForm;
 use Icinga\Module\Eventtracker\Web\Form\LinkLikeForm;
 use Icinga\Module\Eventtracker\Web\Form\ReOpenIssueForm;
+use Icinga\Module\Eventtracker\Web\Form\TakeIssueForm;
 use Icinga\Module\Eventtracker\Web\HtmlPurifier;
 use Icinga\Web\Hook;
 use Icinga\Web\Response;
@@ -307,13 +308,8 @@ class IssueHeader extends BaseHtmlElement
             return null;
         }
 
-        $take = new LinkLikeForm(
-            $this->translate('[ Take ]'),
-            $this->translate('Take ownership for this issue') // TODO: issue type!?
-        );
+        $take = new TakeIssueForm($issue, $db);
         $take->on('success', function () use ($issue, $db) {
-            $issue->setOwner($this->getMyUsername());
-            $issue->storeToDb($db);
             $this->response->redirectAndExit($this->url());
         });
         $take->handleRequest($this->request);
