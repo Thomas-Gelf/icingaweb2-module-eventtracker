@@ -140,6 +140,7 @@ class IssuesTable extends BaseTable
                 return $this->formatMessageColumn($row);
             }),
             $this->createColumn('sender_name', $this->translate('Sender'), 's.sender_name'),
+            $this->createColumn('owner', $this->translate('Owner'), 'i.owner'),
         ]);
     }
 
