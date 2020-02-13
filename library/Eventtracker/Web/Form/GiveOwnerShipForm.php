@@ -25,12 +25,11 @@ class GiveOwnerShipForm extends InlineIssueForm
         if ($this->hasBeenSent()) {
             $label = Html::tag('strong', $this->translate('Give to:'));
             $this->add($label);
+            $possibleOwners = [];
             $select = new SelectElement('new_owner', [
                 'options' => [
-                    'tom' => 'Thomas Gelf (tom)',
-                    'zsa' => 'Sàrosi Zoltàn (zsa)',
                     null => $this->translate('Nobody in particular'),
-                ],
+                ] + $possibleOwners,
                 'value' => $current,
             ]);
             $submit = new SubmitElement('submit', [
