@@ -2,6 +2,9 @@
 
 namespace Icinga\Module\Eventtracker;
 
+use Icinga\Module\Monitoring\Object\Host;
+use Icinga\Module\Monitoring\Object\MonitoredObject;
+
 class ConfigHelper
 {
     public static function getList($value)
@@ -37,6 +40,12 @@ class ConfigHelper
             } elseif ($issue instanceof Issue || $issue instanceof Event) {
                 // TODO: check whether Issue has such property, and eventually use an interface
                 $value = $issue->get($property);
+            } elseif ($issue instanceof MonitoredObject) {
+                if (preg_match('/^(host|service)\.vars\.([^.]+)$/', $property, $pMatch)) {
+                    $value = $issue->{'_' . $pMatch[1] . '_' . $pMatch[2]};
+                 } else {
+                    $value = $issue->$property;
+                }
             } else {
                 $value = $issue->$property;
             }
