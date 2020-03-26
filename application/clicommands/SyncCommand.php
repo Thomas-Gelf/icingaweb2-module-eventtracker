@@ -4,7 +4,6 @@ namespace Icinga\Module\Eventtracker\Clicommands;
 
 use gipfl\Protocol\JsonRpc\Connection;
 use gipfl\Protocol\NetString\StreamWrapper;
-use Icinga\Cli\Command;
 use Icinga\Data\Db\DbConnection;
 use Icinga\Module\Eventtracker\Daemon\IcingaCiSync;
 use Icinga\Module\Eventtracker\Daemon\IcingaStateSync;
@@ -159,22 +158,6 @@ class SyncCommand extends Command
         }
 
         return $content;
-    }
-
-    /**
-     * @param $name
-     * @return Mssql
-     */
-    protected function requireMssqlResource($name)
-    {
-        $db  = null;
-        $db = DbConnection::fromResourceName($name)->getDbAdapter();
-        if (! $db instanceof Mssql) {
-            // Well... it's ConfigurationError
-            throw new \InvalidArgumentException("DB resource '$name' is not an MSSQL connection'");
-        }
-
-        return $db;
     }
 
     public function failNice($msg)

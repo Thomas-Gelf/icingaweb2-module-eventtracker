@@ -2,7 +2,6 @@
 
 namespace Icinga\Module\Eventtracker\Clicommands;
 
-use Icinga\Cli\Command;
 use Icinga\Module\Eventtracker\Daemon\BackgroundDaemon;
 
 class DaemonCommand extends Command
