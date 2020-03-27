@@ -31,16 +31,16 @@ class ScomQuery
             ),
             'ticket_id'       => 'alert.TicketId',
             'category'        => new DbExpr('COALESCE("rules"."RuleCategory", "monitor"."MonitorCategory")'),
-            'alert_severity'  => "CASE alert.Severity
+            'alert_severity'  => new DbExpr("CASE \"alert\".\"Severity\"
     WHEN 2 THEN 'critical'
     WHEN 1 THEN 'warning'
     WHEN 0 THEN 'informational'
-  END",
-            'alert_priority' => "CASE alert.Priority
+  END"),
+            'alert_priority' => new DbExpr("CASE \"alert\".\"Priority\"
     WHEN 2 THEN 'high'
     WHEN 1 THEN 'normal'
     WHEN 0 THEN 'low'
-  END",
+  END"),
             'resolution_state' => 'alert.ResolutionState',
             'resolution_state_name' => 'rs.ResolutionStateName',
             'entity_name'      => new DbExpr('LOWER("topentity"."Name")'),
