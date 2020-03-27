@@ -2,6 +2,10 @@
 
 use Icinga\Module\Eventtracker\ProvidedHook\Eventtracker\ScomIssueHook;
 
+if ($this->getConfig()->get('frontend', 'disabled', 'no') === 'yes') {
+    return;
+}
+
 /** @var \Icinga\Application\Modules\Module $this */
 $section = $this->menuSection(N_('Event Tracker'))
     ->setIcon('attention-circled')

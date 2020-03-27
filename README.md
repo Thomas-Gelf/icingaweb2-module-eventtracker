@@ -152,4 +152,7 @@ Currently the following settings are available:
 [ui]
 ; Allow no more than X issues to be selected at once. Defaults to 50:
 ; multiselect_max_issues = 50
+;
+; Set to yes to disable the Web frontend:
+; disabled = no
 ```
