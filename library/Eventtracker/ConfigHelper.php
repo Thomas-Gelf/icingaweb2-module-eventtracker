@@ -43,7 +43,7 @@ class ConfigHelper
             } elseif ($issue instanceof MonitoredObject) {
                 if (preg_match('/^(host|service)\.vars\.([^.]+)$/', $property, $pMatch)) {
                     $value = $issue->{'_' . $pMatch[1] . '_' . $pMatch[2]};
-                 } else {
+                } else {
                     $value = $issue->$property;
                 }
             } else {
