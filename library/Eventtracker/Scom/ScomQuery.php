@@ -23,12 +23,12 @@ class ScomQuery
         // sender_id       = 1 -> SCOM / new-scom
 
         return [
-            'alert_id'        => 'CONVERT([varchar](64), alert.AlertId)',
+            'alert_id'        => new DbExpr('CONVERT([varchar](64), alert.AlertId)'),
             'is_monitor'      => 'alert.IsMonitorAlert',
             'time_raised'     => 'alert.TimeRaised',
-            'rule_monitor_id' => 'CONVERT([varchar](64), COALESCE(rules.RuleId, monitor.MonitorId))',
+            'rule_monitor_id' => new DbExpr('CONVERT([varchar](64), COALESCE(rules.RuleId, monitor.MonitorId))'),
             'ticket_id'       => 'alert.TicketId',
-            'category'        => 'COALESCE(rules.RuleCategory, monitor.MonitorCategory)',
+            'category'        => new DbExpr('COALESCE(rules.RuleCategory, monitor.MonitorCategory)'),
             'alert_severity'  => "CASE alert.Severity
     WHEN 2 THEN 'critical'
     WHEN 1 THEN 'warning'
@@ -41,12 +41,12 @@ class ScomQuery
   END",
             'resolution_state' => 'alert.ResolutionState',
             'resolution_state_name' => 'rs.ResolutionStateName',
-            'entity_name'      => 'LOWER(topentity.Name)',
+            'entity_name'      => new DbExpr('LOWER(topentity.Name)'),
             'entity_base_type' => 'topentitybasetype.TypeName',
             'entity_type'      => 'topentitytype.TypeName',
             'object_type'      => 'entitytype.TypeName',
-            'alert_name'       => 'COALESCE(prettyalert.AlertName, rules.RuleName,'
-                . ' monitor.MonitorName, alert.AlertName)',
+            'alert_name'       => new DbExpr('COALESCE(prettyalert.AlertName, rules.RuleName,'
+                . ' monitor.MonitorName, alert.AlertName)'),
             'description'      => 'prettyalert.AlertDescription',
             'in_maintenance'   => 'MM.IsInMaintenanceMode',
         ];
