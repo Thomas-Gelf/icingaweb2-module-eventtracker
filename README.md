@@ -143,3 +143,13 @@ a JSON-encoded file, that's what the `simulation_file` setting is for.
 You might want to automatically close issues in SCOM once they're being closed
 in the EventTracker or to update a reference to created tickets when this module
 creates such.
+
+### UI settings
+
+Currently the following settings are available:
+
+```ini
+[ui]
+; Allow no more than X issues to be selected at once. Defaults to 50:
+; multiselect_max_issues = 50
+```

@@ -12,7 +12,6 @@ use Icinga\Module\Eventtracker\IssueHistory;
 use Icinga\Module\Eventtracker\SetOfIssues;
 use Icinga\Module\Eventtracker\Uuid;
 use Icinga\Module\Eventtracker\Web\Form\CloseIssueForm;
-use Icinga\Module\Eventtracker\Web\Form\LinkLikeForm;
 use Icinga\Module\Eventtracker\Web\Form\TakeIssueForm;
 use Icinga\Module\Eventtracker\Web\Widget\IdoDetails;
 use Icinga\Module\Eventtracker\Web\Widget\IssueActivities;
@@ -35,6 +34,14 @@ class IssueController extends CompatController
             $issues = SetOfIssues::fromUrl($this->url(), $db);
             $count = \count($issues);
             $this->addTitle($this->translate('%d issues'), $count);
+            $maxIssues = $this->Config()->get('ui', 'multiselect_max_issues', 50);
+            if ($count > $maxIssues) {
+                $this->content()->add(Html::tag('p', [
+                    'class' => 'state-hint warning'
+                ], \sprintf($this->translate('Please select no more than %s issues'), $maxIssues)));
+
+                return;
+            }
             if ($this->Auth()->hasPermission('eventtracker/operator')) {
                 $this->actions()->add(
                     (new CloseIssueForm($issues, $db))->on('success', function () use ($count) {
