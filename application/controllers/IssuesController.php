@@ -2,7 +2,6 @@
 
 namespace Icinga\Module\Eventtracker\Controllers;
 
-use gipfl\IcingaWeb2\CompatController;
 use gipfl\IcingaWeb2\Link;
 use Icinga\Authentication\Auth;
 use Icinga\Module\Eventtracker\Db\EventSummaryBySeverity;
@@ -18,13 +17,8 @@ use Icinga\Web\Widget\Tabextension\DashboardAction;
 use ipl\Html\BaseHtmlElement;
 use ipl\Html\Html;
 
-class IssuesController extends CompatController
+class IssuesController extends Controller
 {
-    protected function showCompact()
-    {
-        return $this->params->get('view') === 'compact';
-    }
-
     protected function applyFilters(IssuesTable $table)
     {
         $table->search($this->params->get('q'));
@@ -158,21 +152,6 @@ class IssuesController extends CompatController
 
         if (! $this->showCompact()) {
             $this->tabs()->extend(new DashboardAction());
-        }
-    }
-
-    protected function eventuallySendJson(BaseTable $table)
-    {
-        if ($this->getRequest()->isApiRequest() || $this->getParam('format') === 'json') {
-            $table->ensureAssembled();
-            $result = $table->fetch();
-            foreach ($result as & $row) {
-                $row->issue_uuid = Uuid::toHex($row->issue_uuid);
-            }
-            $flags = JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE;
-            $this->getResponse()->setHeader('Content-Type', 'application/json', true)->sendHeaders();
-            echo json_encode($result, $flags);
-            exit;
         }
     }
 }
