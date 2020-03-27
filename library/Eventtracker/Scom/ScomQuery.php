@@ -3,6 +3,7 @@
 namespace Icinga\Module\Eventtracker\Scom;
 
 use Zend_Db_Adapter_Pdo_Mssql as Mssql;
+use Zend_Db_Expr as DbExpr;
 
 class ScomQuery
 {
@@ -55,46 +56,46 @@ class ScomQuery
     {
         $query = $db->select()
             ->from(
-                ['alert' => 'OperationsManager.dbo.Alert'],
+                ['alert' => new DbExpr('OperationsManager.dbo.Alert')],
                 []
             )->join(
-                ['entity' => 'OperationsManager.dbo.BaseManagedEntity'],
+                ['entity' => new DbExpr('OperationsManager.dbo.BaseManagedEntity')],
                 'entity.BaseManagedEntityId = alert.BaseManagedEntityId',
                 []
             )->join(
-                ['rs' => 'OperationsManager.dbo.ResolutionState'],
+                ['rs' => new DbExpr('OperationsManager.dbo.ResolutionState')],
                 'rs.ResolutionState = alert.ResolutionState',
                 []
             )->joinLeft(
-                ['prettyalert' => 'OperationsManagerDW.Alert.vAlert'],
+                ['prettyalert' => new DbExpr('OperationsManagerDW.Alert.vAlert')],
                 'prettyalert.AlertGuid = alert.AlertId',
                 []
             )->joinLeft(
-                ['topentity' => 'OperationsManager.dbo.BaseManagedEntity'],
+                ['topentity' => new DbExpr('OperationsManager.dbo.BaseManagedEntity')],
                 'topentity.BaseManagedEntityId = entity.TopLevelHostEntityId',
                 []
             )->joinLeft(
-                ['entitytype' => 'OperationsManager.dbo.ManagedType'],
+                ['entitytype' => new DbExpr('OperationsManager.dbo.ManagedType')],
                 'entitytype.ManagedTypeId = entity.BaseManagedTypeId',
                 []
             )->joinLeft(
-                ['topentitytype' => 'OperationsManager.dbo.ManagedType'],
+                ['topentitytype' => new DbExpr('OperationsManager.dbo.ManagedType')],
                 'topentitytype.ManagedTypeId = topentity.BaseManagedTypeId',
                 []
             )->joinLeft(
-                ['topentitybasetype' => 'OperationsManager.dbo.ManagedType'],
+                ['topentitybasetype' => new DbExpr('OperationsManager.dbo.ManagedType')],
                 'topentitybasetype.ManagedTypeId = topentitytype.BaseManagedTypeId',
                 []
             )->joinLeft(
-                ['rules' => 'OperationsManager.dbo.Rules'],
+                ['rules' => new DbExpr('OperationsManager.dbo.Rules')],
                 'rules.RuleId = alert.RuleId',
                 []
             )->joinLeft(
-                ['monitor' => 'OperationsManager.dbo.Monitor'],
+                ['monitor' => new DbExpr('OperationsManager.dbo.Monitor')],
                 'monitor.MonitorId = alert.RuleId',
                 []
             )->joinLeft(
-                ['mm' => 'OperationsManager.dbo.MaintenanceMode'],
+                ['mm' => new DbExpr('OperationsManager.dbo.MaintenanceMode')],
                 'mm.BaseManagedEntityId = alert.BaseManagedEntityId',
                 []
             );
