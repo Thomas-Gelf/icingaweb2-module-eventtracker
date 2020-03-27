@@ -6,8 +6,6 @@ use gipfl\IcingaWeb2\Link;
 use Icinga\Authentication\Auth;
 use Icinga\Module\Eventtracker\Db\EventSummaryBySeverity;
 use Icinga\Module\Eventtracker\DbFactory;
-use Icinga\Module\Eventtracker\Uuid;
-use Icinga\Module\Eventtracker\Web\Table\BaseTable;
 use Icinga\Module\Eventtracker\Web\Table\IssuesTable;
 use Icinga\Module\Eventtracker\Web\Widget\AdditionalTableActions;
 use Icinga\Module\Eventtracker\Web\Widget\SeverityFilter;
