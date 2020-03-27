@@ -10,11 +10,8 @@ class MssqlProcessesTable extends BaseTable
 
     public function prepareQuery()
     {
-        return $this->db()
-            ->select()
-            ->from('sys.dm_exec_requests', $this->getRequiredDbColumns())
-            ->order('session_id')
-            ;
+        return $this->db()->select()
+            ->from('sys.dm_exec_requests', $this->getRequiredDbColumns());
     }
 
     protected function initialize()
