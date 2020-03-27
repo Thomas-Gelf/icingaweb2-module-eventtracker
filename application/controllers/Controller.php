@@ -47,7 +47,10 @@ abstract class Controller extends CompatController
             $table->ensureAssembled();
             $result = $table->fetch();
             foreach ($result as & $row) {
-                $row->issue_uuid = Uuid::toHex($row->issue_uuid);
+                // For some tables only
+                if (isset($row->issue_uuid)) {
+                    $row->issue_uuid = Uuid::toHex($row->issue_uuid);
+                }
             }
             $flags = JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE;
             $this->getResponse()->setHeader('Content-Type', 'application/json', true)->sendHeaders();
