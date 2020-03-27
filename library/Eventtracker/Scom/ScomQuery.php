@@ -100,9 +100,9 @@ class ScomQuery
             );
 
         $query->where('alert.ResolutionState = 0')
-            ->where('alert.Severity > 0')
-            ->order('alert.Severity DESC')
-            ->order('alert.TimeRaised DESC');
+            ->where('alert.Severity > 0');
+            // ->order('alert.Severity DESC')
+            // ->order('alert.TimeRaised DESC')
 
         return $query;
     }
