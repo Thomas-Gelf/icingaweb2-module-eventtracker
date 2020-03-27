@@ -45,6 +45,23 @@ class IcingaCi
         return null;
     }
 
+    public static function eventuallyLoadForIssue(Db $db, Issue $issue)
+    {
+        $hostname = $issue->get('host_name');
+        $service = $issue->get('object_name');
+        $object = static::eventuallyFetchCi($db, $hostname, $service);
+        if ($object) {
+            return $object;
+        } else {
+            $domain = \trim(Config::module('eventtracker')->get('ido-sync', 'search_domain'), '.');
+            if ($domain) {
+                return static::eventuallyFetchCi($db, "$hostname.$domain", $service);
+            }
+        }
+
+        return null;
+    }
+
     protected static function eventuallyFetchCi(Db $db, $hostname, $service = null)
     {
         $query = self::prepareCiQuery($db)->where('host_name = ?', $hostname);
