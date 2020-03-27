@@ -27,11 +27,14 @@ class CheckCommand extends Command
         }
         $service = $this->params->get('service');
         $db = $this->requireMssqlResource($resource);
+        $columns = ScomQuery::getDefaultColumns();
         $query = ScomQuery::prepareBaseQuery($db)
-            ->columns(ScomQuery::getDefaultColumns())
-            ->where('object_name = ?', $host);
+            ->columns($columns)
+            // ->where('object_name = ?', $host);
+            ->where($columns['object_name'] . $db->quoteInto(' = ?', $host));
         if ($service !== null) {
-            $query->where('alert_name = ?', $service);
+            // $query->where('alert_name = ?', $service);
+            $query->where($columns['alert_name'] . $db->quoteInto(' = ?', $service));
         }
 
         try {
