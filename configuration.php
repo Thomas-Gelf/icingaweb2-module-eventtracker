@@ -2,7 +2,7 @@
 
 use Icinga\Module\Eventtracker\ProvidedHook\Eventtracker\ScomIssueHook;
 
-if ($this->getConfig()->get('frontend', 'disabled', 'no') === 'yes') {
+if ($this->getConfig()->get('ui', 'disabled', 'no') === 'yes') {
     return;
 }
 

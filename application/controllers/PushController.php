@@ -4,16 +4,14 @@ namespace Icinga\Module\Eventtracker\Controllers;
 
 use Icinga\Application\Logger;
 use Icinga\Module\Eventtracker\MSendEventFactory;
-use Icinga\Module\Eventtracker\Uuid;
-use ipl\Html\Html;
-use gipfl\IcingaWeb2\CompatController;
 use Icinga\Module\Eventtracker\DbFactory;
 use Icinga\Module\Eventtracker\EventReceiver;
 use Icinga\Module\Eventtracker\MSendCommandLine;
 use Icinga\Module\Eventtracker\ObjectClassInventory;
 use Icinga\Module\Eventtracker\SenderInventory;
+use ipl\Html\Html;
 
-class PushController extends CompatController
+class PushController extends Controller
 {
     protected $requiresAuthentication = false;
 

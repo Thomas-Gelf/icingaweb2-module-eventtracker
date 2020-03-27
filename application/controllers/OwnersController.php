@@ -2,12 +2,11 @@
 
 namespace Icinga\Module\Eventtracker\Controllers;
 
-use gipfl\IcingaWeb2\CompatController;
 use Icinga\Module\Eventtracker\DbFactory;
 use Icinga\Module\Eventtracker\Web\Table\OwnerSummaryTable;
 use Icinga\Module\Eventtracker\Web\Widget\SummaryTabs;
 
-class OwnersController extends CompatController
+class OwnersController extends Controller
 {
     public function indexAction()
     {

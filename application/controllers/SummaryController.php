@@ -2,7 +2,6 @@
 
 namespace Icinga\Module\Eventtracker\Controllers;
 
-use gipfl\IcingaWeb2\CompatController;
 use Icinga\Module\Eventtracker\DbFactory;
 use Icinga\Module\Eventtracker\Status;
 use Icinga\Module\Eventtracker\Web\Table\BaseSummaryTable;
@@ -12,9 +11,8 @@ use Icinga\Module\Eventtracker\Web\Table\ObjectNameSummaryTable;
 use Icinga\Module\Eventtracker\Web\Table\OwnerSummaryTable;
 use Icinga\Module\Eventtracker\Web\Table\SenderSummaryTable;
 use Icinga\Module\Eventtracker\Web\Widget\SummaryTabs;
-use ipl\Html\Html;
 
-class SummaryController extends CompatController
+class SummaryController extends Controller
 {
     public function classesAction()
     {

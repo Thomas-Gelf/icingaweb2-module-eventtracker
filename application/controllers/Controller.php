@@ -5,12 +5,25 @@ namespace Icinga\Module\Eventtracker\Controllers;
 use gipfl\IcingaWeb2\CompatController;
 use Icinga\Authentication\Auth;
 use Icinga\Data\Db\DbConnection;
+use Icinga\Exception\NotFoundError;
 use Icinga\Module\Eventtracker\Uuid;
 use Icinga\Module\Eventtracker\Web\Table\BaseTable;
 use Icinga\Module\Eventtracker\Web\Widget\AdditionalTableActions;
 
 abstract class Controller extends CompatController
 {
+    /**
+     * @throws NotFoundError
+     */
+    public function init()
+    {
+        if (! $this->getRequest()->isApiRequest()
+            && $this->Config()->get('ui', 'disabled', 'no') === 'yes'
+        ) {
+            throw new NotFoundError('Not found');
+        }
+    }
+
     protected function showCompact()
     {
         return $this->params->get('view') === 'compact';

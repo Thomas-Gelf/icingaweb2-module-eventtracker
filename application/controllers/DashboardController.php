@@ -2,11 +2,10 @@
 
 namespace Icinga\Module\Eventtracker\Controllers;
 
-use gipfl\IcingaWeb2\CompatController;
 use Icinga\Module\Eventtracker\Web\Widget\Dashlet;
 use ipl\Html\Html;
 
-class DashboardController extends CompatController
+class DashboardController extends Controller
 {
     public function indexAction()
     {

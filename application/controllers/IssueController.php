@@ -2,7 +2,6 @@
 
 namespace Icinga\Module\Eventtracker\Controllers;
 
-use gipfl\IcingaWeb2\CompatController;
 use gipfl\IcingaWeb2\Url;
 use Icinga\Exception\NotFoundError;
 use Icinga\Module\Eventtracker\DbFactory;
@@ -20,7 +19,7 @@ use Icinga\Module\Eventtracker\Web\Widget\IssueHeader;
 use Icinga\Web\Hook;
 use ipl\Html\Html;
 
-class IssueController extends CompatController
+class IssueController extends Controller
 {
     /**
      * @throws \Icinga\Exception\NotFoundError
