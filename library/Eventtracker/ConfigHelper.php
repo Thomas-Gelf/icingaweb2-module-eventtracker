@@ -27,12 +27,7 @@ class ConfigHelper
     {
         return \preg_replace_callback('/({[^}]+})/', function ($match) use ($issue) {
             $property = \trim($match[1], '{}');
-            $modifier = null;
-            // TODO: make property modifiers dynamic
-            if (\preg_match('/:lower$/', $property)) {
-                $property = \preg_replace('/:lower$/', '', $property);
-                $modifier = 'lower';
-            }
+            list($property, $modifier) = static::extractPropertyModifier($property);
             if ($issue instanceof Issue && $property === 'uuid') {
                 $value = $issue->getNiceUuid();
             } elseif ($issue instanceof Issue && \preg_match('/^attributes\.(.+)$/', $property, $pMatch)) {
@@ -49,14 +44,31 @@ class ConfigHelper
             } else {
                 $value = $issue->$property;
             }
-
-            switch ($modifier) {
-                case 'lower':
-                    $value = \strtolower($value);
-                    break;
-            }
+            static::applyPropertyModifier($property, $modifier);
 
             return $value;
         }, $string);
+    }
+
+    protected static function applyPropertyModifier(&$value, $modifier)
+    {
+        // Hint: $modifier could be null
+        switch ($modifier) {
+            case 'lower':
+                $value = \strtolower($value);
+                break;
+        }
+    }
+
+    protected static function extractPropertyModifier($property)
+    {
+        $modifier = null;
+        // TODO: make property modifiers dynamic
+        if (\preg_match('/:lower$/', $property)) {
+            $property = \preg_replace('/:lower$/', '', $property);
+            $modifier = 'lower';
+        }
+
+        return [$property, $modifier];
     }
 }
