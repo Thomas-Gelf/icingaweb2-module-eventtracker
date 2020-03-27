@@ -4,6 +4,7 @@ namespace Icinga\Module\Eventtracker\Controllers;
 
 use gipfl\IcingaWeb2\CompatController;
 use Icinga\Authentication\Auth;
+use Icinga\Data\Db\DbConnection;
 use Icinga\Module\Eventtracker\Uuid;
 use Icinga\Module\Eventtracker\Web\Table\BaseTable;
 use Icinga\Module\Eventtracker\Web\Widget\AdditionalTableActions;
@@ -28,6 +29,16 @@ abstract class Controller extends CompatController
         $table->getQuery()->limit($defaultLimit);
         $this->eventuallySendJson($table);
         $table->renderTo($this);
+    }
+
+    /**
+     * @return DbConnection
+     */
+    protected function getScomDb()
+    {
+        return DbConnection::fromResourceName(
+            $this->Config()->get('scom', 'db_resource')
+        );
     }
 
     protected function eventuallySendJson(BaseTable $table)
