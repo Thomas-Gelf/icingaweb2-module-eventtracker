@@ -35,7 +35,6 @@ class ConfigHelper
                 if ($ci === null) {
                     return static::missingProperty($property);
                 }
-
                 $value = static::getIcingaCiProperty($ci, $property);
             } else {
                 $value = static::getIssueProperty($issue, $property);
@@ -63,7 +62,7 @@ class ConfigHelper
 
                 $ci = $ci->host;
             }
-            $property = $match[1];
+            $property = $match[2];
         }
 
         return static::reallyGetCiProperty($ci, $property);
