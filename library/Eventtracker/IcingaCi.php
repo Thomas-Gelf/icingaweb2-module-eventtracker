@@ -59,7 +59,11 @@ class IcingaCi
             }
         }
 
-        return null;
+        if ($service === null) {
+            return null;
+        } else {
+            return static::eventuallyFetchCi($db, $hostname);
+        }
     }
 
     protected static function eventuallyFetchCi(Db $db, $hostname, $service = null)
