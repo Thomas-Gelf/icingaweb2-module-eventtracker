@@ -32,8 +32,8 @@ SELECT
 FROM OperationsManager.dbo.Alert alert
 JOIN OperationsManager.dbo.BaseManagedEntity entity ON entity.BaseManagedEntityId = alert.BaseManagedEntityId
 JOIN OperationsManager.dbo.ResolutionState rs ON rs.ResolutionState = alert.ResolutionState
+JOIN OperationsManagerDW.Alert.vAlert prettyalert ON prettyalert.AlertGuid = alert.AlertId
 
-LEFT JOIN OperationsManagerDW.Alert.vAlert prettyalert ON prettyalert.AlertGuid = alert.AlertId
 LEFT JOIN OperationsManager.dbo.BaseManagedEntity topentity ON topentity.BaseManagedEntityId = entity.TopLevelHostEntityId
 LEFT JOIN OperationsManager.dbo.ManagedType entitytype ON entitytype.ManagedTypeId = entity.BaseManagedTypeId
 LEFT JOIN OperationsManager.dbo.ManagedType topentitytype ON topentitytype.ManagedTypeId = topentity.BaseManagedTypeId
