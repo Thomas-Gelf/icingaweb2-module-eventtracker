@@ -41,10 +41,26 @@ class Severity
         return $value === static::DEBUG;
     }
 
-    public static function assertValid($priority)
+    public static function max($severity1, $severity2)
     {
-        if (! static::isValid($priority)) {
-            throw new InvalidArgumentException("Valid priority expected, got '$priority'");
+        $order = [
+            self::DEBUG         => 0,
+            self::INFORMATIONAL => 1,
+            self::NOTICE        => 2,
+            self::WARNING       => 3,
+            self::ERROR         => 4,
+            self::CRITICAL      => 5,
+            self::ALERT         => 6,
+            self::EMERGENCY     => 7,
+        ];
+
+        return $order[$severity1] > $order[$severity2] ? $severity1 : $severity2;
+    }
+
+    public static function assertValid($severity)
+    {
+        if (! static::isValid($severity)) {
+            throw new InvalidArgumentException("Valid severity expected, got '$severity'");
         }
     }
 

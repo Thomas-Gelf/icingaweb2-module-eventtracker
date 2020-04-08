@@ -61,6 +61,16 @@ class SetOfIssues implements Countable
         }
     }
 
+    public function getWorstSeverity()
+    {
+        $severity = Severity::DEBUG;
+        foreach ($this->issues as $issue) {
+            $severity = Severity::max($severity, $issue->get('severity'));
+        }
+
+        return $severity;
+    }
+
     public static function fromUrl(Url $url, DbAdapter $db)
     {
         $set = new static($db);
