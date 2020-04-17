@@ -6,16 +6,27 @@ SELECT
   alert.TicketId AS ticket_id,
   COALESCE(rules.RuleCategory, monitor.MonitorCategory) AS category,
 
+  CASE
+   WHEN alert.Severity = 0 AND alert.Priority < 2 THEN 'informational',
+   WHEN alert.Severity = 0 THEN 'warning',
+   WHEN alert.Severity = 1 AND alert.Priority < 2 THEN 'warning',
+   WHEN alert.Severity = 1 THEN 'error',
+   WHEN alert.Severity = 2 AND alert.Priority = 0 THEN 'error',
+   WHEN alert.Severity = 2 AND alert.Priority = 1 THEN 'alert',
+   WHEN alert.Severity = 2 AND alert.Priority = 2 THEN 'critical',
+  END AS alert_severity,
+  1 AS alert_priority,
+
   CASE alert.Severity
     WHEN 2 THEN 'critical'
     WHEN 1 THEN 'warning'
     WHEN 0 THEN 'informational'
-    END AS alert_severity,
+    END AS real_alert_severity,
   CASE alert.Priority
     WHEN 2 THEN 'high'
     WHEN 1 THEN 'normal'
     WHEN 0 THEN 'low'
-  END AS alert_priority,
+  END AS real_alert_priority,
 
   alert.ResolutionState AS resolution_state,
   rs.ResolutionStateName AS resolution_state_name,
