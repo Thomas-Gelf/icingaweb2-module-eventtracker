@@ -9,8 +9,7 @@ SELECT
   CASE
    WHEN alert.Severity = 0 AND alert.Priority < 2 THEN 'informational'
    WHEN alert.Severity = 0 THEN 'warning'
-   WHEN alert.Severity = 1 AND alert.Priority < 2 THEN 'warning'
-   WHEN alert.Severity = 1 THEN 'error'
+   WHEN alert.Severity = 1 THEN 'warning'
    WHEN alert.Severity = 2 AND alert.Priority = 0 THEN 'error'
    WHEN alert.Severity = 2 AND alert.Priority = 1 THEN 'alert'
    WHEN alert.Severity = 2 AND alert.Priority = 2 THEN 'critical'
