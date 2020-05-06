@@ -141,6 +141,7 @@ class IssuesTable extends BaseTable
             }),
             $this->createColumn('sender_name', $this->translate('Sender'), 's.sender_name'),
             $this->createColumn('owner', $this->translate('Owner'), 'i.owner'),
+            $this->createColumn('ticket_ref', $this->translate('Ticket'), 'i.ticket_ref'),
         ]);
     }
 
