@@ -40,6 +40,9 @@ class IdoDetails extends BaseHtmlElement
     /** @var Service */
     protected $service;
 
+    /** @var \stdClass */
+    protected $icingaCi;
+
     public function __construct(
         Issue $issue,
         ZfDb $db
@@ -71,7 +74,8 @@ class IdoDetails extends BaseHtmlElement
         $db = $this->db;
         $ido = $this->ido;
 
-        if ($objectName && IcingaCi::exists($db, $hostname, $objectName)) {
+        if ($ci = IcingaCi::eventuallyLoad($db, $hostname, $objectName)) {
+            $this->icingaCi = $ci;
             $service = new Service($ido, $hostname, $objectName);
             $host = new Host($ido, $hostname);
             if ($service->fetch()) {
@@ -80,7 +84,8 @@ class IdoDetails extends BaseHtmlElement
             if ($host->fetch()) {
                 $this->host = $host;
             }
-        } elseif (IcingaCi::exists($db, $hostname)) {
+        } elseif ($ci = IcingaCi::eventuallyLoad($db, $hostname)) {
+            $this->icingaCi = $ci;
             $host = new Host($ido, $hostname);
             if ($host->fetch()) {
                 $this->host = $host;
@@ -128,30 +133,46 @@ class IdoDetails extends BaseHtmlElement
 
     protected function assemble()
     {
-        $content = [
-            Html::tag('h2', 'ICINGA'),
-        ];
-        if ($this->service) {
-            $actions = \array_merge([Html::sprintf(
-                $this->translate('Service: %s (on %s)'),
-                $this->getServiceLink(),
+        if ($ci = $this->icingaCi) {
+            $details = new NameValuePreFormatted();
+            $details->addNameValueRow(
+                $this->translate('Host'),
                 $this->getHostLink()
-            )], $this->getHookActions('Monitoring\\ServiceActions', $this->service));
-        } elseif ($this->host) {
-            $actions = \array_merge([Html::sprintf(
-                $this->translate('Host: %s'),
-                $this->getHostLink()
-            )], $this->getHookActions('Monitoring\\HostActions', $this->host));
+            );
+            if ($ci->object_type === 'service') {
+                $details->addNameValueRow(
+                    $this->translate('Service'),
+                    $this->getServiceLink()
+                );
+                $actions = $this->getHookActions('Monitoring\\ServiceActions', $this->service);
+            } else {
+                $actions = $this->getHookActions('Monitoring\\HostActions', $this->host);
+            }
+            $preActions = [];
+            $first = true;
+            foreach ($actions as $action) {
+                if ($first) {
+                    $first = false;
+                } else {
+                    $preActions[] = "\n";
+                }
+                $preActions[] = $action;
+            }
+            $details->addNameValueRow(
+                $this->translate('Actions'),
+                $preActions
+            );
+            $details->addAttributes([
+                'style' => 'width: 50%; display: inline-block'
+            ]);
+            $details->addNameValuePairs((array) $ci->vars);
+
         } else {
-            $actions = [];
+            $details = $this->translate('No related host is known to Icinga');
         }
-        if (empty($actions)) {
-            $content[] = $this->translate('No related host is known to Icinga');
-        } else {
-            $content[] = Html::tag('ul', Html::wrapEach($actions, 'li'));
-        }
+
         $this->add(Html::tag('div', [
-            'class' => 'output comment'
-        ], $content));
+            'class' => 'output comment',
+        ], [Html::tag('h2', 'ICINGA'), $details]));
     }
 }
