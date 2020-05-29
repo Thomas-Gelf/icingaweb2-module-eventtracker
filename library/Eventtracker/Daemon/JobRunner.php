@@ -8,8 +8,8 @@ use Icinga\Application\Logger;
 use Icinga\Data\Db\DbConnection as Db;
 use React\ChildProcess\Process;
 use React\EventLoop\LoopInterface;
-use React\Promise\FulfilledPromise;
 use React\Promise\Promise;
+use function React\Promise\resolve;
 
 class JobRunner implements DbBasedComponent
 {
@@ -86,7 +86,7 @@ class JobRunner implements DbBasedComponent
         $this->timer = $this->loop->addPeriodicTimer($this->checkInterval, $check);
         $this->timer = $this->loop->addPeriodicTimer(7, $schedule);
 
-        return new FulfilledPromise();
+        return resolve();
     }
 
     /**

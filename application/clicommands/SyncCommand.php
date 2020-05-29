@@ -17,10 +17,10 @@ use Icinga\Module\Eventtracker\Scom\ScomSync;
 use React\EventLoop\Factory as Loop;
 use React\EventLoop\LoopInterface;
 use React\Promise\ExtendedPromiseInterface;
-use React\Promise\FulfilledPromise;
 use React\Stream\ReadableResourceStream;
 use React\Stream\WritableResourceStream;
 use Zend_Db_Adapter_Pdo_Mssql as Mssql;
+use function React\Promise\resolve;
 
 class SyncCommand extends Command
 {
@@ -97,7 +97,7 @@ class SyncCommand extends Command
     }
 
     /**
-     * @return FulfilledPromise
+     * @return \React\Promise\FulfilledPromise
      * @throws \Icinga\Exception\ConfigurationError
      */
     public function runIdo()
@@ -113,11 +113,11 @@ class SyncCommand extends Command
         }
         $sync->sync();
 
-        return new FulfilledPromise();
+        return resolve();
     }
 
     /**
-     * @return FulfilledPromise
+     * @return \React\Promise\FulfilledPromise
      * @throws \Icinga\Exception\ConfigurationError
      */
     public function runIdoState()
@@ -126,7 +126,7 @@ class SyncCommand extends Command
         $sync = new IcingaStateSync(DbFactory::db(), $ido);
         $sync->sync();
 
-        return new FulfilledPromise();
+        return resolve();
     }
 
     public function runExpirations()
@@ -142,7 +142,7 @@ class SyncCommand extends Command
             Logger::info(sprintf('Expired %d outdated issues', $count));
         }
 
-        return new FulfilledPromise();
+        return resolve();
     }
 
     protected function readJsonFile($filename)
