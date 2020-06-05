@@ -67,7 +67,7 @@ class JobRunner implements DbBasedComponent
             $taskNames = [
                 'scom',
                 'ido',
-                'idoState',
+                'idostate',
                 'expire',
             ];
             foreach ($taskNames as $taskName) {
