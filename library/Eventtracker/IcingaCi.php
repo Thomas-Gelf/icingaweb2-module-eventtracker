@@ -117,7 +117,8 @@ class IcingaCi
             'varname',
             'varvalue',
             'varformat',
-        ]);
+        ])->where('object_id = ?', $id);
+
         $vars = [];
         foreach ($db->fetchAll($query) as $var) {
             if ($var->varformat === 'json') {
