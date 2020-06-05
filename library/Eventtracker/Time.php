@@ -19,11 +19,11 @@ class Time
 
     public static function usFormatter($ms)
     {
-        // 12/11/2019 11:41PM
         return Html::tag('span', [
             'class' => 'time-ago',
             'title' => DateFormatter::formatDateTime($ms / 1000)
-        ], \strftime('%D %I:%M%p', $ms / 1000));
+        ], \strftime('%D %H:%M', $ms / 1000));
+        // Hint: used to be '%D %I:%M%p', am/pm seems to not work with our locales
     }
 
     public static function agoFormatted($ms)
