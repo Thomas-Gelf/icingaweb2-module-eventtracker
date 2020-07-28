@@ -49,20 +49,13 @@ class IcingaCi
     {
         $hostname = $issue->get('host_name');
         $service = $issue->get('object_name');
-        $object = static::eventuallyFetchCi($db, $hostname, $service);
+        $object = static::eventuallyLoad($db, $hostname, $service);
         if ($object) {
             return $object;
-        } else {
-            $domain = \trim(Config::module('eventtracker')->get('ido-sync', 'search_domain'), '.');
-            if ($domain) {
-                return static::eventuallyFetchCi($db, "$hostname.$domain", $service);
-            }
-        }
-
-        if ($service === null) {
+        } elseif ($service === null) {
             return null;
         } else {
-            return static::eventuallyFetchCi($db, $hostname);
+            return static::eventuallyLoad($db, $hostname);
         }
     }
 
