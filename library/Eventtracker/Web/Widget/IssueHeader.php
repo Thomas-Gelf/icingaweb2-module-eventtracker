@@ -220,7 +220,11 @@ class IssueHeader extends BaseHtmlElement
 
     protected function renderTicket(Issue $issue)
     {
-        $actions = $this->getHookedActions($issue);
+        if ($issue->get('status') === 'closed') {
+            $actions = [];
+        } else {
+            $actions = $this->getHookedActions($issue);
+        }
         if (empty($actions)) {
             if ($ref = $issue->get('ticket_ref')) {
                 return $ref;
@@ -275,7 +279,9 @@ class IssueHeader extends BaseHtmlElement
         }
 
         if ($issue->get('status') === 'closed') {
-            $openClose = new ReOpenIssueForm($issue, $db);
+            // We do not allow this right now
+            // $openClose = new ReOpenIssueForm($issue, $db);
+            return null;
         } else {
             $openClose = new CloseIssueForm($issue, $db);
         }

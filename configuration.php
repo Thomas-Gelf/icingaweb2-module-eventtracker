@@ -19,6 +19,7 @@ $section->add(N_('Handled Issues'))
     )
     ->setPriority(20);
 $section->add(N_('Summaries'))->setUrl('eventtracker/summary/top10')->setPriority(30);
+$section->add(N_('History'))->setUrl('eventtracker/issueshistory')->setPriority(30);
 
 $this->provideSearchUrl('EventTracker', 'eventtracker/issues', 110);
 $this->providePermission(

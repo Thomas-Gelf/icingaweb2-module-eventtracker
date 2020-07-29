@@ -1,0 +1,282 @@
+<?php
+
+namespace Icinga\Module\Eventtracker\Web\Table;
+
+use gipfl\IcingaWeb2\Icon;
+use gipfl\IcingaWeb2\Link;
+use gipfl\IcingaWeb2\Table\Extension\MultiSelect;
+use gipfl\Translation\TranslationHelper;
+use Icinga\Application\Config;
+use Icinga\Module\Eventtracker\Priority;
+use Icinga\Module\Eventtracker\Time;
+use Icinga\Module\Eventtracker\Uuid;
+use Icinga\Module\Eventtracker\Web\HtmlPurifier;
+use ipl\Html\Html;
+
+class IssueHistoryTable extends BaseTable
+{
+    use TranslationHelper;
+    use MultiSelect;
+
+    protected $joinedSenders = false;
+
+    protected $compact = false;
+
+    protected $searchColumns = [
+        'i.host_name',
+        'i.object_name',
+        'i.object_class',
+        'i.message',
+    ];
+
+    protected $noHeader = false;
+
+    protected $disablePrio = true;
+
+    public function setNoHeader($setNoHeader = true)
+    {
+        $this->noHeader = (bool) $setNoHeader;
+
+        return $this;
+    }
+
+    public function showCompact($compact = true)
+    {
+        $this->compact = $compact;
+        if ($compact) {
+            $this->addAttributes(['class' => 'compact-table']);
+        }
+
+        return $this;
+    }
+
+    protected function renderTitleColumns()
+    {
+        if ($this->noHeader) {
+            return null;
+        } else {
+            return parent::renderTitleColumns();
+        }
+    }
+
+    protected function initialize()
+    {
+        $this->enableMultiSelect(
+            'eventtracker/issue',
+            'eventtracker/issue',
+            ['uuid']
+        );
+        $prioIconRenderer = function ($row) {
+            if ($this->disablePrio) {
+                return null;
+            }
+
+            $icons = [
+                Priority::HIGHEST => 'up-big',
+                Priority::HIGH    => 'up-small',
+                Priority::NORMAL  => 'right-small',
+                Priority::LOW     => 'down-small',
+                Priority::LOWEST  => 'down-big',
+            ];
+
+            return Icon::create($icons[$row->priority], [
+                'title' => \ucfirst($row->priority)
+            ]);
+        };
+        $this->addAvailableColumns([
+            $this->createColumn('severity', $this->translate('Severity'), [
+                'severity'   => 'i.severity',
+                'priority'   => 'i.priority',
+                'timestamp'  => 'i.ts_first_event',
+                'issue_uuid' => 'i.issue_uuid',
+            ])->setRenderer(function ($row) use ($prioIconRenderer) {
+                return $this->formatSeverityColumn($row, $prioIconRenderer);
+            })->setSortExpression($this->disablePrio
+                ? [
+                    'i.severity',
+                    'i.ts_first_event'
+                ]
+                : [
+                    'i.severity',
+                    'i.priority',
+                    'i.ts_first_event'
+                ])->setDefaultSortDirection('DESC'),
+            /* $this->createColumn('priority', $this->translate('Priority'), [
+                'priority' => 'i.priority'
+            ])->setRenderer(function ($row) use ($prioIconRenderer) {
+                return Html::tag('td', ['style' => 'white-space: nowrap'], [
+                    $prioIconRenderer($row),
+                    $row->priority
+                ]);
+            })->setDefaultSortDirection('DESC'), */
+            $this->createColumn('received', $this->translate('Received'), [
+                'received' => 'i.ts_first_event'
+            ])->setRenderer(function ($row) {
+                return Time::agoFormatted($row->received);
+            })->setDefaultSortDirection('DESC'),
+            $this->createColumn('host_name', $this->translate('Host'), [
+                'host_name' => 'i.host_name'
+            ])->setSortExpression([
+                'i.host_name',
+                'i.object_name',
+            ])->setRenderer(function ($row) {
+                return $this->linkToObject($row, $row->host_name);
+            }),
+            $this->createColumn('object_name', $this->translate('Object'), [
+                'object_name'   => 'i.object_name',
+                'issue_uuid' => 'i.issue_uuid'
+            ])->setRenderer(function ($row) {
+                return $this->linkToObject($row, $row->object_name);
+            }),
+            $this->createColumn('message', $this->translate('Message'), [
+                'severity'      => 'i.severity', // Used by linkToObject
+                'issue_uuid'    => 'i.issue_uuid',
+                'message'       => 'i.message',
+                'host_name'     => 'i.host_name',
+                'object_name'   => 'i.object_name',
+            ])->setRenderer(function ($row) {
+                return $this->formatMessageColumn($row);
+            }),
+            $this->createColumn('sender_name', $this->translate('Sender'), 's.sender_name'),
+            $this->createColumn('owner', $this->translate('Owner'), 'i.owner'),
+            $this->createColumn('ticket_ref', $this->translate('Ticket'), 'i.ticket_ref'),
+        ]);
+    }
+
+    protected function listCustomVarNames()
+    {
+        $vars = Config::module('eventtracker')->get('ido-sync', 'vars');
+        if (\strlen($vars)) {
+            return \preg_split('/\s*,\s*/', $vars, -1, PREG_SPLIT_NO_EMPTY);
+        } else {
+            return [];
+        }
+    }
+
+    protected function formatSeverityColumn($row, $prioIconRenderer)
+    {
+        $classes = [
+            'severity-col',
+            $row->severity
+        ];
+
+        if ($this->compact) {
+            return Html::tag('td', [
+                'class' => $classes
+            ], [
+                $this->formatTime($row->timestamp)->add(
+                    $prioIconRenderer($row)
+                )
+            ]);
+        }
+
+        $link = Link::create(substr(strtoupper($row->severity), 0, 4), 'eventtracker/issue', [
+            'uuid' => Uuid::toHex($row->issue_uuid)
+        ], [
+            'title' => \ucfirst($row->severity)
+        ]);
+
+        if (! \in_array('priority', $this->getChosenColumnNames())) {
+            $link->add($prioIconRenderer($row));
+        }
+
+        $td = Html::tag('td', ['class' => $classes], $link);
+        if (! \in_array('received', $this->getChosenColumnNames())) {
+            $td->add($this->formatTime($row->timestamp));
+        }
+
+        return $td;
+    }
+
+    protected function formatTime($timestamp)
+    {
+        $usTime = true;
+        if ($usTime) {
+            return Time::usFormatter($timestamp);
+        } else {
+            return Time::agoFormatted($timestamp);
+        }
+    }
+
+    protected function formatMessageColumn($row)
+    {
+        if (\in_array('host_name', $this->getChosenColumnNames())) {
+            $host = null;
+        } else {
+            $host = $row->host_name;
+        }
+        if (\in_array('object_name', $this->getChosenColumnNames())) {
+            $object = null;
+        } else {
+            $object = $row->object_name;
+        }
+
+        if ($host === null && $object === null) {
+            $link = null;
+        } else {
+            if ($host === null) {
+                $link = $this->linkToObject($row, $object);
+            } elseif ($object === null) {
+                $link = $this->linkToObject($row, $host);
+            } else {
+                $link = $this->linkToObject($row, "$object on $host");
+            }
+        }
+        return $this->renderMessage($row->message, $link, Uuid::toHex($row->issue_uuid));
+    }
+
+    protected function renderMessage($message, $link, $id)
+    {
+        $message = \preg_replace('/\r?\n.+/s', '', $message);
+        if ($link === null) {
+            return Html::tag('p', ['class' => 'output-line'], HtmlPurifier::process($message));
+        } else {
+            return Html::tag('td', ['id' => $id], [
+                $link,
+                $this->compact
+                    ? ': ' . preg_replace('/\n.+/s', '', \strip_tags($message))
+                    : Html::tag('p', ['class' => 'output-line'], HtmlPurifier::process($message))
+            ]);
+        }
+    }
+
+    protected function linkToObject($row, $label)
+    {
+        return Link::create($label, 'eventtracker/issue', [
+            'uuid' => Uuid::toHex($row->issue_uuid)
+        ], [
+            'title' => \ucfirst($row->severity)
+        ]);
+    }
+
+    public function getDefaultColumnNames()
+    {
+        return [
+            'severity',
+            'host_name',
+            'message',
+        ];
+    }
+
+    public function prepareQuery()
+    {
+        $columns = $this->getRequiredDbColumns();
+        $query = $this->db()->select()->from(['i' => 'issue_history'], []);
+        if (array_key_exists('sender_name', $columns)) {
+            $query->join(['s' => 'sender'], 's.id = i.sender_id', []);
+            $this->joinedSenders = true;
+        }
+
+        return $query->columns($this->getRequiredDbColumns());
+    }
+
+    public function joinSenders()
+    {
+        if ($this->joinedSenders === false) {
+            $this->getQuery()->join(['s' => 'sender'], 's.id = i.sender_id', []);
+            $this->joinedSenders = true;
+        }
+
+        return $this;
+    }
+}

@@ -98,6 +98,38 @@ class Issue
     }
 
     /**
+     * @param $uuid
+     * @param Db $db
+     * @return Issue|null
+     */
+    public static function loadFromHistory($uuid, Db $db)
+    {
+        $result = $db->fetchRow(
+            $db->select()
+                ->from('issue_history')
+                ->where('issue_uuid = ?', $uuid)
+        );
+
+        $activities = \json_decode($result->activities);
+        $closeReason = $result->close_reason;
+        $closedBy = $result->closed_by;
+        unset($result->activities);
+        unset($result->close_reason);
+        unset($result->closed_by);
+        $result->status = 'closed';
+
+        if ($result) {
+            $issue = new static();
+            $issue->setProperties($result);
+            $issue->set('status', 'closed');
+
+            return $issue;
+        } else {
+            return null;
+        }
+    }
+
+    /**
      * @param Event $event
      * @param Db $db
      * @return Issue|null

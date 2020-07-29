@@ -70,9 +70,12 @@ class IssueController extends Controller
                 $this->addTitle($this->translate('Issue has been closed'));
                 $this->content()->add(Html::tag('p', [
                     'class' => 'state-hint ok'
-                ], $this->translate('This issue has already been closed.')
-                    . ' '
-                    . $this->translate('Future versions will show an Issue history in this place')));
+                ], $this->translate('This issue has been closed.')
+                    // . ' '
+                    // . $this->translate('Future versions will show an Issue history in this place')
+                ));
+                $issue = Issue::loadFromHistory($uuid, $db);
+                $this->showIssue($issue);
             } else {
                 $this->addTitle($this->translate('Not found'));
                 $this->content()->add(Html::tag('p', [
