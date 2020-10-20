@@ -32,6 +32,9 @@ class IcingaCi
 
     public static function eventuallyLoad(Db $db, $hostname, $service = null)
     {
+        if ($hostname === null) {
+            return null;
+        }
         $object = static::eventuallyFetchCi($db, $hostname, $service);
         if ($object) {
             return $object;
