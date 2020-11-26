@@ -1,0 +1,11 @@
+Name: Event Tracker
+Version: 0.7.0
+Depends: reactbundle (>=0.6.0), ipl (>=0.5.0), incubator (>=0.5.0)
+Description: Operator Dashboard to track Incidents from various sources
+
+  This module allows Operators to track Incidents from various sources in a single
+  place. It provides Hooks allowing Third-Party modules to trigger custom actions,
+  with Ticket/Issue-Creation being the most obvious use-case.
+
+  There are also hooks for a back-channel, providing information regarding created
+  tickets and acknowledged or resolved problems to various Event senders.
