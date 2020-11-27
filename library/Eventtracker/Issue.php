@@ -326,7 +326,7 @@ class Issue
             return (object) [];
         }
 
-        $result = \json_decode($this->properties['attributes'], true);
+        $result = \json_decode($this->properties['attributes'], false);
         if (is_array($result) && empty($result)) {
             return (object) []; // Wrongly encoded
         }
