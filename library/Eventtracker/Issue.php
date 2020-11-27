@@ -324,9 +324,14 @@ class Issue
     {
         if (empty($this->properties['attributes'])) {
             return (object) [];
-        } else {
-            return \json_decode($this->properties['attributes']);
         }
+
+        $result = \json_decode($this->properties['attributes'], true);
+        if (is_array($result) && empty($result)) {
+            return (object) []; // Wrongly encoded
+        }
+
+        return $result;
     }
 
     public function getAttribute($name, $default = null)
@@ -334,9 +339,9 @@ class Issue
         $attrs = $this->getAttributes();
         if (\property_exists($attrs, $name)) {
             return $attrs->$name;
-        } else {
-            return $default;
         }
+
+        return $default;
     }
 
     public function setAttributes($attributes)
@@ -456,9 +461,9 @@ class Issue
         $issue = Issue::loadIfEventExists($event, $db);
         if ($issue) {
             return static::closeIssue($issue, $db, IssueHistory::REASON_RECOVERY);
-        } else {
-            return false;
         }
+
+        return false;
     }
 
     public function recover(Event $event, \Zend_Db_Adapter_Abstract $db)
