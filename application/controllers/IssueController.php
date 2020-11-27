@@ -21,9 +21,6 @@ use ipl\Html\Html;
 
 class IssueController extends Controller
 {
-    /**
-     * @throws \Icinga\Exception\NotFoundError
-     */
     public function indexAction()
     {
         $db = DbFactory::db();
@@ -88,11 +85,15 @@ class IssueController extends Controller
     protected function showIssue(Issue $issue)
     {
         $db = DbFactory::db();
-        $this->addTitle(sprintf(
-            '%s (%s)',
-            $issue->get('object_name'),
-            $issue->get('host_name')
-        ));
+        if ($hostname = $issue->get('host_name')) {
+            $this->addTitle(sprintf(
+                '%s (%s)',
+                $issue->get('object_name'),
+                $issue->get('host_name')
+            ));
+        } else {
+            $this->addTitle($issue->get('object_name'));
+        }
         // $this->addHookedActions($issue);
         $this->content()->add([
             $this->issueHeader($issue),

@@ -156,3 +156,10 @@ Currently the following settings are available:
 ; Set to yes to disable the Web frontend:
 ; disabled = no
 ```
+
+Changes
+-------
+
+### v0.8.0
+
+* FIX: Better title for issues without host (#13)
