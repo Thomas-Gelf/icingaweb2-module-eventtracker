@@ -68,8 +68,8 @@ severity = emergency, alert, critical, error
 
 ```ini
 [msend-severity-map]
-MAJOR         = alert
-CRITICAL      = critical
+CRITICAL      = alert
+MAJOR         = critical
 MINOR         = error
 WARNING       = warning
 INFORMATIONAL = informational
@@ -162,4 +162,5 @@ Changes
 
 ### v0.8.0
 
+* BREAKING: Change default severities for BMC Event Manager (#12)
 * FIX: Better title for issues without host (#13)

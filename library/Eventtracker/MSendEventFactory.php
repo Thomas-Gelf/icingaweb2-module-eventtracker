@@ -77,8 +77,8 @@ class MSendEventFactory
     {
         return [
             // 'emergency',
-            'MAJOR'         => 'alert',
-            'CRITICAL'      => 'critical',
+            'CRITICAL'      => 'alert',
+            'MAJOR'         => 'critical',
             'MINOR'         => 'error',
             'WARNING'       => 'warning',
             'INFORMATIONAL' => 'informational', // was: 'notice',
