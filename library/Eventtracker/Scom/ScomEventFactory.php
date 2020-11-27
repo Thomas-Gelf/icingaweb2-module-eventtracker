@@ -28,7 +28,7 @@ class ScomEventFactory
             'object_class'    => $this->classInventory->requireClass(\substr($obj->entity_base_type, 0, 128)),
             'severity'        => $obj->alert_severity,
             'priority'        => $obj->alert_priority,
-            'message'         => $obj->description ? $obj->description : '-',
+            'message'         => $obj->description ?: '-',
             'sender_event_id' => $obj->alert_id,
             'sender_id'       => $this->senderId,
         ]);
