@@ -7,7 +7,7 @@ one-size-fits-all solution.
 
 ...serves the following purposes:
 
-- provide a drop-in replacement for `msend`
+- provide a drop-in replacement for `msend` (via the msend module)
 - sync issues from SCOM
 - sync objects from the Icinga IDO
 - provide Hooks to allow to implement various kinds of back-channels
@@ -24,6 +24,9 @@ In said project, we used the following modules combined with this one:
   - as Host/ServiceAction into the Monitoring module (to create tickets)
   - as an EventAction into the EventTracker, mainly to create Operational
     Requests
+- [msend module](https://github.com/Thomas-Gelf/icingaweb2-module-msend): This
+  module will receive Icinga Alerts via msend from the BMC (ProactiveNet) Event
+  Manager©)
 
 Purpose
 -------
@@ -64,20 +67,6 @@ default setting as follows:
 severity = emergency, alert, critical, error
 ```
 
-## Eventually override default msend severity mappings:
-
-```ini
-[msend-severity-map]
-CRITICAL      = alert
-MAJOR         = critical
-MINOR         = error
-WARNING       = warning
-INFORMATIONAL = informational
-INFO          = informational
-NORMAL        = informational
-OK            = informational
-```
-
 ### Synchronize custom variables from the IDO database
 
 This module replicates available Icinga Object names from the IDO database, and
@@ -91,7 +80,27 @@ vars = location, priority
 ; search_domain = example.com
 ```
 
-### Force msend command logging
+### msend Configuration
+
+**DEPRECATED**: this still works, but the msend receiver has been moved to the
+[msend module](https://github.com/Thomas-Gelf/icingaweb2-module-msend). Please
+expect this to be removed in future versions.
+
+#### Eventually override default msend severity mappings:
+
+```ini
+[msend-severity-map]
+CRITICAL      = alert
+MAJOR         = critical
+MINOR         = error
+WARNING       = warning
+INFORMATIONAL = informational
+INFO          = informational
+NORMAL        = informational
+OK            = informational
+```
+
+#### Force msend command logging
 
 Forwarding msend-like parameters via HTTP might become tricky, that's why we
 provide a script that behaves like `msend` in `contrib/msend-eventtracker`. In
@@ -166,3 +175,6 @@ Changes
 * FIX: Better title for issues without host (#13)
 * FIX: Deal with empty attributes not stored as NULL (#14)
 * FIX: IssueHeader links to host only if there is such (#15)
+
+### v0.9.0
+* FEATURE: msend/push has been deprecated in favor of the msend module (#16)

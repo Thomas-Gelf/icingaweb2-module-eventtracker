@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# DEPRECATED, please use the msend module
+
 ICINGAWEB2=http://localhost/icingaweb2
 # CURL="curl --capath /etc/ssl/certs/ --cert /my/cert.pem --cert-type PEM"
 CURL="curl"

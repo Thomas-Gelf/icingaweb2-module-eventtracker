@@ -11,6 +11,9 @@ use Icinga\Module\Eventtracker\ObjectClassInventory;
 use Icinga\Module\Eventtracker\SenderInventory;
 use ipl\Html\Html;
 
+/**
+ * @deprecated use the msend module
+ */
 class PushController extends Controller
 {
     protected $requiresAuthentication = false;

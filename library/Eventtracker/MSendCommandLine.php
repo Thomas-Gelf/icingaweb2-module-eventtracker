@@ -4,6 +4,9 @@ namespace Icinga\Module\Eventtracker;
 
 use InvalidArgumentException;
 
+/**
+ * @deprecated use the msend module
+ */
 class MSendCommandLine
 {
     protected $arguments;

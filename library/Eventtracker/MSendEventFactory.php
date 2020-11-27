@@ -5,6 +5,9 @@ namespace Icinga\Module\Eventtracker;
 use Icinga\Application\Config;
 use InvalidArgumentException;
 
+/**
+ * @deprecated use the msend module
+ */
 class MSendEventFactory
 {
     protected $senders;
