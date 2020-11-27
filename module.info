@@ -1,5 +1,5 @@
 Name: Event Tracker
-Version: 0.8.0
+Version: 0.9.0
 Depends: reactbundle (>=0.6.0), ipl (>=0.5.0), incubator (>=0.5.0)
 Description: Operator Dashboard to track Incidents from various sources
 

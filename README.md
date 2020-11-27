@@ -178,3 +178,4 @@ Changes
 
 ### v0.9.0
 * FEATURE: msend/push has been deprecated in favor of the msend module (#16)
+* FIX: exception when accessing attributes (#18)
