@@ -94,12 +94,12 @@ class IssueHeader extends BaseHtmlElement
     {
         return [
             Html::tag('strong', 'Host:   '),
-            Link::create(
+            $issue->get('host_name') ? Link::create(
                 $issue->get('host_name'),
                 'eventtracker/issues',
                 ['host_name' => $issue->get('host_name')],
                 ['data-base-target' => 'col1']
-            ),
+            ) : '-',
             "\n",
             Html::tag('strong', 'Object: '),
             Link::create(

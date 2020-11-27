@@ -164,3 +164,5 @@ Changes
 
 * BREAKING: Change default severities for BMC Event Manager (#12)
 * FIX: Better title for issues without host (#13)
+* FIX: Deal with empty attributes not stored as NULL (#14)
+* FIX: IssueHeader links to host only if there is such (#15)
