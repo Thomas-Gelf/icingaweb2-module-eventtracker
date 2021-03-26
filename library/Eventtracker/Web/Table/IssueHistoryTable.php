@@ -27,6 +27,7 @@ class IssueHistoryTable extends BaseTable
         'i.object_name',
         'i.object_class',
         'i.message',
+        'i.ticket_ref',
     ];
 
     protected $noHeader = false;
@@ -54,9 +55,9 @@ class IssueHistoryTable extends BaseTable
     {
         if ($this->noHeader) {
             return null;
-        } else {
-            return parent::renderTitleColumns();
         }
+
+        return parent::renderTitleColumns();
     }
 
     protected function initialize()
@@ -148,9 +149,9 @@ class IssueHistoryTable extends BaseTable
         $vars = Config::module('eventtracker')->get('ido-sync', 'vars');
         if (\strlen($vars)) {
             return \preg_split('/\s*,\s*/', $vars, -1, PREG_SPLIT_NO_EMPTY);
-        } else {
-            return [];
         }
+
+        return [];
     }
 
     protected function formatSeverityColumn($row, $prioIconRenderer)
