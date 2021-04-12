@@ -2,11 +2,14 @@
 
 namespace Icinga\Module\Eventtracker\Scom;
 
+use Icinga\Application\Config;
 use Icinga\Module\Eventtracker\Daemon\Logger;
 use Icinga\Module\Eventtracker\EventReceiver;
 use Icinga\Module\Eventtracker\Issue;
 use Icinga\Module\Eventtracker\ObjectClassInventory;
 use Icinga\Module\Eventtracker\SenderInventory;
+use InvalidArgumentException;
+use RuntimeException;
 use Zend_Db_Adapter_Abstract as DbAdapter;
 use Zend_Db_Adapter_Pdo_Mssql as Mssql;
 
@@ -26,8 +29,19 @@ class ScomSync
      */
     public function syncFromDb(Mssql $db)
     {
-        $query = file_get_contents(__DIR__ . '/scom-alerts.sql');
-        $this->shipEvents($db->fetchAll($query));
+        $filename = Config::module('eventtracker')->get('scom', 'query_file', 'scom-alerts.sql');
+        if (substr($filename, 0, 1) !== '/') {
+            $filename = __DIR__ . "/$filename";
+        }
+        if (substr($filename, -4) !== '.sql') {
+            throw new InvalidArgumentException("Query file name must end with '.sql', got '$filename'");
+        }
+        $query = file_get_contents($filename);
+        if ($query) {
+            $this->shipEvents($db->fetchAll($query));
+        } else {
+            throw new RuntimeException("Failed to read query from '$filename'");
+        }
     }
 
     /**

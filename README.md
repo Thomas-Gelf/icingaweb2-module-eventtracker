@@ -130,6 +130,7 @@ dedicated section:
 ```ini
 [scom]
 db_resource = "MSSQL SCOM"
+; query_file = "scom_alerts.sql"
 ; simulation_file = /tmp/scomtest.json
 ; poll_interval = 5
 ; cmd_ticket_ref = "/usr/bin/ssh icinga@scom.example.com 'c:\\Scripts\\UpdateScomAlertTicketIdV1.ps1' '{sender_event_id}' '{ticket_ref}' '{owner}'"
