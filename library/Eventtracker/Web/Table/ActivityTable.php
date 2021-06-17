@@ -2,6 +2,9 @@
 
 namespace Icinga\Module\Eventtracker\Web\Table;
 
+use gipfl\Diff\HtmlRenderer\InlineDiff;
+use gipfl\Diff\HtmlRenderer\SideBySideDiff;
+use gipfl\Diff\PhpDiff;
 use Icinga\Module\Eventtracker\Issue;
 use Icinga\Module\Eventtracker\Time;
 use Icinga\Module\Eventtracker\Web\Widget\ConfigDiff;
@@ -67,7 +70,7 @@ class ActivityTable extends BaseTable
                 }
                 $old = trim($oldA);
                 $new = trim($newA);
-                $result->add(ConfigDiff::create($old, $new));
+                $result->add(new SideBySideDiff(new PhpDiff($old, $new)));
             } else {
                 $result->add("$old -> $new");
             }

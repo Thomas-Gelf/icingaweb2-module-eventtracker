@@ -2,7 +2,6 @@
 
 namespace Icinga\Module\Eventtracker;
 
-use Exception;
 use Zend_Db_Adapter_Abstract as Db;
 use Zend_Db_Adapter_Exception as DbException;
 

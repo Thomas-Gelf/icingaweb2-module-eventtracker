@@ -188,11 +188,21 @@ class Issue
         $properties = $event->getProperties();
         $timeout = $properties['event_timeout'];
         $attributes = $properties['attributes'];
+
+        // We need a better handling for those:
+        if ($properties['acknowledge']) {
+            $this->set('status', 'acknowledged');
+        }
+        unset($properties['acknowledge']);
+
+        // We might want to handle clear, but what about hooks?
+        unset($properties['clear']);
+
         if ($attributes === null) {
             $attributes = [];
         }
         unset($properties['event_timeout'], $properties['attributes']);
-        $attributes = array_filter($attributes, function ($key) {
+        $attributes = array_filter((array) $attributes, function ($key) {
             if ($key === 'severity' || $key === 'msg') {
                 return false;
             }

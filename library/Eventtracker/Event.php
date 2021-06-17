@@ -17,6 +17,8 @@ class Event
         'sender_event_id' => null,
         'sender_id'       => null,
         'attributes'      => null,
+        'acknowledge'     => null,
+        'clear'           => null,
     ];
 
     public function getChecksum()
@@ -28,6 +30,16 @@ class Event
             $this->get('sender_id'),
             $this->get('sender_event_id'),
         ]), true);
+    }
+
+    public function isAcknowledged()
+    {
+        return (bool) $this->get('acknowledge');
+    }
+
+    public function hasBeenCleared()
+    {
+        return (bool) $this->get('clear');
     }
 
     public function isProblem()

@@ -50,7 +50,7 @@ class SenderInventory
     /**
      * @param $senderName
      * @param $implementation
-     * @return string
+     * @return int
      * @throws Exception
      */
     protected function createNewSender($senderName, $implementation)
@@ -68,6 +68,8 @@ class SenderInventory
             if (! isset($this->senders[$senderName])) {
                 throw $e;
             }
+
+            return $this->senders[$senderName];
         }
 
         return $id;
