@@ -79,6 +79,7 @@ class SyslogParser
             $pid = null;
         }
 
+        // TODO: introduce RawEvent object?
         $result = (object) [
             'host_name'    => $host,
             'object_name'  => $program,
@@ -90,7 +91,7 @@ class SyslogParser
         ];
 
         if ($pid !== null) {
-            $result->attributes = (object) ['pid' => $pid];
+            $result->attributes = (object) ['syslog_sender_pid' => $pid];
         }
 
         return $result;
