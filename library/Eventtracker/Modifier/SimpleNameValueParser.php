@@ -10,10 +10,16 @@ class SimpleNameValueParser extends BaseModifier
     {
         $parts = explode(' ', $value);
         $properties = [];
-        $key = 'invalid';
+
+        // TODO: Improve this.
         foreach ($parts as $part) {
             if (($pos = strpos($part, '=')) === false) {
-                $properties[$key] .= " $part";
+                $key = 'invalid';
+                if (isset($properties[$key])) {
+                    $properties[$key] .= " $part";
+                } else {
+                    $properties[$key] = $part;
+                }
             } else {
                 $key = substr($part, 0, $pos);
                 $properties[$key] = substr($part, $pos + 1);
