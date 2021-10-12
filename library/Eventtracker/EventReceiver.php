@@ -2,7 +2,7 @@
 
 namespace Icinga\Module\Eventtracker;
 
-use Icinga\Module\Eventtracker\Syslog\Counters;
+use Icinga\Module\Eventtracker\Engine\Counters;
 use Zend_Db_Adapter_Abstract as Db;
 
 class EventReceiver

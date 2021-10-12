@@ -1,6 +1,6 @@
 <?php
 
-namespace Icinga\Module\Eventtracker\Syslog;
+namespace Icinga\Module\Eventtracker\Engine;
 
 class Counters
 {
