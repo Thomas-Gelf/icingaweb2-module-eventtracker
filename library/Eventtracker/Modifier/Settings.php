@@ -44,6 +44,33 @@ class Settings implements JsonSerializable
         return $default;
     }
 
+    public function getArray($name, $default = [])
+    {
+        if ($this->has($name)) {
+            return (array) $this->settings[$name];
+        }
+
+        return $default;
+    }
+
+    public function requireArray($name)
+    {
+        return (array) $this->getRequired(($name));
+    }
+
+    public function getAsSettings($name, Settings $default = null)
+    {
+        if ($this->has($name)) {
+            return Settings::fromSerialization($this->settings[$name]);
+        }
+
+        if ($default === null) {
+            return new Settings();
+        }
+
+        return $default;
+    }
+
     public function getRequired($name)
     {
         if ($this->has($name)) {
