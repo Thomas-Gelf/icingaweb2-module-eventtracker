@@ -1,6 +1,6 @@
 <?php
 
-namespace Icinga\Module\Eventtracker\Syslog;
+namespace Icinga\Module\Eventtracker\Stream;
 
 use Evenement\EventEmitterTrait;
 use React\EventLoop\LoopInterface;
@@ -46,12 +46,12 @@ class BufferedReader implements WritableStreamInterface
 
     public function isWritable()
     {
-        // TODO: Implement isWritable() method.
+        return $this->writable;
     }
 
     public function write($data)
     {
-        // TODO: Implement write() method.
+        $this->append($data);
     }
 
     public function end($data = null)
