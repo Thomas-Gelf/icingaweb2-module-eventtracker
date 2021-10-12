@@ -147,8 +147,9 @@ class ObjectUtils
         }
         if (! property_exists($object, $key) || ! is_object($object->$key)) {
             $object->$key = (object) [];
-            static::setDeepValue($object->$key, $val, $keys);
         }
+        // TODO: setDeepValue was in the parenthesis above. Check in the Director!
+        static::setDeepValue($object->$key, $val, $keys);
     }
 
     protected static function unsetDeepValue($object, array $keys)
