@@ -3,6 +3,7 @@
 namespace Icinga\Module\Eventtracker\Db;
 
 use gipfl\ZfDb\Adapter\Adapter;
+use Icinga\Module\Eventtracker\Data\Json;
 use Icinga\Module\Eventtracker\Engine\Channel;
 use Icinga\Module\Eventtracker\Engine\Input;
 use Icinga\Module\Eventtracker\Modifier\Settings;
@@ -70,7 +71,7 @@ class ConfigStore
     {
         foreach ($this->serializedProperties as $property) {
             if (isset($row->$property)) {
-                $row->$property = json_decode($row->$property);
+                $row->$property = Json::decode($row->$property);
             }
         }
     }
@@ -137,7 +138,7 @@ class ConfigStore
     {
         foreach ($this->serializedProperties as $property) {
             if (isset($array[$property])) {
-                $array[$property] = json_encode($array[$property]);
+                $array[$property] = Json::encode($array[$property]);
             }
         }
     }
