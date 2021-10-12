@@ -2,13 +2,13 @@
 
 namespace Icinga\Module\Eventtracker\Daemon;
 
+use Evenement\EventEmitterTrait;
 use Exception;
 use gipfl\IcingaCliDaemon\DbResourceConfigWatch;
 use gipfl\IcingaCliDaemon\RetryUnless;
 use Icinga\Data\ConfigObject;
 use Icinga\Data\Db\DbConnection as Db;
 use Icinga\Module\Eventtracker\Db\Migrations;
-use ipl\Stdlib\EventEmitter;
 use React\EventLoop\LoopInterface;
 use React\Promise\Deferred;
 use RuntimeException;
@@ -18,7 +18,7 @@ use function React\Promise\resolve;
 
 class DaemonDb
 {
-    use EventEmitter;
+    use EventEmitterTrait;
 
     const TABLE_NAME = 'daemon_info';
 
@@ -246,6 +246,25 @@ class DaemonDb
         return resolve();
     }
 
+    protected function stopRegisteredComponents()
+    {
+        $pending = new Deferred();
+        $pendingComponents = new SplObjectStorage();
+        foreach ($this->registeredComponents as $component) {
+            $pendingComponents->attach($component);
+            $resolve = function () use ($pendingComponents, $component, $pending) {
+                $pendingComponents->detach($component);
+                if ($pendingComponents->count() === 0) {
+                    $pending->resolve();
+                }
+            };
+            // TODO: What should we do in case they don't?
+            $component->stopDb()->then($resolve);
+        }
+
+        return $pending->promise();
+    }
+
     /**
      * @return \React\Promise\ExtendedPromiseInterface
      */
@@ -259,19 +278,7 @@ class DaemonDb
         }
 
         $this->eventuallySetStopped();
-        $this->pendingDisconnect = new Deferred();
-        $pendingComponents = new SplObjectStorage();
-        foreach ($this->registeredComponents as $component) {
-            $pendingComponents->attach($component);
-            $resolve = function () use ($pendingComponents, $component) {
-                $pendingComponents->detach($component);
-                if ($pendingComponents->count() === 0) {
-                    $this->pendingDisconnect->resolve();
-                }
-            };
-            // TODO: What should we do in case they don't?
-            $component->stopDb()->then($resolve);
-        }
+        $this->pendingDisconnect = $this->stopRegisteredComponents();
 
         try {
             if ($this->db) {
