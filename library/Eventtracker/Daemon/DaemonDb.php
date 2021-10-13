@@ -8,11 +8,13 @@ use gipfl\DbMigration\Migrations;
 use gipfl\IcingaCliDaemon\DbResourceConfigWatch;
 use gipfl\IcingaCliDaemon\RetryUnless;
 use gipfl\ZfDb\Adapter\Adapter as ZfDb;
+use gipfl\ZfDb\Adapter\Pdo\Mysql;
 use Icinga\Application\Icinga;
 use Icinga\Module\Eventtracker\Db\ZfDbConnectionFactory;
 use Icinga\Module\Eventtracker\Modifier\Settings;
 use React\EventLoop\LoopInterface;
 use React\Promise\Deferred;
+use React\Promise\ExtendedPromiseInterface;
 use RuntimeException;
 use SplObjectStorage;
 use function React\Promise\reject;
@@ -45,7 +47,7 @@ class DaemonDb
     /** @var RetryUnless|null */
     protected $pendingReconnection;
 
-    /** @var Deferred|null */
+    /** @var ExtendedPromiseInterface|null */
     protected $pendingDisconnect;
 
     /** @var \React\EventLoop\TimerInterface */
@@ -147,14 +149,20 @@ class DaemonDb
             ;
     }
 
+    protected function getMigrations(Mysql $db)
+    {
+        return new Migrations($db, Icinga::app()->getModuleManager()->getModuleDir(
+            'eventtracker',
+            '/schema'
+        ), 'eventtracker_schema_migration');
+    }
+
     protected function reallyEstablishConnection($config)
     {
         $db = ZfDbConnectionFactory::connection(Settings::fromSerialization($config));
         $db->getConnection();
-        $migrations = new Migrations($db, Icinga::app()->getModuleManager()->getModuleDir(
-            'eventtracker',
-            '/schema'
-        ));
+        assert($db instanceof Mysql); // TODO: IDE hint only. Drop in case we're using PostgreSQL
+        $migrations = $this->getMigrations($db);
         if (! $migrations->hasSchema()) {
             $this->emitStatus('no schema', 'error');
             throw new RuntimeException('DB has no schema');
@@ -206,9 +214,8 @@ class DaemonDb
                 'Cannot determine DB schema version without an established DB connection'
             );
         }
-        $migrations = new Migrations($this->db);
 
-        return  $migrations->getLastMigrationNumber();
+        return  $this->getMigrations($this->db)->getLastMigrationNumber();
     }
 
     protected function onConnected()
@@ -275,7 +282,7 @@ class DaemonDb
             return resolve();
         }
         if ($this->pendingDisconnect) {
-            return $this->pendingDisconnect->promise();
+            return $this->pendingDisconnect;
         }
 
         $this->eventuallySetStopped();
@@ -289,7 +296,7 @@ class DaemonDb
             Logger::error('Failed to disconnect: ' . $e->getMessage());
         }
 
-        return $this->pendingDisconnect->promise()->then(function () {
+        return $this->pendingDisconnect->then(function () {
             $this->db = null;
             $this->pendingDisconnect = null;
         });
