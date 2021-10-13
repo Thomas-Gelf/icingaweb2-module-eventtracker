@@ -4,6 +4,7 @@ namespace Icinga\Module\Eventtracker\Web\Widget;
 
 use gipfl\IcingaWeb2\Link;
 use gipfl\Translation\TranslationHelper;
+use gipfl\ZfDb\Adapter\Adapter as ZfDb;
 use Icinga\Application\Config;
 use Icinga\Application\Hook;
 use Icinga\Module\Eventtracker\IcingaCi;
@@ -14,7 +15,6 @@ use Icinga\Module\Monitoring\Object\MonitoredObject;
 use Icinga\Module\Monitoring\Object\Service;
 use ipl\Html\BaseHtmlElement;
 use ipl\Html\Html;
-use Zend_Db_Adapter_Abstract as ZfDb;
 
 class IdoDetails extends BaseHtmlElement
 {

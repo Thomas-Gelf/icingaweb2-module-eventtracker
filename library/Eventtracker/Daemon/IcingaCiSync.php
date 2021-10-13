@@ -2,7 +2,8 @@
 
 namespace Icinga\Module\Eventtracker\Daemon;
 
-use Zend_Db_Adapter_Abstract as ZfDb;
+use Exception;
+use gipfl\ZfDb\Adapter\Adapter as ZfDb;
 
 class IcingaCiSync
 {
@@ -46,7 +47,7 @@ class IcingaCiSync
 
     /**
      * @param $idoHosts
-     * @throws \Exception
+     * @throws Exception
      */
     protected function replaceHosts($idoHosts)
     {
@@ -83,11 +84,11 @@ class IcingaCiSync
                 $this->updateCi($current[$ci->object_id], $ci);
             }
             $this->db->commit();
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             try {
                 Logger::error($e->getMessage());
                 $this->db->rollBack();
-            } catch (\Exception $rollbackError) {
+            } catch (Exception $rollbackError) {
                 Logger::error($rollbackError->getMessage());
             }
 
@@ -107,7 +108,8 @@ class IcingaCiSync
 
     /**
      * @param $ci
-     * @throws \Zend_Db_Adapter_Exception
+     * @throws \gipfl\ZfDb\Adapter\Exception\AdapterException
+     * @throws \gipfl\ZfDb\Statement\Exception\StatementException
      */
     protected function createCi($ci)
     {
@@ -134,7 +136,8 @@ class IcingaCiSync
     /**
      * @param $current
      * @param $new
-     * @throws \Zend_Db_Adapter_Exception
+     * @throws \gipfl\ZfDb\Adapter\Exception\AdapterException
+     * @throws \gipfl\ZfDb\Statement\Exception\StatementException
      */
     protected function updateCi($current, $new)
     {
@@ -176,7 +179,7 @@ class IcingaCiSync
      * @param $objectId
      * @param $vars
      * @return int
-     * @throws \Zend_Db_Adapter_Exception
+     * @throws \gipfl\ZfDb\Adapter\Exception\AdapterException
      */
     protected function modifyVars($objectId, $vars)
     {
@@ -205,7 +208,8 @@ class IcingaCiSync
     /**
      * @param $objectId
      * @param $vars
-     * @throws \Zend_Db_Adapter_Exception
+     * @throws \gipfl\ZfDb\Adapter\Exception\AdapterException
+     * @throws \gipfl\ZfDb\Statement\Exception\StatementException
      */
     protected function createVars($objectId, $vars)
     {

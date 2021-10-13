@@ -4,7 +4,6 @@ namespace Icinga\Module\Eventtracker\Controllers;
 
 use Icinga\Authentication\Auth;
 use Icinga\Module\Eventtracker\Db\EventSummaryBySeverity;
-use Icinga\Module\Eventtracker\DbFactory;
 use Icinga\Module\Eventtracker\Web\Table\IssuesTable;
 use Icinga\Module\Eventtracker\Web\Widget\AdditionalTableActions;
 use Icinga\Module\Eventtracker\Web\Widget\SeverityFilter;
@@ -20,7 +19,7 @@ class IssuesController extends Controller
     public function indexAction()
     {
         $this->setAutorefreshInterval(20);
-        $db = DbFactory::db();
+        $db = $this->db();
 
         $table = new IssuesTable($db, $this->url());
         $this->applyFilters($table);

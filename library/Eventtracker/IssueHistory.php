@@ -2,7 +2,7 @@
 
 namespace Icinga\Module\Eventtracker;
 
-use Zend_Db_Adapter_Abstract as Db;
+use gipfl\ZfDb\Adapter\Adapter as Db;
 
 class IssueHistory
 {

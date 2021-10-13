@@ -4,11 +4,13 @@ namespace Icinga\Module\Eventtracker\Daemon;
 
 use Evenement\EventEmitterTrait;
 use Exception;
+use gipfl\DbMigration\Migrations;
 use gipfl\IcingaCliDaemon\DbResourceConfigWatch;
 use gipfl\IcingaCliDaemon\RetryUnless;
-use Icinga\Data\ConfigObject;
-use Icinga\Data\Db\DbConnection as Db;
-use Icinga\Module\Eventtracker\Db\Migrations;
+use gipfl\ZfDb\Adapter\Adapter as ZfDb;
+use Icinga\Application\Icinga;
+use Icinga\Module\Eventtracker\Db\ZfDbConnectionFactory;
+use Icinga\Module\Eventtracker\Modifier\Settings;
 use React\EventLoop\LoopInterface;
 use React\Promise\Deferred;
 use RuntimeException;
@@ -25,10 +27,7 @@ class DaemonDb
     /** @var LoopInterface */
     private $loop;
 
-    /** @var Db */
-    protected $connection;
-
-    /** @var \Zend_Db_Adapter_Abstract */
+    /** @var ZfDb */
     protected $db;
 
     /** @var DaemonProcessDetails */
@@ -123,7 +122,7 @@ class DaemonDb
 
     protected function establishConnection($config)
     {
-        if ($this->connection !== null) {
+        if ($this->db !== null) {
             Logger::error('Trying to establish a connection while being connected');
             return reject();
         }
@@ -150,33 +149,35 @@ class DaemonDb
 
     protected function reallyEstablishConnection($config)
     {
-        $connection = new Db(new ConfigObject($config));
-        $connection->getDbAdapter()->getConnection();
-        $migrations = new Migrations($connection);
+        $db = ZfDbConnectionFactory::connection(Settings::fromSerialization($config));
+        $db->getConnection();
+        $migrations = new Migrations($db, Icinga::app()->getModuleManager()->getModuleDir(
+            'eventtracker',
+            '/schema'
+        ));
         if (! $migrations->hasSchema()) {
             $this->emitStatus('no schema', 'error');
             throw new RuntimeException('DB has no schema');
         }
-        $this->wipeOrphanedInstances($connection);
-        if ($this->hasAnyOtherActiveInstance($connection)) {
+        $this->wipeOrphanedInstances($db);
+        if ($this->hasAnyOtherActiveInstance($db)) {
             $this->emitStatus('locked by other instance', 'error');
             throw new RuntimeException('DB is locked by a running daemon instance');
         }
         $this->startupSchemaVersion = $migrations->getLastMigrationNumber();
         $this->details->set('schema_version', $this->startupSchemaVersion);
 
-        $this->connection = $connection;
-        $this->db = $connection->getDbAdapter();
+        $this->db = $db;
         $this->loop->futureTick(function () {
             $this->refreshMyState();
         });
 
-        return $connection;
+        return $db;
     }
 
     protected function checkDbSchema()
     {
-        if ($this->connection === null) {
+        if ($this->db === null) {
             return;
         }
 
@@ -200,12 +201,12 @@ class DaemonDb
 
     protected function getDbSchemaVersion()
     {
-        if ($this->connection === null) {
+        if ($this->db === null) {
             throw new RuntimeException(
                 'Cannot determine DB schema version without an established DB connection'
             );
         }
-        $migrations = new Migrations($this->connection);
+        $migrations = new Migrations($this->db);
 
         return  $migrations->getLastMigrationNumber();
     }
@@ -215,7 +216,7 @@ class DaemonDb
         $this->emitStatus('connected');
         Logger::info('Connected to the database');
         foreach ($this->registeredComponents as $component) {
-            $component->initDb($this->connection);
+            $component->initDb($this->db);
         }
     }
 
@@ -237,7 +238,7 @@ class DaemonDb
      */
     public function connect()
     {
-        if ($this->connection === null) {
+        if ($this->db === null) {
             if ($this->dbConfig) {
                 return $this->establishConnection($this->dbConfig);
             }
@@ -270,7 +271,7 @@ class DaemonDb
      */
     public function disconnect()
     {
-        if (! $this->connection) {
+        if (! $this->db) {
             return resolve();
         }
         if ($this->pendingDisconnect) {
@@ -289,7 +290,6 @@ class DaemonDb
         }
 
         return $this->pendingDisconnect->promise()->then(function () {
-            $this->connection = null;
             $this->db = null;
             $this->pendingDisconnect = null;
         });
@@ -302,10 +302,8 @@ class DaemonDb
         return $this;
     }
 
-    protected function hasAnyOtherActiveInstance(Db $connection)
+    protected function hasAnyOtherActiveInstance(ZfDb $db)
     {
-        $db = $connection->getDbAdapter();
-
         return (int) $db->fetchOne(
             $db->select()
                 ->from(self::TABLE_NAME, 'COUNT(*)')
@@ -313,9 +311,8 @@ class DaemonDb
         ) > 0;
     }
 
-    protected function wipeOrphanedInstances(Db $connection)
+    protected function wipeOrphanedInstances(ZfDb $db)
     {
-        $db = $connection->getDbAdapter();
         $db->delete(self::TABLE_NAME, 'ts_stopped IS NOT NULL');
         $db->delete(self::TABLE_NAME, $db->quoteInto(
             'instance_uuid_hex = ?',

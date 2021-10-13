@@ -3,7 +3,7 @@
 namespace Icinga\Module\Eventtracker;
 
 use Exception;
-use Zend_Db_Adapter_Abstract as Db;
+use gipfl\ZfDb\Adapter\Adapter as Db;
 
 class SenderInventory
 {

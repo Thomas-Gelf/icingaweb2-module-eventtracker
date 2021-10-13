@@ -2,6 +2,7 @@
 
 namespace Icinga\Module\Eventtracker\Web\Table;
 
+use gipfl\ZfDb\Adapter\Pdo\Mssql;
 use Icinga\Module\Eventtracker\Scom\ScomQuery;
 
 class ScomAlertsTable extends BaseTable
@@ -17,7 +18,7 @@ class ScomAlertsTable extends BaseTable
 
     public function prepareQuery()
     {
-        /** @var \Zend_Db_Adapter_Pdo_Mssql $db */
+        /** @var Mssql $db */
         $db = $this->db();
         return ScomQuery::prepareBaseQuery($db)->columns(
             ScomQuery::getDefaultColumns()

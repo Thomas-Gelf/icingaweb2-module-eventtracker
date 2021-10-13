@@ -2,8 +2,8 @@
 
 namespace Icinga\Module\Eventtracker;
 
+use gipfl\ZfDb\Adapter\Adapter as Db;
 use Icinga\Module\Eventtracker\Engine\Counters;
-use Zend_Db_Adapter_Abstract as Db;
 
 class EventReceiver
 {
@@ -26,7 +26,8 @@ class EventReceiver
     /**
      * @param Event $event
      * @return Issue|null
-     * @throws \Zend_Db_Adapter_Exception
+     * @throws \gipfl\ZfDb\Adapter\Exception\AdapterException
+     * @throws \gipfl\ZfDb\Statement\Exception\StatementException
      */
     public function processEvent(Event $event)
     {

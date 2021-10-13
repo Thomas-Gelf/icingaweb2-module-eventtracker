@@ -18,7 +18,7 @@ class SummaryController extends Controller
     {
         $this->addTitleWithType($this->translate('Object Class'));
         $this->setAutorefreshInterval(10);
-        (new ObjectClassSummaryTable(DbFactory::db()))->renderTo($this);
+        (new ObjectClassSummaryTable($this->db()))->renderTo($this);
         $this->tabs(new SummaryTabs())->activate('classes');
     }
 
@@ -26,7 +26,7 @@ class SummaryController extends Controller
     {
         $this->addTitleWithType($this->translate('Object Name'));
         $this->setAutorefreshInterval(10);
-        (new ObjectNameSummaryTable(DbFactory::db()))->renderTo($this);
+        (new ObjectNameSummaryTable($this->db()))->renderTo($this);
         $this->tabs(new SummaryTabs())->activate('objects');
     }
 
@@ -34,7 +34,7 @@ class SummaryController extends Controller
     {
         $this->addTitleWithType($this->translate('Hostname'));
         $this->setAutorefreshInterval(10);
-        (new HostNameSummaryTable(DbFactory::db()))->renderTo($this);
+        (new HostNameSummaryTable($this->db()))->renderTo($this);
         $this->tabs(new SummaryTabs())->activate('hosts');
     }
 
@@ -42,7 +42,7 @@ class SummaryController extends Controller
     {
         $this->addTitleWithType($this->translate('Owner'));
         $this->setAutorefreshInterval(10);
-        (new OwnerSummaryTable(DbFactory::db()))->renderTo($this);
+        (new OwnerSummaryTable($this->db()))->renderTo($this);
         $this->tabs(new SummaryTabs())->activate('owners');
     }
 
@@ -50,7 +50,7 @@ class SummaryController extends Controller
     {
         $this->addTitleWithType($this->translate('Sender'));
         $this->setAutorefreshInterval(10);
-        (new SenderSummaryTable(DbFactory::db()))->renderTo($this);
+        (new SenderSummaryTable($this->db()))->renderTo($this);
         $this->tabs(new SummaryTabs())->activate('senders');
     }
 
@@ -61,7 +61,7 @@ class SummaryController extends Controller
             $this->addTitle($this->translate('Top Issue Summary by:'));
         }
 
-        $db = DbFactory::db();
+        $db = $this->db();
         $this->setAutorefreshInterval(10);
         $tables = [
             $this->translate('Object Class') => new ObjectClassSummaryTable($db),

@@ -9,7 +9,6 @@ use gipfl\Web\Widget\Hint;
 use Icinga\Module\Eventtracker\Data\Json;
 use Icinga\Module\Eventtracker\Data\JsonException;
 use Icinga\Module\Eventtracker\Db\ConfigStore;
-use Icinga\Module\Eventtracker\DbFactory;
 use Icinga\Module\Eventtracker\Modifier\ModifierChain;
 use Icinga\Module\Eventtracker\Modifier\ModifierUtils;
 use Icinga\Module\Eventtracker\Web\Form\ChannelConfigForm;
@@ -111,7 +110,7 @@ class ConfigurationController extends Controller
         ]));
         /** @var string|BaseTable $class IDE Hint*/
         $class = $this->variant('table_class');
-        $table = new $class(DbFactory::db());
+        $table = new $class($this->db());
         if ($table->count() > 0) {
             $this->content()->add($table);
         } else {
@@ -124,7 +123,7 @@ class ConfigurationController extends Controller
 
     protected function showForm()
     {
-        $store = new ConfigStore(DbFactory::gipflDb());
+        $store = new ConfigStore($this->db());
         /** @var string|Form $formClass IDE hint */
         $formClass = $this->variant('form_class');
         $form = new $formClass(new InputRegistry(), $store);

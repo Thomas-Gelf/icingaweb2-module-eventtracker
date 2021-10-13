@@ -27,9 +27,6 @@ class ClassInventoryLookup extends BaseModifier
         return $this->classes;
     }
 
-    /**
-     * @throws \Zend_Db_Adapter_Exception
-     */
     protected function simpleTransform($value)
     {
         return $this->classes()->requireClass($value);

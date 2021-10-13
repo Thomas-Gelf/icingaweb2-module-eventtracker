@@ -12,9 +12,9 @@ use gipfl\ZfDb\Adapter\Pdo\Oci;
 use gipfl\ZfDb\Adapter\Pdo\Pgsql;
 use gipfl\ZfDb\Adapter\Pdo\Sqlite;
 use gipfl\ZfDb\Db;
-use Icinga\Exception\ConfigurationError;
 use Icinga\Module\Eventtracker\Modifier\Settings;
 use PDO;
+use RuntimeException;
 
 class ZfDbConnectionFactory
 {
@@ -56,7 +56,6 @@ class ZfDbConnectionFactory
     /**
      * @param Settings $config
      * @return Adapter
-     * @throws ConfigurationError
      */
     public static function connection(Settings $config)
     {
@@ -160,7 +159,7 @@ class ZfDbConnectionFactory
             return self::DB_ADAPTERS[$dbType];
         }
 
-        throw new ConfigurationError(
+        throw new RuntimeException(
             'Backend "%s" is not supported',
             $config->get('db', 'mysql')
         );

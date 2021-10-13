@@ -2,8 +2,8 @@
 
 namespace Icinga\Module\Eventtracker;
 
+use gipfl\ZfDb\Adapter\Adapter as ZfDb;
 use Icinga\Module\Monitoring\Object\MonitoredObject;
-use Zend_Db_Adapter_Abstract as ZfDb;
 
 class ConfigHelper
 {

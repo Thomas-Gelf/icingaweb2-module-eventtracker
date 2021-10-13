@@ -5,9 +5,9 @@ namespace Icinga\Module\Eventtracker\Web\Widget;
 use gipfl\IcingaWeb2\Link;
 use gipfl\IcingaWeb2\Url;
 use gipfl\Translation\TranslationHelper;
+use gipfl\ZfDb\Select;
 use ipl\Html\BaseHtmlElement;
 use ipl\Html\Html;
-use Zend_Db_Select as DbSelect;
 
 abstract class ToggleFlagList extends BaseHtmlElement
 {
@@ -21,10 +21,10 @@ abstract class ToggleFlagList extends BaseHtmlElement
     /** @var string */
     private $param;
 
-    /** @var DbSelect|null */
+    /** @var ?Select */
     private $originalQuery;
 
-    /** @var DbSelect|null */
+    /** @var ?Select */
     private $query;
 
     protected $iconMain = 'angle-double-down';
@@ -37,7 +37,7 @@ abstract class ToggleFlagList extends BaseHtmlElement
         $this->param = $param;
     }
 
-    public function applyToQuery(DbSelect $query)
+    public function applyToQuery(Select $query)
     {
         $this->originalQuery = $query;
         $this->query = clone $query;

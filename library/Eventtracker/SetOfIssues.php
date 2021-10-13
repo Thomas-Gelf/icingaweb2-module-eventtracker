@@ -4,12 +4,12 @@ namespace Icinga\Module\Eventtracker;
 
 use Countable;
 use gipfl\IcingaWeb2\Url;
+use gipfl\ZfDb\Adapter\Adapter as DbAdapter;
 use Icinga\Data\Filter\Filter;
 use Icinga\Data\Filter\FilterAnd;
 use Icinga\Data\Filter\FilterExpression;
 use Icinga\Data\Filter\FilterOr;
 use InvalidArgumentException;
-use Zend_Db_Adapter_Abstract as DbAdapter;
 
 class SetOfIssues implements Countable
 {

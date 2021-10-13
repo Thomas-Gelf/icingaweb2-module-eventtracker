@@ -2,12 +2,13 @@
 
 namespace Icinga\Module\Eventtracker;
 
+use gipfl\ZfDb\Adapter\Adapter as Db;
+use gipfl\ZfDb\Expr;
 use Icinga\Application\Hook;
 use Icinga\Authentication\Auth;
 use Icinga\Exception\NotFoundError;
+use Icinga\Module\Eventtracker\Data\Json;
 use Icinga\Module\Eventtracker\Hook\IssueHook;
-use Zend_Db_Adapter_Abstract as Db;
-use Zend_Db_Expr as DbExpr;
 
 class Issue
 {
@@ -110,7 +111,7 @@ class Issue
                 ->where('issue_uuid = ?', $uuid)
         );
 
-        $activities = \json_decode($result->activities);
+        $activities = Json::decode($result->activities);
         $closeReason = $result->close_reason;
         $closedBy = $result->closed_by;
         unset($result->activities);
@@ -277,7 +278,8 @@ class Issue
     /**
      * @param Db $db
      * @return bool
-     * @throws \Zend_Db_Adapter_Exception
+     * @throws \gipfl\ZfDb\Adapter\Exception\AdapterException
+     * @throws \gipfl\ZfDb\Statement\Exception\StatementException
      */
     public function storeToDb(Db $db)
     {
@@ -336,7 +338,7 @@ class Issue
             return (object) [];
         }
 
-        $result = \json_decode($this->properties['attributes'], false);
+        $result = Json::decode($this->properties['attributes'], false);
         if (is_array($result) && empty($result)) {
             return (object) []; // Wrongly encoded
         }
@@ -402,7 +404,8 @@ class Issue
     /**
      * @param Db $db
      * @return bool
-     * @throws \Zend_Db_Adapter_Exception
+     * @throws \gipfl\ZfDb\Adapter\Exception\AdapterException
+     * @throws \gipfl\ZfDb\Statement\Exception\StatementException
      */
     protected function insertIntoDb(Db $db)
     {
@@ -422,7 +425,8 @@ class Issue
     /**
      * @param Db $db
      * @return bool
-     * @throws \Zend_Db_Adapter_Exception
+     * @throws \gipfl\ZfDb\Adapter\Exception\AdapterException
+     * @throws \gipfl\ZfDb\Statement\Exception\StatementException
      */
     protected function updateDb(Db $db)
     {
@@ -437,7 +441,7 @@ class Issue
         ]);
         $where = $db->quoteInto('issue_uuid = ?', $this->getUuid());
         $db->update(self::$tableName, [
-            'cnt_events' => new DbExpr('cnt_events + 1'),
+            'cnt_events' => new Expr('cnt_events + 1'),
         ] + $this->getProperties(), $where);
         unset($modifications['ts_expiration']);
         if (! empty($modifications)) {
@@ -445,14 +449,14 @@ class Issue
                 'activity_uuid' => Uuid::generate(),
                 'issue_uuid'    => $this->getUuid(),
                 'ts_modified'   => $this::now(),
-                'modifications' => \json_encode($modifications)
+                'modifications' => Json::encode($modifications)
             ]);
         }
 
         return true;
     }
 
-    public function close(\Zend_Db_Adapter_Abstract $db, Auth $auth = null)
+    public function close(Db $db, Auth $auth = null)
     {
         if ($auth === null) {
             $auth = Auth::getInstance();
@@ -466,7 +470,7 @@ class Issue
         );
     }
 
-    public static function eventuallyRecover(Event $event, \Zend_Db_Adapter_Abstract $db)
+    public static function eventuallyRecover(Event $event, Db $db)
     {
         $issue = Issue::loadIfEventExists($event, $db);
         if ($issue) {
@@ -476,22 +480,22 @@ class Issue
         return false;
     }
 
-    public function recover(Event $event, \Zend_Db_Adapter_Abstract $db)
+    public function recover(Event $event, Db $db)
     {
         return static::closeIssue($this, $db, IssueHistory::REASON_RECOVERY);
     }
 
-    public static function recoverUuid($uuid, \Zend_Db_Adapter_Abstract $db)
+    public static function recoverUuid($uuid, Db $db)
     {
         return static::closeIssue(Issue::load($uuid, $db), $db, IssueHistory::REASON_RECOVERY);
     }
 
-    public static function expireUuid($uuid, \Zend_Db_Adapter_Abstract $db)
+    public static function expireUuid($uuid, Db $db)
     {
         return static::closeIssue(Issue::load($uuid, $db), $db, IssueHistory::REASON_EXPIRATION);
     }
 
-    public static function closeIssue(Issue $issue, \Zend_Db_Adapter_Abstract $db, $reason, $closedBy = null)
+    public static function closeIssue(Issue $issue, Db $db, $reason, $closedBy = null)
     {
         // TODO: Update? Log warning? Merge actions?
         //       -> This happens only when closing the issue formerly failed badly

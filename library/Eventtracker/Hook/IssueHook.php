@@ -2,8 +2,8 @@
 
 namespace Icinga\Module\Eventtracker\Hook;
 
+use gipfl\ZfDb\Adapter\Adapter as Db;
 use Icinga\Module\Eventtracker\Issue;
-use Zend_Db_Adapter_Abstract as Db;
 
 abstract class IssueHook
 {

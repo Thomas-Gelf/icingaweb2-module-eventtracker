@@ -2,6 +2,8 @@
 
 namespace Icinga\Module\Eventtracker\Scom;
 
+use gipfl\ZfDb\Adapter\Adapter as DbAdapter;
+use gipfl\ZfDb\Adapter\Pdo\Mssql as Mssql;
 use Icinga\Application\Config;
 use Icinga\Module\Eventtracker\Daemon\Logger;
 use Icinga\Module\Eventtracker\EventReceiver;
@@ -10,8 +12,6 @@ use Icinga\Module\Eventtracker\ObjectClassInventory;
 use Icinga\Module\Eventtracker\SenderInventory;
 use InvalidArgumentException;
 use RuntimeException;
-use Zend_Db_Adapter_Abstract as DbAdapter;
-use Zend_Db_Adapter_Pdo_Mssql as Mssql;
 
 class ScomSync
 {

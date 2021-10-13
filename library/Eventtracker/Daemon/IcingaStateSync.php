@@ -3,9 +3,9 @@
 namespace Icinga\Module\Eventtracker\Daemon;
 
 use Exception;
+use gipfl\ZfDb\Adapter\Adapter as ZfDb;
+use gipfl\ZfDb\Select as ZfDbSelect;
 use RuntimeException;
-use Zend_Db_Adapter_Abstract as ZfDb;
-use Zend_Db_Select as ZfDbSelect;
 
 class IcingaStateSync
 {

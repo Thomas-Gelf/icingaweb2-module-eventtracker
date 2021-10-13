@@ -9,9 +9,6 @@ class CloseIssueForm extends InlineIssueForm
         $this->provideAction($this->translate('Close'), $this->translate('Manually close this issue'));
     }
 
-    /**
-     * @throws \Zend_Db_Adapter_Exception
-     */
     public function onSuccess()
     {
         foreach ($this->issues as $issue) {
