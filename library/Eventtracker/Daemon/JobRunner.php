@@ -4,8 +4,8 @@ namespace Icinga\Module\Eventtracker\Daemon;
 
 use gipfl\IcingaCliDaemon\FinishedProcessState;
 use gipfl\IcingaCliDaemon\IcingaCliRpc;
+use gipfl\ZfDb\Adapter\Adapter as Db;
 use Icinga\Application\Logger;
-use Icinga\Data\Db\DbConnection as Db;
 use React\ChildProcess\Process;
 use React\EventLoop\LoopInterface;
 use React\Promise\Promise;
@@ -104,6 +104,7 @@ class JobRunner implements DbBasedComponent
             $promise->cancel();
         }
         $this->runningTasks = [];
+        $this->db = null;
 
         return $allFinished;
     }
@@ -168,10 +169,8 @@ class JobRunner implements DbBasedComponent
         unset($this->scheduledTasks[$what]);
         $this->runningTasks[$what] = $cli->run($this->loop)->then(function () use ($what) {
             Logger::debug("Job ($what) finished");
-        })->otherwise(function (\Exception $e) use ($what) {
+        }, function (\Exception $e) use ($what) {
             Logger::error("Job ($what) failed: " . $e->getMessage());
-        })->otherwise(function (FinishedProcessState $state) use ($what) {
-            Logger::error("Job ($what) failed: " . $state->getReason());
         })->always(function () use ($what) {
             unset($this->runningTasks[$what]);
             $this->loop->futureTick(function () {

@@ -2,14 +2,11 @@
 
 namespace Icinga\Module\Eventtracker\Daemon;
 
-use Exception;
-use Icinga\Data\Db\DbConnection as Db;
+use gipfl\ZfDb\Adapter\Adapter as Db;
 use function React\Promise\resolve;
 
 class LogProxy implements DbBasedComponent
 {
-    protected $connection;
-
     protected $db;
 
     protected $server;
@@ -31,13 +28,12 @@ class LogProxy implements DbBasedComponent
     }
 
     /**
-     * @param Db $connection
+     * @param Db $db
      * @return \React\Promise\ExtendedPromiseInterface
      */
-    public function initDb(Db $connection)
+    public function initDb(Db $db)
     {
-        $this->connection = $connection;
-        $this->db = $connection->getDbAdapter();
+        $this->db = $db;
 
         return resolve();
     }
@@ -47,7 +43,6 @@ class LogProxy implements DbBasedComponent
      */
     public function stopDb()
     {
-        $this->connection = null;
         $this->db = null;
 
         return resolve();

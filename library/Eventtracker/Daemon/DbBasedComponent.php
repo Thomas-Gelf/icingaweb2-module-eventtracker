@@ -2,7 +2,7 @@
 
 namespace Icinga\Module\Eventtracker\Daemon;
 
-use Icinga\Data\Db\DbConnection as Db;
+use gipfl\ZfDb\Adapter\Adapter as Db;
 
 interface DbBasedComponent
 {

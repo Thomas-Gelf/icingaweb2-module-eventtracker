@@ -2,9 +2,8 @@
 
 namespace Icinga\Module\Eventtracker\Db;
 
-use gipfl\IcingaWeb2\Url;
-use Zend_Db_Adapter_Pdo_Abstract as DbAdapter;
-use Zend_Db_Select as DbSelect;
+use gipfl\ZfDb\Adapter\Adapter as Db;
+use gipfl\ZfDb\Select;
 
 class EventSummaryByProperty
 {
@@ -16,18 +15,18 @@ class EventSummaryByProperty
 
     protected $originalSelect;
 
-    public function __construct(DbSelect $select)
+    public function __construct(Select $select)
     {
         $this->select = clone $select;
         $this->originalSelect = $select;
     }
 
-    public function fetch(DbAdapter $db)
+    public function fetch(Db $db)
     {
         return $db->fetchRow($this->prepareQuery());
     }
 
-    public static function addAggregationColumnsToQuery(DbSelect $query)
+    public static function addAggregationColumnsToQuery(Select $query)
     {
         $property = static::PROPERTY;
         $class = static::CLASS_NAME;
@@ -45,10 +44,10 @@ class EventSummaryByProperty
     protected function prepareQuery()
     {
         $query = clone $this->select;
-        $query->reset(DbSelect::COLUMNS)
-            ->reset(DbSelect::ORDER)
-            ->reset(DbSelect::LIMIT_COUNT)
-            ->reset(DbSelect::LIMIT_OFFSET);
+        $query->reset(Select::COLUMNS)
+            ->reset(Select::ORDER)
+            ->reset(Select::LIMIT_COUNT)
+            ->reset(Select::LIMIT_OFFSET);
 
         static::addAggregationColumnsToQuery($query);
 

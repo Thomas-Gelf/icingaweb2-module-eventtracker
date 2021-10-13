@@ -2,9 +2,8 @@
 
 namespace Icinga\Module\Eventtracker;
 
-use Exception;
-use Zend_Db_Adapter_Abstract as Db;
-use Zend_Db_Adapter_Exception as DbException;
+use gipfl\ZfDb\Adapter\Adapter as Db;
+use gipfl\ZfDb\Adapter\Exception as DbException;
 
 class ObjectClassInventory
 {
@@ -23,7 +22,6 @@ class ObjectClassInventory
     /**
      * @param $className
      * @return string
-     * @throws DbException
      */
     public function requireClass($className)
     {
@@ -36,7 +34,6 @@ class ObjectClassInventory
 
     /**
      * @param $className
-     * @throws DbException
      */
     protected function createNewObjectClass($className)
     {

@@ -4,7 +4,6 @@ namespace Icinga\Module\Eventtracker\Clicommands;
 
 use gipfl\Protocol\JsonRpc\Connection;
 use gipfl\Protocol\NetString\StreamWrapper;
-use Icinga\Data\Db\DbConnection;
 use Icinga\Module\Eventtracker\Daemon\IcingaCiSync;
 use Icinga\Module\Eventtracker\Daemon\IcingaStateSync;
 use Icinga\Module\Eventtracker\Daemon\IdoDb;
@@ -19,7 +18,6 @@ use React\EventLoop\LoopInterface;
 use React\Promise\ExtendedPromiseInterface;
 use React\Stream\ReadableResourceStream;
 use React\Stream\WritableResourceStream;
-use Zend_Db_Adapter_Pdo_Mssql as Mssql;
 use function React\Promise\resolve;
 
 class SyncCommand extends Command

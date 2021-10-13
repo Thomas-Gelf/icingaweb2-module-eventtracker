@@ -3,15 +3,24 @@
 namespace Icinga\Module\Eventtracker\Controllers;
 
 use gipfl\IcingaWeb2\CompatController;
+use gipfl\ZfDb\Adapter\Adapter;
+use gipfl\ZfDb\Adapter\Adapter as Db;
+use gipfl\ZfDb\Adapter\Pdo\Mssql;
 use Icinga\Authentication\Auth;
-use Icinga\Data\Db\DbConnection;
 use Icinga\Exception\NotFoundError;
+use Icinga\Module\Eventtracker\Config\IcingaResource;
+use Icinga\Module\Eventtracker\Data\Json;
+use Icinga\Module\Eventtracker\Db\ZfDbConnectionFactory;
+use Icinga\Module\Eventtracker\DbFactory;
 use Icinga\Module\Eventtracker\Uuid;
 use Icinga\Module\Eventtracker\Web\Table\BaseTable;
 use Icinga\Module\Eventtracker\Web\Widget\AdditionalTableActions;
 
 abstract class Controller extends CompatController
 {
+    /** @var Db */
+    private $db;
+
     /**
      * @throws NotFoundError
      */
@@ -22,6 +31,18 @@ abstract class Controller extends CompatController
         ) {
             throw new NotFoundError('Not found');
         }
+    }
+
+    /**
+     * @return Db
+     */
+    protected function db()
+    {
+        if ($this->db === null) {
+            $this->db = DbFactory::db();
+        }
+
+        return $this->db;
     }
 
     protected function showCompact()
@@ -45,12 +66,12 @@ abstract class Controller extends CompatController
     }
 
     /**
-     * @return DbConnection
+     * @return Adapter|Mssql
      */
     protected function getScomDb()
     {
-        return DbConnection::fromResourceName(
-            $this->Config()->get('scom', 'db_resource')
+        return ZfDbConnectionFactory::connection(
+            IcingaResource::requireResourceConfig($this->Config()->get('scom', 'db_resource'))
         );
     }
 
@@ -65,9 +86,8 @@ abstract class Controller extends CompatController
                     $row->issue_uuid = Uuid::toHex($row->issue_uuid);
                 }
             }
-            $flags = JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE;
             $this->getResponse()->setHeader('Content-Type', 'application/json', true)->sendHeaders();
-            echo json_encode($result, $flags);
+            echo Json::encode($result, JSON_PRETTY_PRINT);
             exit;
         }
     }

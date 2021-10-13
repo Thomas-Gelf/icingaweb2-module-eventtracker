@@ -2,11 +2,12 @@
 
 namespace Icinga\Module\Eventtracker\Daemon;
 
-use Icinga\Data\ResourceFactory;
-use Icinga\Exception\NotFoundError;
-use Icinga\Module\Monitoring\Backend\MonitoringBackend;
-use Zend_Db_Adapter_Abstract as DbAdapter;
-use Zend_Db_Select as DbSelect;
+use gipfl\ZfDb\Adapter\Adapter as DbAdapter;
+use gipfl\ZfDb\Select as DbSelect;
+use Icinga\Application\Config;
+use Icinga\Module\Eventtracker\Config\IcingaResource;
+use Icinga\Module\Eventtracker\Db\ZfDbConnectionFactory;
+use RuntimeException;
 
 /**
  * Class IdoDb
@@ -125,7 +126,7 @@ class IdoDb
     /**
      * @param DbSelect $select
      * @return DbSelect
-     * @throws \Zend_Db_Select_Exception
+     * @throws \gipfl\ZfDb\Exception\SelectException
      */
     protected function addServiceStatus(DbSelect $select)
     {
@@ -292,21 +293,45 @@ class IdoDb
     public static function fromResourceName($name)
     {
         return new static(
-            ResourceFactory::create($name)->getDbAdapter()
+            ZfDbConnectionFactory::connection(static::getResourceConfig($name))
         );
+    }
+
+    protected static function getResourceConfig($name)
+    {
+        $config = IcingaResource::requireResourceConfig($name);
+        if ($config->get('db') === 'mysql' && strlen($config->get('charset')) === 0) {
+            $config->set('charset', 'latin1');
+        }
+
+        return $config;
     }
 
     /**
      * Borrow the database connection from the monitoring module
      *
      * @return static
-     * @throws \Icinga\Exception\ConfigurationError
      */
     public static function fromMonitoringModule()
     {
-        return new static(
-            MonitoringBackend::instance()->getResource()->getDbAdapter()
-        );
+        return static::fromResourceName(static::getIdoBackendResourceName());
+    }
+
+    protected static function getIdoBackendResourceName()
+    {
+        $resourceName = null;
+
+        foreach (Config::module('monitoring', 'backends') as $config) {
+            if ((bool) $config->get('disabled', false) === false && $config->get('type') === 'ido') {
+                $resourceName = $config->get('resource');
+            }
+        }
+
+        if ($resourceName === null) {
+            throw new RuntimeException('There is no active IDO backend');
+        }
+
+        return (string) $resourceName;
     }
 
     // Unused, might help to replace BEM

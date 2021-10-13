@@ -2,11 +2,11 @@
 
 namespace Icinga\Module\Eventtracker\Web\Form;
 
+use gipfl\ZfDb\Adapter\Adapter as DbAdapter;
 use Icinga\Module\Eventtracker\Issue;
 use Icinga\Module\Eventtracker\SetOfIssues;
 use Icinga\Module\Eventtracker\Web\Form;
 use ipl\Html\FormElement\SubmitElement;
-use Zend_Db_Adapter_Abstract as DbAdapter;
 
 abstract class InlineIssueForm extends Form
 {

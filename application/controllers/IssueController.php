@@ -4,7 +4,6 @@ namespace Icinga\Module\Eventtracker\Controllers;
 
 use gipfl\IcingaWeb2\Url;
 use Icinga\Exception\NotFoundError;
-use Icinga\Module\Eventtracker\DbFactory;
 use Icinga\Module\Eventtracker\Hook\EventActionsHook;
 use Icinga\Module\Eventtracker\Issue;
 use Icinga\Module\Eventtracker\IssueHistory;
@@ -23,7 +22,7 @@ class IssueController extends Controller
 {
     public function indexAction()
     {
-        $db = DbFactory::db();
+        $db = $this->db();
         $this->addSingleTab('Event');
         $uuid = $this->params->get('uuid');
         if ($uuid === null) {
@@ -84,7 +83,7 @@ class IssueController extends Controller
 
     protected function showIssue(Issue $issue)
     {
-        $db = DbFactory::db();
+        $db = $this->db();
         if ($hostname = $issue->get('host_name')) {
             $this->addTitle(sprintf(
                 '%s (%s)',
@@ -131,7 +130,7 @@ class IssueController extends Controller
 
     protected function issueHeader(Issue $issue)
     {
-        return new IssueHeader($issue, $this->getServerRequest(), $this->getResponse(), $this->Auth());
+        return new IssueHeader($issue, $this->db(), $this->getServerRequest(), $this->getResponse(), $this->Auth());
     }
 
     // TODO: IssueList?

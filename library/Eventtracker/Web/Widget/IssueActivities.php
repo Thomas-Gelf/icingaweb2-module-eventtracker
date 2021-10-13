@@ -3,6 +3,7 @@
 namespace Icinga\Module\Eventtracker\Web\Widget;
 
 use gipfl\Translation\TranslationHelper;
+use gipfl\ZfDb\Adapter\Adapter as Db;
 use Icinga\Module\Eventtracker\Issue;
 use Icinga\Module\Eventtracker\Web\Table\ActivityTable;
 use ipl\Html\BaseHtmlElement;
@@ -20,10 +21,10 @@ class IssueActivities extends BaseHtmlElement
     /** @var Issue */
     protected $issue;
 
-    /** @var \Zend_Db_Adapter_Abstract */
+    /** @var Db */
     protected $db;
 
-    public function __construct(Issue $issue, \Zend_Db_Adapter_Abstract $db)
+    public function __construct(Issue $issue, Db $db)
     {
         $this->issue = $issue;
         $this->db = $db;

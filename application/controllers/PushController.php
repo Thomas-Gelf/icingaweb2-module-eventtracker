@@ -4,7 +4,6 @@ namespace Icinga\Module\Eventtracker\Controllers;
 
 use Icinga\Application\Logger;
 use Icinga\Module\Eventtracker\MSendEventFactory;
-use Icinga\Module\Eventtracker\DbFactory;
 use Icinga\Module\Eventtracker\EventReceiver;
 use Icinga\Module\Eventtracker\MSendCommandLine;
 use Icinga\Module\Eventtracker\ObjectClassInventory;
@@ -24,7 +23,7 @@ class PushController extends Controller
     public function testmsendAction()
     {
         $cmd = $this->params->get('command');
-        $db = DbFactory::db();
+        $db = $this->db();
         $senders = new SenderInventory($db);
         $classes = new ObjectClassInventory($db);
         $receiver = new EventReceiver($db);
@@ -53,7 +52,7 @@ class PushController extends Controller
         $cmd = $this->getRequest()->getRawBody();
         $this->getResponse()->setHeader('Content-Type', 'text/plain');
         try {
-            $db = DbFactory::db();
+            $db = $this->db();
             $senders = new SenderInventory($db);
             $classes = new ObjectClassInventory($db);
             $receiver = new EventReceiver($db);

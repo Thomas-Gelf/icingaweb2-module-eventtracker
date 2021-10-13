@@ -5,6 +5,8 @@ namespace Icinga\Module\Eventtracker\Web\Widget;
 use gipfl\IcingaWeb2\Link;
 use gipfl\IcingaWeb2\Url;
 use gipfl\Translation\TranslationHelper;
+use gipfl\Web\Widget\Hint;
+use gipfl\ZfDb\Adapter\Adapter as Db;
 use Icinga\Authentication\Auth;
 use Icinga\Date\DateFormatter;
 use Icinga\Module\Eventtracker\DbFactory;
@@ -44,11 +46,12 @@ class IssueHeader extends BaseHtmlElement
     /** @var Response */
     protected $response;
 
-    /** @var \Zend_Db_Adapter_Pdo_Abstract */
+    /** @var Db */
     protected $db;
 
     public function __construct(
         Issue $issue,
+        Db $db,
         ServerRequestInterface $request,
         Response $response,
         Auth $auth
@@ -57,7 +60,7 @@ class IssueHeader extends BaseHtmlElement
         $this->request = $request;
         $this->response = $response;
         $this->isOperator = $auth->hasPermission('eventtracker/operator');
-        $this->db = DbFactory::db();
+        $this->db = $db;
     }
 
     protected function assemble()

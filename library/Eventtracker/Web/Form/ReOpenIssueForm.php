@@ -10,7 +10,8 @@ class ReOpenIssueForm extends InlineIssueForm
     }
 
     /**
-     * @throws \Zend_Db_Adapter_Exception
+     * @throws \gipfl\ZfDb\Adapter\Exception\AdapterException
+     * @throws \gipfl\ZfDb\Statement\Exception\StatementException
      */
     public function onSuccess()
     {
