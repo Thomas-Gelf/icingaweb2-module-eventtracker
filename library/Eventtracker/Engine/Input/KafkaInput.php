@@ -105,20 +105,25 @@ class KafkaInput extends SimpleInputConstructor
 
     protected function initiateEventHandlers(Process $process, LoopInterface $loop)
     {
-        $this->log('Process started');
+        $this->logger->info($this->command . ' started');
 
         $process->on('exit', function ($code, $term) {
             if ($term === null) {
-                echo 'exit with code ' . $code . PHP_EOL;
+                $this->logger->warning($this->command . ' exit with code ' . $code);
             } else {
-                echo 'terminated with signal ' . $term . PHP_EOL;
+                $this->logger->error($this->command . ' terminated with signal ' . $term);
             }
+            $this->process = null;
+            $this->logger->info('Scheduling reconnection in 10s');
+            $this->loop->addTimer(10, function () {
+                $this->start();
+            });
         });
         $process->stderr->on('data', function ($line) {
             if (substr($line, 0, 2) === '% ') {
                 $this->processSpecialLine(substr($line, 2));
             } else {
-                echo "ERRO: " . $line . "\n";
+                $this->logger->error("STDERR: $line");
             }
         });
         $reader = new BufferedReader($loop);
@@ -135,7 +140,7 @@ class KafkaInput extends SimpleInputConstructor
     protected function processLine($line)
     {
         if ($line === '') {
-            $this->log('Ignoring empty line');
+            $this->logger->info('Ignoring empty line');
             return;
         }
 
@@ -143,19 +148,18 @@ class KafkaInput extends SimpleInputConstructor
             // TODO: JSON decoding class
             $this->emit('event', [Json::decode($line)]);
         } catch (\Exception $e) {
-            $this->log("Failed to process '$line': " . $e->getMessage());
-            echo $e->getTraceAsString();
+            $this->logger->error("Failed to process '$line': " . $e->getMessage());
         }
     }
 
     protected function processSpecialLine($line) {
         if (substr($line, 0, 7) === 'ERROR: ') {
-            throw new RuntimeException(substr($line, 7));
+            $this->emit('error', [new RuntimeException(rtrim(substr($line, 7)))]);
         } elseif (preg_match('/^Reached end of topic (.+?) \[(\d+)] at offset (\d+)$/', $line, $match)) {
             list(, $topic, $partition, $offset) = $match;
             // printf("New offset for %s[%s] is %d\n", $topic, $partition, $offset);
         } else {
-            var_dump("UNEXPECTED: $line");
+            $this->logger->error("UNEXPECTED line: $line");
         }
     }
 
@@ -233,11 +237,5 @@ class KafkaInput extends SimpleInputConstructor
         }
 
         return $command;
-    }
-
-    protected function log($message)
-    {
-        // TODO.
-        echo "$message\n";
     }
 }

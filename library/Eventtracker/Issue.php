@@ -9,6 +9,7 @@ use Icinga\Authentication\Auth;
 use Icinga\Exception\NotFoundError;
 use Icinga\Module\Eventtracker\Data\Json;
 use Icinga\Module\Eventtracker\Hook\IssueHook;
+use Ramsey\Uuid\Uuid;
 
 class Issue
 {
@@ -25,6 +26,7 @@ class Issue
         'host_name'             => null,
         'object_name'           => null,
         'object_class'          => null,
+        'input_uuid'            => null,
         'sender_id'             => null,
         'sender_event_id'       => null,
         'message'               => null,
@@ -255,6 +257,10 @@ class Issue
         return $this->get('issue_uuid');
     }
 
+    /**
+     * @deprecated
+     * @return string
+     */
     public function getHexUuid()
     {
         return bin2hex($this->get('issue_uuid'));
@@ -262,7 +268,7 @@ class Issue
 
     public function getNiceUuid()
     {
-        return Uuid::toHex($this->get('issue_uuid'));
+        return Uuid::fromBytes($this->get('issue_uuid'))->toString();
     }
 
     protected function triggerHooks($action, Db $db)
@@ -411,13 +417,18 @@ class Issue
     {
         $now = static::now();
         $this->setProperties([
-            'issue_uuid'       => Uuid::generate(),
+            'issue_uuid'       => Uuid::uuid4()->getBytes(),
             'cnt_events'       => 1,
             'status'           => 'open',
             'ts_first_event'   => $now,
             'ts_last_modified' => $now,
         ]);
-        $db->insert(self::$tableName, $this->getProperties());
+        $properties = $this->getProperties();
+        if ($properties['sender_event_id'] === null) {
+            $properties['sender_event_id'] = '';
+        }
+
+        $db->insert(self::$tableName, $properties);
 
         return true;
     }
@@ -440,13 +451,23 @@ class Issue
             'ts_last_modified' => static::now(),
         ]);
         $where = $db->quoteInto('issue_uuid = ?', $this->getUuid());
-        $db->update(self::$tableName, [
+        $properties = [
             'cnt_events' => new Expr('cnt_events + 1'),
-        ] + $this->getProperties(), $where);
+        ] + $this->getProperties();
+
+        // Compat:
+        if (array_key_exists('sender_event_id', $properties)) {
+            if ($properties['sender_event_id'] === null) {
+                $properties['sender_event_id'] = '';
+            }
+        } else {
+            $properties['sender_event_id'] = '';
+        }
+        $db->update(self::$tableName, $properties, $where);
         unset($modifications['ts_expiration']);
         if (! empty($modifications)) {
             $db->insert('issue_activity', [
-                'activity_uuid' => Uuid::generate(),
+                'activity_uuid' => Uuid::uuid4()->getBytes(),
                 'issue_uuid'    => $this->getUuid(),
                 'ts_modified'   => $this::now(),
                 'modifications' => Json::encode($modifications)

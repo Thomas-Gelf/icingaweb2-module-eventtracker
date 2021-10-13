@@ -6,6 +6,7 @@ use Exception;
 use gipfl\Cli\Process;
 use gipfl\IcingaCliDaemon\DbResourceConfigWatch;
 use gipfl\SystemD\NotifySystemD;
+use Psr\Log\LoggerInterface;
 use React\EventLoop\Factory as Loop;
 use React\EventLoop\LoopInterface;
 use Ramsey\Uuid\Uuid;
@@ -20,6 +21,9 @@ class BackgroundDaemon
 
     /** @var JobRunner */
     protected $jobRunner;
+
+    /** @var InputAndChannelRunner */
+    protected $channelRunner;
 
     /** @var string|null */
     protected $dbResourceName;
@@ -41,6 +45,13 @@ class BackgroundDaemon
 
     /** @var bool */
     protected $shuttingDown = false;
+
+    protected $logger;
+
+    public function __construct(LoggerInterface $logger)
+    {
+        $this->logger = $logger;
+    }
 
     public function run(LoopInterface $loop = null)
     {
@@ -79,6 +90,7 @@ class BackgroundDaemon
             ->registerProcessList($this->jobRunner->getProcessList());
         $this->logProxy = new LogProxy($this->processDetails->getInstanceUuid());
         $this->jobRunner->forwardLog($this->logProxy);
+        $this->channelRunner = new InputAndChannelRunner($this->loop, $this->logger);
         $this->daemonDb = $this->initializeDb(
             $this->processDetails,
             $this->processState,
@@ -87,6 +99,7 @@ class BackgroundDaemon
         $this->daemonDb
             ->register($this->jobRunner)
             ->register($this->logProxy)
+            ->register($this->channelRunner)
             ->run($this->loop);
         $this->setState('running');
     }
@@ -118,7 +131,6 @@ class BackgroundDaemon
     {
         $systemd = NotifySystemD::ifRequired($this->loop);
         if ($systemd) {
-            Logger::replaceRunningInstance(new SystemdLogWriter());
             Logger::info(sprintf(
                 "Started by systemd, notifying watchdog every %0.2Gs via %s",
                 $systemd->getWatchdogInterval(),

@@ -97,6 +97,9 @@ class DaemonDb
         $this->schemaCheckTimer = $loop->addPeriodicTimer(15, function () {
             $this->checkDbSchema();
         });
+        $loop->addTimer(1, function () {
+            $this->checkDbSchema();
+        });
         if ($this->configWatch) {
             $this->configWatch->run($this->loop);
         }
@@ -188,7 +191,17 @@ class DaemonDb
         if ($this->db === null) {
             return;
         }
-
+        $migrations = $this->getMigrations($this->db);
+        if ($migrations->hasPendingMigrations()) {
+            Logger::warning('Schema is outdated, applying migrations');
+            $count = $migrations->countPendingMigrations();
+            $migrations->applyPendingMigrations();
+            if ($count === 1) {
+                Logger::info("A pending DB migration has been applied");
+            } else {
+                Logger::info("$count pending DB migrations have been applied");
+            }
+        }
         if ($this->schemaIsOutdated()) {
             $this->emit('schemaChange', [
                 $this->getStartupSchemaVersion(),
@@ -215,7 +228,7 @@ class DaemonDb
             );
         }
 
-        return  $this->getMigrations($this->db)->getLastMigrationNumber();
+        return $this->getMigrations($this->db)->getLastMigrationNumber();
     }
 
     protected function onConnected()

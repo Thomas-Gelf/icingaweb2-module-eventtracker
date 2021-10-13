@@ -85,30 +85,35 @@ class Channel implements LoggerAwareInterface
     public function addInput(Input $input)
     {
         $this->logger->info("Wiring " . $input->getName() . ' to ' . $this->name);
-        $input->on('event', function (\stdClass $event) {
-            $this->process($event);
+        $inputUuid = $input->getUuid();
+        $input->on('event', function (\stdClass $event) use ($inputUuid) {
+            $this->process($inputUuid, $event);
         });
     }
 
-    public function process(\stdClass $object)
+    public function process(UuidInterface $inputUuid, \stdClass $object)
     {
         $this->rules->process($object);
         $db = DbFactory::db();
-        $senders = new SenderInventory($db);
         $receiver = new EventReceiver($db);
-        $senderId = $senders->getSenderId('debugging', 'Debugging');
 
         $enforced = ModifierChain::fromSerialization([
             ['object_name', 'ShortenString', (object) ['max_length' => 128]],
             ['object_class', 'ShortenString', (object) ['max_length' => 128]],
             ['object_class', 'ClassInventoryLookup'],
             ['priority', 'FallbackValue', (object) ['value' => 'normal']],
-            ['sender_id', 'SetValue', (object) ['value' => $senderId]],
+            ['input_uuid', 'SetValue', (object) ['value' => $inputUuid->toString()]],
+            ['sender_id', 'SetValue', (object) ['value' => '99999']],
         ]);
+
         $enforced->process($object);
-        $object->sender_event_id = Uuid::uuid4()->toString();
+        // print_r($object);
+        // $object->sender_event_id = Uuid::uuid4()->toString();
 
         $event = new Event();
+        if (isset($object->input_uuid)) {
+            $object->input_uuid = Uuid::fromString($object->input_uuid)->getBytes();
+        }
         $event->setProperties((array) $object);
         $issue = $receiver->processEvent($event);
         if ($issue) {
