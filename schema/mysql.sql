@@ -13,6 +13,25 @@ CREATE TABLE sender (
   UNIQUE INDEX(sender_name)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE utf8mb4_bin;
 
+CREATE TABLE input (
+  uuid VARBINARY(16) NOT NULL,
+  label VARCHAR(32) NOT NULL,
+  implementation VARCHAR(64) NOT NULL,
+  settings TEXT DEFAULT NULL,
+  PRIMARY KEY (uuid),
+  UNIQUE INDEX(label)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE utf8mb4_bin;
+
+CREATE TABLE channel (
+  uuid VARBINARY(16) NOT NULL,
+  label VARCHAR(32) NOT NULL,
+  rules MEDIUMTEXT NOT NULL,
+  input_implementation TEXT DEFAULT NULL,
+  input_uuids TEXT DEFAULT NULL,
+  PRIMARY KEY (uuid),
+  UNIQUE INDEX(label)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE utf8mb4_bin;
+
 CREATE TABLE icinga_ci (
   object_id BIGINT(20) UNSIGNED NOT NULL,
   host_id BIGINT(20) UNSIGNED NULL DEFAULT NULL,
@@ -95,6 +114,7 @@ CREATE TABLE issue (
     'high',
     'highest'
   ) NOT NULL,
+  input_uuid VARBINARY(16) DEFAULT NULL,
   sender_id INT(10) UNSIGNED NOT NULL,
   sender_event_id VARBINARY(64) NOT NULL, -- mc_tool_key
   -- sha1(json([host_name, object_class, object_name, sender_id, sender_event_id])):
@@ -141,6 +161,9 @@ CREATE TABLE issue_activity (
       ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE utf8mb4_bin;
 
+INSERT INTO sender (id, sender_name, implementation) VALUES ('compat', 'Compat', 99999);
+
+
 CREATE TABLE issue_history (
   issue_uuid VARBINARY(16) NOT NULL,
   severity ENUM (
@@ -166,6 +189,7 @@ CREATE TABLE issue_history (
     'expiration'
   ) NOT NULL,
   closed_by VARCHAR(64) COLLATE utf8mb4_general_ci NULL DEFAULT NULL,
+  input_uuid VARBINARY(16) DEFAULT NULL,
   sender_id INT(10) UNSIGNED NOT NULL,
   sender_event_id VARBINARY(64) NOT NULL, -- mc_tool_key
   -- sha1(json([host_name, object_class, object_name, sender_id, sender_event_id])):
@@ -216,6 +240,7 @@ CREATE TABLE eventtracker_schema_migration (
   PRIMARY KEY(schema_version)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE utf8mb4_bin;
 
+
 INSERT INTO eventtracker_schema_migration
   (schema_version, migration_time)
-VALUES (1, NOW());
+VALUES (4, NOW());
