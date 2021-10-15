@@ -117,7 +117,13 @@ class SyslogInput extends SimpleInputConstructor
                     return;
                 }
                 try {
-                    $this->emit('event', [SyslogParser::parseLine($line)]);
+                    $event = SyslogParser::parseLine($line);
+                    if ($event->object_name !== 'eventtracker'
+                        || ! isset($event->attributes->syslog_sender_pid)
+                        || $event->attributes->syslog_sender_pid !== posix_getpid()
+                    ) {
+                        $this->emit('event', [$event]);
+                    }
                 } catch (\Exception $e) {
                     $this->logger->error("Failed to process '$line': " . $e->getMessage());
                     echo $e->getTraceAsString();
