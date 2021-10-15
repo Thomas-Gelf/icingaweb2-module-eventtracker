@@ -81,8 +81,10 @@ class SyslogInput extends SimpleInputConstructor
 
     public function stop()
     {
-        $this->server->close();
-        $this->server = null;
+        if ($this->server) {
+            $this->server->close();
+            $this->server = null;
+        }
     }
 
     public function pause()
