@@ -68,7 +68,7 @@ class ConfigStore
                 'rules'          => Json::decode($row->rules),
                 'implementation' => $row->input_implementation,
                 'inputs'         => $row->input_uuids,
-            ]), $uuid, $row->label);
+            ]), $uuid, $row->label, $this->logger);
         }
 
         return $channels;

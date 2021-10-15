@@ -131,13 +131,13 @@ class BackgroundDaemon
     {
         $systemd = NotifySystemD::ifRequired($this->loop);
         if ($systemd) {
-            Logger::info(sprintf(
+            $this->logger->info(sprintf(
                 "Started by systemd, notifying watchdog every %0.2Gs via %s",
                 $systemd->getWatchdogInterval(),
                 $systemd->getSocketPath()
             ));
         } else {
-            Logger::debug('Running without systemd');
+            $this->logger->debug('Running without systemd');
         }
 
         return $systemd;
@@ -154,7 +154,7 @@ class BackgroundDaemon
             $processState->setComponentState('db', $state);
         });
         $db->on('schemaChange', function ($startupSchema, $dbSchema) {
-            Logger::info(sprintf(
+            $this->logger->info(sprintf(
                 "DB schema version changed. Started with %d, DB has %d. Restarting.",
                 $startupSchema,
                 $dbSchema
@@ -193,7 +193,7 @@ class BackgroundDaemon
     protected function reload()
     {
         if ($this->reloading) {
-            Logger::error('Ignoring reload request, reload is already in progress');
+            $this->logger->error('Ignoring reload request, reload is already in progress');
             return;
         }
         $this->reloading = true;
@@ -206,14 +206,14 @@ class BackgroundDaemon
     protected function shutdown()
     {
         if ($this->shuttingDown) {
-            Logger::error('Ignoring shutdown request, shutdown is already in progress');
+            $this->logger->error('Ignoring shutdown request, shutdown is already in progress');
             return;
         }
-        Logger::info('Shutting down');
+        $this->logger->info('Shutting down');
         $this->shuttingDown = true;
         $this->setState('shutting down');
         $this->daemonDb->disconnect()->then(function () {
-            Logger::info('DB has been disconnected, shutdown finished');
+            $this->logger->info('DB has been disconnected, shutdown finished');
             $this->loop->stop();
         });
     }

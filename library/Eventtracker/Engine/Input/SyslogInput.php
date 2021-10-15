@@ -104,7 +104,7 @@ class SyslogInput extends SimpleInputConstructor
     protected function initiateEventHandlers(UnixServer $server)
     {
         $server->on('connection', function (ConnectionInterface $connection) {
-            $this->log('Got a new connection on ' . $this->socket);
+            $this->logger->notice('Got a new connection on ' . $this->socket);
             $buffer = new BufferedReader($this->loop);
             $buffer->on('line', function ($line) {
                 // echo "< $line";
@@ -115,13 +115,13 @@ class SyslogInput extends SimpleInputConstructor
                 try {
                     $this->emit('event', [SyslogParser::parseLine($line)]);
                 } catch (\Exception $e) {
-                    $this->log("Failed to process '$line': " . $e->getMessage());
+                    $this->logger->error("Failed to process '$line': " . $e->getMessage());
                     echo $e->getTraceAsString();
                 }
             });
             $connection->pipe($buffer);
             $connection->on('end', function () {
-                $this->log('Connection closed');
+                $this->logger->notice('Connection closed');
             });
         });
         $server->on('error', function ($error) {
@@ -132,13 +132,13 @@ class SyslogInput extends SimpleInputConstructor
     protected function createUnixSocket($uri, $loop)
     {
         if (file_exists($uri)) {
-            $this->log("Removing orphaned socket '$uri'");
+            $this->logger->warning("Removing orphaned socket '$uri'");
             unlink($uri);
         }
 
         $old = umask(0000);
         $socket = new UnixServer($uri, $loop);
-        $this->log("Listening on '$uri'");
+        $this->logger->notice("Listening on '$uri'");
         umask($old);
 
         return $socket;

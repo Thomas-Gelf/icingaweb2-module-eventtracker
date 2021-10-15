@@ -7,9 +7,9 @@ use Icinga\Module\Eventtracker\Event;
 use Icinga\Module\Eventtracker\EventReceiver;
 use Icinga\Module\Eventtracker\Modifier\ModifierChain;
 use Icinga\Module\Eventtracker\Modifier\Settings;
-use Icinga\Module\Eventtracker\SenderInventory;
 use Psr\Log\LoggerAwareInterface;
 use Psr\Log\LoggerAwareTrait;
+use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\UuidInterface;
@@ -37,11 +37,15 @@ class Channel implements LoggerAwareInterface
     /** @var NullLogger */
     protected $logger;
 
-    public function __construct(Settings $settings, UuidInterface $uuid, $name)
+    public function __construct(Settings $settings, UuidInterface $uuid, $name, LoggerInterface $logger = null)
     {
         $this->uuid = $uuid;
         $this->name = $name;
-        $this->logger = new NullLogger();
+        if ($logger === null) {
+            $this->logger = new NullLogger();
+        } else {
+            $this->logger = $logger;
+        }
         $this->applySettings($settings);
     }
 
