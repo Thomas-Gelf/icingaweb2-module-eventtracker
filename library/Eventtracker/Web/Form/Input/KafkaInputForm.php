@@ -17,6 +17,11 @@ class KafkaInputForm implements InputFormExtension
 
     public function enhanceConfigForm(Form $form)
     {
+        $form->addElement('text', 'kcat_binary', [
+            'label'       => $this->translate('kcat Binary'),
+            'required'    => true,
+            'description' => $this->translate('Path to the kcat binary, usually /usr/bin/kcat or /usr/bin/kafkacat'),
+        ]);
         $form->addElement('text', 'bootstrap_servers', [
             'label'       => $this->translate('Bootstrap Servers'),
             'value'       => 'localhost:9092',

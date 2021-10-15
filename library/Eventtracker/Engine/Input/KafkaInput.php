@@ -29,8 +29,10 @@ class KafkaInput extends SimpleInputConstructor
     /** @var string */
     protected $servers;
 
-    protected $command = '/usr/bin/kafkacat';
+    /** @var string */
+    protected $command;
 
+    /** @var string Consumer Group ID */
     protected $groupId;
 
     protected function initialize()
@@ -39,6 +41,7 @@ class KafkaInput extends SimpleInputConstructor
         $this->topic = $settings->getRequired('topic');
         $this->groupId = $settings->getRequired('group_id');
         $this->servers = $settings->getRequired('bootstrap_servers');
+        $this->command = $settings->getRequired('kcat_binary');
     }
 
     public static function getSettingsSubForm()
