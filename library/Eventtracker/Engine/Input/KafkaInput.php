@@ -35,6 +35,8 @@ class KafkaInput extends SimpleInputConstructor
     /** @var string Consumer Group ID */
     protected $groupId;
 
+    protected $stopping = false;
+
     protected function initialize()
     {
         $settings = $this->getSettings();
@@ -84,8 +86,11 @@ class KafkaInput extends SimpleInputConstructor
 
     public function stop()
     {
-        $this->process->terminate();
-        $this->process = null;
+        if ($this->process) {
+            $this->stopping = true;
+            $this->process->terminate();
+            $this->process = null;
+        }
     }
 
     public function pause()
@@ -108,19 +113,26 @@ class KafkaInput extends SimpleInputConstructor
 
     protected function initiateEventHandlers(Process $process, LoopInterface $loop)
     {
-        $this->logger->info($this->command . ' started');
-
         $process->on('exit', function ($code, $term) {
-            if ($term === null) {
-                $this->logger->warning($this->command . ' exit with code ' . $code);
-            } else {
-                $this->logger->error($this->command . ' terminated with signal ' . $term);
-            }
             $this->process = null;
-            $this->logger->info('Scheduling reconnection in 10s');
-            $this->loop->addTimer(10, function () {
-                $this->start();
-            });
+            if ($this->stopping) {
+                $this->stopping = false;
+                if ($term === null) {
+                    $this->logger->debug($this->command . ' exit with code ' . $code);
+                } else {
+                    $this->logger->warning($this->command . ' terminated with signal ' . $term);
+                }
+            } else {
+                if ($term === null) {
+                    $this->logger->warning($this->command . ' exit with code ' . $code);
+                } else {
+                    $this->logger->error($this->command . ' terminated with signal ' . $term);
+                }
+                $this->logger->info('Scheduling reconnection in 10s');
+                $this->loop->addTimer(10, function () {
+                    $this->start();
+                });
+            }
         });
         $process->stderr->on('data', function ($line) {
             if (substr($line, 0, 2) === '% ') {
