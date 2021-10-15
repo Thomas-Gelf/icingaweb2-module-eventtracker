@@ -111,7 +111,9 @@ class SyslogInput extends SimpleInputConstructor
             $buffer->on('line', function ($line) {
                 // echo "< $line";
                 if ($line === '') {
-                    $this->log('Ignoring empty line');
+                    return;
+                }
+                if ($line === '-- MARK --') {
                     return;
                 }
                 try {
