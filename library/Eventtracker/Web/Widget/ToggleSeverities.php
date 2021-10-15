@@ -59,8 +59,8 @@ class ToggleSeverities extends ToggleFlagList
     {
         // Preferred default would be descending order. Keeping it ascending
         // as desired by our customer, should be configurable:
-        // $options = \array_reverse(Severity::ENUM, true);
-        $options = Severity::ENUM;
+        // $options = \array_reverse(Severity::ENUM_LIST, true);
+        $options = Severity::ENUM_LIST;
         foreach ($options as $key => & $value) {
             $value = [$this->color($value), ' ', $value];
         }

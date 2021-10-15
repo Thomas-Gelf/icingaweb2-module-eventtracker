@@ -11,7 +11,7 @@ class Status
     const ACKNOWLEDGED = 'acknowledged';
     const OPEN         = 'open';
 
-    const ENUM = [
+    const ENUM_LIST = [
         self::CLOSED       => self::CLOSED,
         self::IN_DOWNTIME  => self::IN_DOWNTIME,
         self::ACKNOWLEDGED => self::ACKNOWLEDGED,
@@ -20,7 +20,7 @@ class Status
 
     public static function isValid($value)
     {
-        return \array_key_exists($value, self::ENUM);
+        return \array_key_exists($value, self::ENUM_LIST);
     }
 
     public static function assertValid($value)

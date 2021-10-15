@@ -8,7 +8,7 @@ class SeverityFilter extends BaseEnumPropertyFilter
 {
     protected $property = 'severity';
 
-    protected $enum = Severity::ENUM;
+    protected $enum = Severity::ENUM_LIST;
 
     protected $skipMissing = true;
 

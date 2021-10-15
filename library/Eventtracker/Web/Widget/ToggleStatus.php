@@ -28,6 +28,6 @@ class ToggleStatus extends ToggleFlagList
 
     protected function getOptions()
     {
-        return \array_reverse(Status::ENUM, true);
+        return \array_reverse(Status::ENUM_LIST, true);
     }
 }

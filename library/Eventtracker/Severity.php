@@ -15,7 +15,7 @@ class Severity
     const ALERT         = 'alert';
     const EMERGENCY     = 'emergency';
 
-    const ENUM = [
+    const ENUM_LIST = [
         self::DEBUG         => self::DEBUG,
         self::INFORMATIONAL => self::INFORMATIONAL,
         self::NOTICE        => self::NOTICE,
@@ -28,7 +28,7 @@ class Severity
 
     public static function isValid($value)
     {
-        return \array_key_exists($value, static::ENUM);
+        return \array_key_exists($value, static::ENUM_LIST);
     }
 
     public static function isHighest($value)

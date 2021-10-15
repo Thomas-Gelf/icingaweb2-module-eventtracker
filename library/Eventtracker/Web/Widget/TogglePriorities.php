@@ -19,6 +19,6 @@ class TogglePriorities extends ToggleFlagList
 
     protected function getOptions()
     {
-        return \array_reverse(Priority::ENUM, true);
+        return \array_reverse(Priority::ENUM_LIST, true);
     }
 }

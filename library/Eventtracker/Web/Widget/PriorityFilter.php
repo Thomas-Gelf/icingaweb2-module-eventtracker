@@ -8,5 +8,5 @@ class PriorityFilter extends BaseEnumPropertyFilter
 {
     protected $property = 'priority';
 
-    protected $enum = Priority::ENUM;
+    protected $enum = Priority::ENUM_LIST;
 }

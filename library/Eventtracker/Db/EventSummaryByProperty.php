@@ -30,7 +30,7 @@ class EventSummaryByProperty
     {
         $property = static::PROPERTY;
         $class = static::CLASS_NAME;
-        foreach ($class::ENUM as $value) {
+        foreach ($class::ENUM_LIST as $value) {
             $query->columns([
                 "cnt_$value" => "COALESCE(SUM(CASE WHEN $property = '$value' THEN 1 ELSE 0 END), 0)",
                 "cnt_${value}_handled"   => "COALESCE(SUM(CASE WHEN $property = '$value'"

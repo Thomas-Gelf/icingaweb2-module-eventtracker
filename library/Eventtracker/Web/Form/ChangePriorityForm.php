@@ -19,7 +19,7 @@ class ChangePriorityForm extends InlineIssueForm
 
         if ($this->hasBeenSent()) {
             $select = new SelectElement('new_priority', [
-                'options' => Priority::ENUM,
+                'options' => Priority::ENUM_LIST,
                 'value'   => $this->issue->get('priority'),
             ]);
             $submit = new SubmitElement('submit', [
