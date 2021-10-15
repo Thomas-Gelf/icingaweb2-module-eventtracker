@@ -11,6 +11,7 @@ class DaemonCommand extends Command
     public function runAction()
     {
         $daemon = new BackgroundDaemon($this->logger);
-        $daemon->run();
+        $daemon->run($this->loop());
+        $this->loop()->run();
     }
 }

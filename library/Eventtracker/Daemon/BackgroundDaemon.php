@@ -55,7 +55,7 @@ class BackgroundDaemon
 
     public function run(LoopInterface $loop = null)
     {
-        if ($ownLoop = $loop === null) {
+        if ($ownLoop = ($loop === null)) {
             $loop = Loop::create();
         }
         $this->loop = $loop;
