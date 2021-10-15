@@ -185,7 +185,8 @@ class KafkaInput extends SimpleInputConstructor
      */
     protected function runCommand($command, LoopInterface $loop)
     {
-        $process = new Process($command);
+        $this->logger->info("Launching $command");
+        $process = new Process("exec $command");
         $process->start($loop);
 
         return $process;
