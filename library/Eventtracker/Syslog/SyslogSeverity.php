@@ -20,25 +20,25 @@ class SyslogSeverity
     const EMERGENCY     = 'emergency';
 
     const MAP_NUMERIC_TO_NAME = [
-        0 => self::DEBUG,
-        1 => self::INFORMATIONAL,
-        2 => self::NOTICE,
-        3 => self::WARNING,
-        4 => self::ERROR,
-        5 => self::CRITICAL,
-        6 => self::ALERT,
-        7 => self::EMERGENCY,
+        0 => self::EMERGENCY,
+        1 => self::ALERT,
+        2 => self::CRITICAL,
+        3 => self::ERROR,
+        4 => self::WARNING,
+        5 => self::NOTICE,
+        6 => self::INFORMATIONAL,
+        7 => self::DEBUG,
     ];
 
     const MAP_NAME_TO_NUMERIC = [
-        self::DEBUG         => 0,
-        self::INFORMATIONAL => 1,
-        self::NOTICE        => 2,
-        self::WARNING       => 3,
-        self::ERROR         => 4,
-        self::CRITICAL      => 5,
-        self::ALERT         => 6,
-        self::EMERGENCY     => 7,
+        self::EMERGENCY     => 0,
+        self::ALERT         => 1,
+        self::CRITICAL      => 2,
+        self::ERROR         => 3,
+        self::WARNING       => 4,
+        self::NOTICE        => 5,
+        self::INFORMATIONAL => 6,
+        self::DEBUG         => 7,
     ];
 
     public static function isValid($value)
