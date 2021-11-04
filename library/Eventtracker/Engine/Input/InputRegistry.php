@@ -3,7 +3,6 @@
 namespace Icinga\Module\Eventtracker\Engine\Input;
 
 use Icinga\Module\Eventtracker\Engine\Input;
-use Icinga\Module\Eventtracker\Web\Form\FormUtils;
 
 class InputRegistry
 {
@@ -41,15 +40,7 @@ class InputRegistry
         foreach ($this->senderClasses as $key => $class) {
             $implementations[$key] = $class::getLabel();
         }
-        return FormUtils::optionalEnum($implementations);
 
-
-        return [
-            // 'syslog'       => $this->translate('Syslog'),
-            'scom_alert'   => $this->translate('SCOM Alerts'),
-            'scom_monitor' => $this->translate('SCOM Monitors'),
-            'ido'          => $this->translate('Icinga IDO Sync'),
-            'icinga_api'   => $this->translate('Icinga 2 API Sync'),
-        ];
+        return $implementations;
     }
 }
