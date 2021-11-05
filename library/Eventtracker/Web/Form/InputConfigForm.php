@@ -25,7 +25,7 @@ class InputConfigForm extends UuidObjectForm
             return;
         }
 
-        $this->getImplementationSettingsForm($implementation)->enhanceConfigForm($this);
+        $this->getImplementationSettingsForm($implementation)->enhanceForm($this);
         $this->addButtons();
     }
 
