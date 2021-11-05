@@ -32,10 +32,10 @@ class ConfigStore
         $this->logger = $logger;
     }
 
-    public function loadInputs()
+    public function loadInputs($filter = [])
     {
         $inputs = [];
-        foreach ($this->fetchObjects('input') as $row) {
+        foreach ($this->fetchObjects('input', $filter) as $row) {
             $row->uuid = Uuid::fromBytes($row->uuid);
             $inputs[$row->uuid->toString()] = $this->initializeInputFromDbRow($row);
         }
@@ -92,10 +92,18 @@ class ConfigStore
         }
     }
 
-    protected function fetchObjects($table)
+    protected function fetchObjects($table, $filter = [])
     {
         $db = $this->db;
-        $rows = $db->fetchAll("SELECT * FROM $table ORDER BY label");
+        $query = "SELECT * FROM $table";
+        if (! empty($filter)) {
+            $query .= ' WHERE';
+        }
+        foreach ($filter as $key => $value) {
+            $query .= $db->quoteInto(sprintf(' %s = ?', $db->quoteIdentifier($key)), $value);
+        }
+        $query .= ' ORDER BY label';
+        $rows = $db->fetchAll($query);
         foreach ($rows as $row) {
             $this->unserializeSerializedProperties($row);
         }
