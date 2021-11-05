@@ -19,17 +19,17 @@ class InputRunner
     /** @var Channel[] */
     protected $channels;
 
-    public function __construct(LoopInterface $loop, ConfigStore $store)
+    public function __construct(ConfigStore $store)
     {
         // TODO: Load all configs from DB. Recheck from time to time. Call "setSettings()" in case
         // they changed. Implementations must reload/restart on their own.
         // This one is about a single Input
-        $this->loop = $loop;
         $this->store = $store;
     }
 
-    public function start()
+    public function start(LoopInterface $loop)
     {
+        $this->loop = $loop;
         $this->inputs = $this->store->loadInputs();
         $this->channels = $this->store->loadChannels();
         $this->linkInputsToChannels();

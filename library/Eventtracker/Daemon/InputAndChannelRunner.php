@@ -40,8 +40,8 @@ class InputAndChannelRunner implements DbBasedComponent
         $this->db = $db;
 
         $store = new ConfigStore($db, $this->logger);
-        $this->runner = new InputRunner($this->loop, $store);
-        $this->runner->start();
+        $this->runner = new InputRunner($store);
+        $this->runner->start($this->loop);
 
         return resolve();
     }
