@@ -25,7 +25,7 @@ my $response = $event_tracker->send_event({
     'object_class' => 'Job Errors',
     'message'      => 'The Job failed: ...',
     'attributes'   => {
-        'team' => 'INRD',
+        'team' => 'Operating',
         'wiki' => 'https://wiki.example.com/wiki/Some_Page',
     }
 });
