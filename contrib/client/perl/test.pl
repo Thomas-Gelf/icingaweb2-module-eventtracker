@@ -18,7 +18,7 @@ my $event_tracker = EventTracker->new($base_url, $token);
 # Disable SSL Checks (don't do this):
 # $event_tracker->ssl_opts(verify_hostname => 0, SSL_verify_mode => 0x00);
 
-my $uuid = $event_tracker->send_event({
+my $response = $event_tracker->send_event({
     'severity'     => 'warning',
     'host_name'    => 'some.example.com',
     'object_name'  => 'Some Job',
@@ -30,4 +30,4 @@ my $uuid = $event_tracker->send_event({
     }
 });
 
-printf("Issue created: %s\n", $uuid);
+printf("Submitted: %s\n", $response);

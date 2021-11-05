@@ -50,15 +50,17 @@ class EventController extends Controller
         if (strlen($body) === 0) {
             $this->sendJsonError('JSON body is required', 400);
         }
+        $wanted = false;
         foreach ($store->loadChannels() as $channel) {
             if ($channel->wantsInput($input)) {
+                $wanted = true;
                 $channel->addInput($input);
             }
         }
         $input->processObject(Json::decode($body));
 
         $response = [
-            'uuid' => 'nada'
+            'success' => $wanted ? 'Event accepted' : 'Request valid, found no related Channel'
         ];
 
         $this->sendJsonResponse($response);

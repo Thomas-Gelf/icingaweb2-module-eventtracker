@@ -84,7 +84,7 @@ sub send_event {
         die "Can't create Ticket: ", $result->{'error'}
     }
 
-    return $result->{'uuid'};
+    return $result->{'success'};
 }
 
 1;
