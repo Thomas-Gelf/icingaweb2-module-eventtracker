@@ -3,10 +3,10 @@
 namespace Icinga\Module\Eventtracker\Web\Form\Input;
 
 use gipfl\Translation\TranslationHelper;
-use Icinga\Module\Eventtracker\Engine\Input\InputFormExtension;
+use Icinga\Module\Eventtracker\Engine\Input\FormExtension;
 use ipl\Html\Form;
 
-class KafkaInputForm implements InputFormExtension
+class KafkaForm implements FormExtension
 {
     use TranslationHelper;
 
@@ -15,7 +15,7 @@ class KafkaInputForm implements InputFormExtension
         return static::getTranslator()->translate('Kafka');
     }
 
-    public function enhanceConfigForm(Form $form)
+    public function enhanceForm(Form $form)
     {
         $form->addElement('text', 'kcat_binary', [
             'label'       => $this->translate('kcat Binary'),

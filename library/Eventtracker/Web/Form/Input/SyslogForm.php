@@ -3,10 +3,10 @@
 namespace Icinga\Module\Eventtracker\Web\Form\Input;
 
 use gipfl\Translation\TranslationHelper;
-use Icinga\Module\Eventtracker\Engine\Input\InputFormExtension;
+use Icinga\Module\Eventtracker\Engine\Input\FormExtension;
 use ipl\Html\Form;
 
-class SyslogInputForm implements InputFormExtension
+class SyslogForm implements FormExtension
 {
     use TranslationHelper;
 
@@ -15,7 +15,7 @@ class SyslogInputForm implements InputFormExtension
         return static::getTranslator()->translate('Syslog');
     }
 
-    public function enhanceConfigForm(Form $form)
+    public function enhanceForm(Form $form)
     {
         $form->addElement('select', 'socket_type', [
             'label' => $this->translate('Socket Type'),
