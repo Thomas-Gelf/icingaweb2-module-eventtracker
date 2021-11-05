@@ -344,7 +344,7 @@ class Issue
             return (object) [];
         }
 
-        $result = Json::decode($this->properties['attributes'], false);
+        $result = Json::decode($this->properties['attributes']);
         if (is_array($result) && empty($result)) {
             return (object) []; // Wrongly encoded
         }
@@ -367,7 +367,9 @@ class Issue
         if (\is_string($attributes)) {
             $this->properties['attributes'] = $attributes;
         } else {
-            $this->properties['attributes'] = \json_encode($attributes);
+            $attributes = (array) $attributes;
+            ksort($attributes);
+            $this->properties['attributes'] = Json::encode($attributes);
         }
     }
 
