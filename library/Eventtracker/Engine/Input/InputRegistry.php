@@ -9,6 +9,7 @@ class InputRegistry
     protected $senderClasses = [
         'syslog'     => SyslogInput::class,
         'kafka'      => KafkaInput::class,
+        'restApi'    => RestApiInput::class,
         // 'scom_alert' =>
     ];
 
