@@ -39,8 +39,9 @@ class IcingaCi
         if ($object) {
             return $object;
         } else {
-            $domain = \trim(Config::module('eventtracker')->get('ido-sync', 'search_domain'), '.');
+            $domain = Config::module('eventtracker')->get('ido-sync', 'search_domain');
             if ($domain) {
+                $domain = \trim($domain, '.');
                 return static::eventuallyFetchCi($db, "$hostname.$domain", $service);
             }
         }

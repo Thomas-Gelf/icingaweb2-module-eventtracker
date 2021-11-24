@@ -61,7 +61,7 @@ abstract class BaseSummaryTable extends BaseTable
     protected function linkToClass($row, $label)
     {
         $column = $this->getMainColumnAlias();
-        if (\strlen($label) === 0) {
+        if ($label === null || \strlen($label) === 0) {
             $label = $this->translate('- none -');
         }
         $zeroSpace = \html_entity_decode('&#8203;');

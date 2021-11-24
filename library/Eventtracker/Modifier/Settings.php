@@ -130,6 +130,7 @@ class Settings implements JsonSerializable
         return gettype($var);
     }
 
+    #[\ReturnTypeWillChange]
     public function jsonSerialize()
     {
         return (object) $this->settings;

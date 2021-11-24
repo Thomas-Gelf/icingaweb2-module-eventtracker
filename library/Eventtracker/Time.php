@@ -21,8 +21,8 @@ class Time
     {
         return Html::tag('span', [
             'class' => 'time-ago',
-            'title' => DateFormatter::formatDateTime($ms / 1000)
-        ], \strftime('%D %H:%M', $ms / 1000));
+            'title' => DateFormatter::formatDateTime((int) ($ms / 1000))
+        ], \date('m/d/Y H:i', (int) ($ms / 1000)));
         // Hint: used to be '%D %I:%M%p', am/pm seems to not work with our locales
     }
 
@@ -30,7 +30,7 @@ class Time
     {
         return Html::tag('span', [
             'class' => 'time-ago',
-            'title' => DateFormatter::formatDateTime($ms / 1000)
+            'title' => DateFormatter::formatDateTime((int) ($ms / 1000))
         ], static::ago($ms));
     }
 
