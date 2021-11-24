@@ -37,6 +37,53 @@ class PluginState
         self::STATE_UNKNOWN  => 'purple',
     ];
 
+    protected $state;
+
+    public function __construct($state = self::STATE_OK)
+    {
+        $this->state = self::getNumeric($state);
+    }
+
+    public function raise($state)
+    {
+        $this->state = self::getWorst($this->state, $state);
+    }
+
+    public function getExitCode()
+    {
+        return $this->state;
+    }
+
+    public function toString()
+    {
+        return self::getColorized($this->state);
+    }
+
+    public function __toString()
+    {
+        return $this->toString();
+    }
+
+    public static function ok()
+    {
+        return new static(self::STATE_OK);
+    }
+
+    public static function warning()
+    {
+        return new static(self::STATE_WARNING);
+    }
+
+    public static function critical()
+    {
+        return new static(self::STATE_CRITICAL);
+    }
+
+    public static function unknown()
+    {
+        return new static(self::STATE_UNKNOWN);
+    }
+
     public static function getWorst(...$states)
     {
         $worst = self::STATE_OK;
