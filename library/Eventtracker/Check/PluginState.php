@@ -8,6 +8,7 @@ use function array_key_exists;
 use function ctype_digit;
 use function is_int;
 use function max;
+use function strtoupper;
 
 class PluginState
 {
@@ -111,6 +112,7 @@ class PluginState
             return (int) $state;
         }
 
+        $state = strtoupper($state);
         if (array_key_exists($state, self::NAME_TO_NUMERIC)) {
             return self::NAME_TO_NUMERIC[$state];
         }
