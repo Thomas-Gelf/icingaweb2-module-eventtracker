@@ -2,14 +2,14 @@
 
 namespace Icinga\Module\Eventtracker\Web\Form;
 
-use gipfl\Translation\TranslationHelper;
+use gipfl\Translation\StaticTranslator;
 
 class FormUtils
 {
     public static function optionalEnum($list)
     {
         return [
-            null => TranslationHelper::getTranslator()->translate('- please choose -')
+            null => StaticTranslator::get()->translate('- please choose -')
         ] + $list;
     }
 }

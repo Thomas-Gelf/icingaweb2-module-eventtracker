@@ -3,7 +3,7 @@
 namespace Icinga\Module\Eventtracker\Engine\Input;
 
 use Evenement\EventEmitterTrait;
-use gipfl\Translation\TranslationHelper;
+use gipfl\Translation\StaticTranslator;
 use Icinga\Module\Eventtracker\Engine\SettingsProperty;
 use Icinga\Module\Eventtracker\Web\Form\Input\RestApiForm;
 use React\EventLoop\LoopInterface;
@@ -32,12 +32,12 @@ class RestApiInput extends SimpleInputConstructor
 
     public static function getLabel()
     {
-        return TranslationHelper::getTranslator()->translate('REST API Token');
+        return StaticTranslator::get()->translate('REST API Token');
     }
 
     public static function getDescription()
     {
-        return TranslationHelper::getTranslator()->translate(
+        return StaticTranslator::get()->translate(
             'Accepts REST REQUESTS via POST eventracker/event'
         );
     }

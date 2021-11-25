@@ -3,7 +3,7 @@
 namespace Icinga\Module\Eventtracker\Engine\Input;
 
 use Evenement\EventEmitterTrait;
-use gipfl\Translation\TranslationHelper;
+use gipfl\Translation\StaticTranslator;
 use Icinga\Module\Eventtracker\Engine\SettingsProperty;
 use Icinga\Module\Eventtracker\Web\Form\Input\SyslogForm;
 use Icinga\Module\Eventtracker\Stream\BufferedReader;
@@ -53,12 +53,12 @@ class SyslogInput extends SimpleInputConstructor
 
     public static function getLabel()
     {
-        return TranslationHelper::getTranslator()->translate('Syslog Receiver');
+        return StaticTranslator::get()->translate('Syslog Receiver');
     }
 
     public static function getDescription()
     {
-        return TranslationHelper::getTranslator()->translate(
+        return StaticTranslator::get()->translate(
             'Accepts Syslog on either a UDP or a UNIX socket'
         );
     }

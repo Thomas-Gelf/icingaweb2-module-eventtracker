@@ -53,15 +53,16 @@ class IdoDetails extends BaseHtmlElement
         $this->ido = MonitoringBackend::instance();
         $this->db = $db;
         $this->checkForObject($hostname, $objectName);
-        if ($this->host === null && \strpos($hostname, '.') === false) {
+        if ($this->host !== null && \strpos($hostname, '.') === false) {
             $this->eventuallyCheckForFqdn($hostname, $objectName);
         }
     }
 
     protected function eventuallyCheckForFqdn($hostname, $objectName = null)
     {
-        $domain = \trim(Config::module('eventtracker')->get('ido-sync', 'search_domain'), '.');
+        $domain = Config::module('eventtracker')->get('ido-sync', 'search_domain');
         if ($domain) {
+            $domain = \trim($domain, '.');
             $this->checkForObject("$hostname.$domain", $objectName);
         }
     }

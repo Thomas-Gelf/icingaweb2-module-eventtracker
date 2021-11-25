@@ -3,7 +3,7 @@
 namespace Icinga\Module\Eventtracker\Engine\Input;
 
 use Evenement\EventEmitterTrait;
-use gipfl\Translation\TranslationHelper;
+use gipfl\Translation\StaticTranslator;
 use Icinga\Module\Eventtracker\Engine\SettingsProperty;
 use Icinga\Module\Eventtracker\Web\Form\Input\KafkaForm;
 use Icinga\Module\Eventtracker\Stream\BufferedReader;
@@ -53,12 +53,12 @@ class KafkaInput extends SimpleInputConstructor
 
     public static function getLabel()
     {
-        return TranslationHelper::getTranslator()->translate('Kafka Consumer');
+        return StaticTranslator::get()->translate('Kafka Consumer');
     }
 
     public static function getDescription()
     {
-        return TranslationHelper::getTranslator()->translate(
+        return StaticTranslator::get()->translate(
             'Consumes a Kafka Topic'
         );
     }

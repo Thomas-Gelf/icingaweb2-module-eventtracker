@@ -71,6 +71,7 @@ class ModifierChain implements JsonSerializable
         $this->modifiers[] = [$propertyName, $modifier];
     }
 
+    #[\ReturnTypeWillChange]
     public function jsonSerialize()
     {
         $result = [];

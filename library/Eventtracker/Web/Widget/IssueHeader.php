@@ -25,6 +25,7 @@ use ipl\Html\BaseHtmlElement;
 use ipl\Html\Html;
 use ipl\Html\HtmlDocument;
 use Psr\Http\Message\ServerRequestInterface;
+use function date;
 
 class IssueHeader extends BaseHtmlElement
 {
@@ -195,8 +196,13 @@ class IssueHeader extends BaseHtmlElement
 
         return Html::tag('span', [
             'class' => 'time-until',
-            'title' => strftime('%A, %e. %B, %Y %H:%M', $ts),
+            'title' => $this->renderNiceDate($ts),
         ], DateFormatter::timeUntil($ts));
+    }
+
+    protected function renderNiceDate($time)
+    {
+        return date('D d. F, Y H:i', $time);
     }
 
     protected function renderPriority(Issue $issue)
@@ -340,7 +346,7 @@ class IssueHeader extends BaseHtmlElement
 
         return Html::tag('span', [
             'class' => 'time-ago',
-            'title' => strftime('%A, %e. %B, %Y %H:%M', $ts),
+            'title' => $this->renderNiceDate($ts),
         ], DateFormatter::timeAgo($ts));
     }
 
