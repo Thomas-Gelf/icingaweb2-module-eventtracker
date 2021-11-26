@@ -3,6 +3,7 @@
 namespace Icinga\Module\Eventtracker\Engine;
 
 use Icinga\Module\Eventtracker\Db\ConfigStore;
+use Icinga\Module\Eventtracker\Engine\Input\KafkaInput;
 use React\EventLoop\LoopInterface;
 
 class InputRunner
@@ -61,7 +62,11 @@ class InputRunner
         foreach ($this->channels as $channel) {
             foreach ($this->inputs as $input) {
                 if ($channel->wantsInput($input)) {
-                    $channel->addInput($input);
+                    if ($input instanceof KafkaInput) {
+                        $channel->addInput($input, true);
+                    } else {
+                        $channel->addInput($input);
+                    }
                 }
             }
         }

@@ -59,6 +59,10 @@ class ConfigStore
         }
     }
 
+    /**
+     * @return Channel[]
+     * @throws \Icinga\Module\Eventtracker\Data\JsonEncodeException
+     */
     public function loadChannels()
     {
         $channels = [];

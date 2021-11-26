@@ -86,16 +86,16 @@ class Channel implements LoggerAwareInterface
         }
     }
 
-    public function addInput(Input $input)
+    public function addInput(Input $input, $ignoreUnknown = false)
     {
         $this->logger->info("Wiring " . $input->getName() . ' to ' . $this->name);
         $inputUuid = $input->getUuid();
-        $input->on('event', function (\stdClass $event) use ($inputUuid) {
-            $this->process($inputUuid, $event);
+        $input->on('event', function (\stdClass $event) use ($inputUuid, $ignoreUnknown) {
+            $this->process($inputUuid, $event, $ignoreUnknown);
         });
     }
 
-    public function process(UuidInterface $inputUuid, \stdClass $object)
+    public function process(UuidInterface $inputUuid, \stdClass $object, $ignoreUnknown = false)
     {
         $this->rules->process($object);
         $db = DbFactory::db();
@@ -118,7 +118,16 @@ class Channel implements LoggerAwareInterface
         if (isset($object->input_uuid)) {
             $object->input_uuid = Uuid::fromString($object->input_uuid)->getBytes();
         }
-        $event->setProperties((array) $object);
+        if ($ignoreUnknown) {
+            $knownProperties = $event->getProperties();
+            foreach ((array) $object as $property => $value) {
+                if (array_key_exists($property, $knownProperties)) {
+                    $event->set($property, $value);
+                }
+            }
+        } else {
+            $event->setProperties((array) $object);
+        }
         $issue = $receiver->processEvent($event);
         if ($issue) {
             $this->logger->info("Issue " . $issue->getNiceUuid());
