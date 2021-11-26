@@ -134,7 +134,7 @@ class IdoDetails extends BaseHtmlElement
 
     protected function assemble()
     {
-        if ($ci = $this->icingaCi) {
+        if (($ci = $this->icingaCi) && $this->host) {
             $details = new NameValuePreFormatted();
             $details->addNameValueRow(
                 $this->translate('Host'),
