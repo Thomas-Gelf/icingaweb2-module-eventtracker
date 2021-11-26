@@ -2,11 +2,18 @@
 
 namespace Icinga\Module\Eventtracker\Clicommands;
 
+use gipfl\ZfDb\Adapter\Adapter;
 use gipfl\ZfDb\Adapter\Pdo\Mssql;
 use Icinga\Module\Eventtracker\Check\PluginState;
+use Icinga\Module\Eventtracker\DbFactory;
+use Icinga\Module\Eventtracker\DbSeverity;
 use Icinga\Module\Eventtracker\Scom\Scom;
 use Icinga\Module\Eventtracker\Scom\ScomQuery;
+use Icinga\Module\Eventtracker\Severity;
 
+/**
+ * Icinga Check Commands provided by the Eventtracker
+ */
 class CheckCommand extends Command
 {
     /**
@@ -64,6 +71,96 @@ class CheckCommand extends Command
             );
         }
         exit($state->getExitCode());
+    }
+
+    /**
+     * This checks whether there are issues for the given filter
+     *
+     * USAGE
+     *
+     * icingacli eventtracker check alert [--filter <val>[, --filter <val>]]
+     *
+     * VALID FILTER COLUMNS
+     *
+     *   - host_name
+     *   - object_name
+     *   - object_class
+     *
+     * EXAMPLE
+     *
+     * Any issues/alerts:
+     *
+     *     icingacli eventtracker check alert
+     *
+     * Issues/alerts for a specific Object Class
+     *
+     *     icingacli eventtracker check alert --object_class System.Computer
+     */
+    public function alertAction()
+    {
+        $db = DbFactory::db();
+        $issues = $this->fetchIssues($db);
+        $state = PluginState::ok();
+        if (empty($issues)) {
+            $this->showWithState('No related issues found', $state);
+            exit($state->getExitCode());
+        }
+        $first = array_shift($issues);
+        $state->raise(
+            $first->severity === Severity::WARNING
+                ? PluginState::STATE_WARNING
+                : PluginState::STATE_CRITICAL
+        );
+
+        $message = $this->shorten($this->firstLine($first->message), 80);
+        $cntRemaining = count($issues);
+        if ($cntRemaining === 1) {
+            $message .= ', and one more issue found';
+        } elseif ($cntRemaining > 1) {
+            $message .= ", and $cntRemaining more issues found";
+        }
+        $this->showWithState($message, $state);
+        exit($state->getExitCode());
+    }
+
+    protected function shorten($string, $length)
+    {
+        if (strlen($string) < $length) {
+            return $string;
+        }
+
+        return substr($string, 0, $length) . '...';
+    }
+
+    protected function firstLine($string)
+    {
+        return preg_split('/\r?\n/', $string)[0];
+    }
+
+    protected function fetchIssues(Adapter $db)
+    {
+        $query = $db->select()->from('issue')
+            ->where('status = ?', 'open')
+            ->where('severity >= ?', DbSeverity::WARNING)
+            ->order('severity DESC')
+            ->order('priority DESC')
+            ->order('ts_first_event DESC');
+        $validFilters = [
+            'host_name',
+            'object_class',
+            'object_name'
+        ];
+        foreach ($validFilters as $filter) {
+            if ($value = $this->params->shift($filter)) {
+                $query->where("$filter = ?", $value);
+            }
+        }
+        $remaining = $this->params->getParams();
+        if (! empty($remaining)) {
+            $this->fail('Unsupported filter: ' . implode(', ', array_keys($remaining)));
+        }
+
+        return $db->fetchAll($query);
     }
 
     protected function fetchScomIssues(Mssql $db, $host, $service = null)
