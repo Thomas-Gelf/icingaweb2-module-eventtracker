@@ -3,13 +3,13 @@
 namespace Icinga\Module\Eventtracker\Controllers;
 
 use gipfl\IcingaWeb2\CompatController;
+use gipfl\Json\JsonString;
 use gipfl\ZfDb\Adapter\Adapter;
 use gipfl\ZfDb\Adapter\Adapter as Db;
 use gipfl\ZfDb\Adapter\Pdo\Mssql;
 use Icinga\Authentication\Auth;
 use Icinga\Exception\NotFoundError;
 use Icinga\Module\Eventtracker\Config\IcingaResource;
-use Icinga\Module\Eventtracker\Data\Json;
 use Icinga\Module\Eventtracker\Db\ZfDbConnectionFactory;
 use Icinga\Module\Eventtracker\DbFactory;
 use Icinga\Module\Eventtracker\Uuid;
@@ -26,7 +26,8 @@ abstract class Controller extends CompatController
      */
     public function init()
     {
-        if (! $this->getRequest()->isApiRequest()
+        if (
+            ! $this->getRequest()->isApiRequest()
             && $this->Config()->get('ui', 'disabled', 'no') === 'yes'
         ) {
             throw new NotFoundError('Not found');
@@ -87,7 +88,7 @@ abstract class Controller extends CompatController
                 }
             }
             $this->getResponse()->setHeader('Content-Type', 'application/json', true)->sendHeaders();
-            echo Json::encode($result, JSON_PRETTY_PRINT);
+            echo JsonString::encode($result, JSON_PRETTY_PRINT);
             exit;
         }
     }

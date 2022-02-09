@@ -2,12 +2,12 @@
 
 namespace Icinga\Module\Eventtracker;
 
+use gipfl\Json\JsonString;
 use gipfl\ZfDb\Adapter\Adapter as Db;
 use gipfl\ZfDb\Expr;
 use Icinga\Application\Hook;
 use Icinga\Authentication\Auth;
 use Icinga\Exception\NotFoundError;
-use Icinga\Module\Eventtracker\Data\Json;
 use Icinga\Module\Eventtracker\Hook\IssueHook;
 use Ramsey\Uuid\Uuid;
 
@@ -113,7 +113,7 @@ class Issue
                 ->where('issue_uuid = ?', $uuid)
         );
 
-        $activities = Json::decode($result->activities);
+        $activities = JsonString::decode($result->activities);
         $closeReason = $result->close_reason;
         $closedBy = $result->closed_by;
         unset($result->activities);
@@ -344,7 +344,7 @@ class Issue
             return (object) [];
         }
 
-        $result = Json::decode($this->properties['attributes']);
+        $result = JsonString::decode($this->properties['attributes']);
         if (is_array($result) && empty($result)) {
             return (object) []; // Wrongly encoded
         }
@@ -369,7 +369,7 @@ class Issue
         } else {
             $attributes = (array) $attributes;
             ksort($attributes);
-            $this->properties['attributes'] = Json::encode($attributes);
+            $this->properties['attributes'] = JsonString::encode($attributes);
         }
     }
 

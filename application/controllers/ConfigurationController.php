@@ -5,9 +5,9 @@ namespace Icinga\Module\Eventtracker\Controllers;
 use gipfl\IcingaWeb2\Link;
 use gipfl\IcingaWeb2\Url;
 use gipfl\Web\Form;
+use gipfl\Json\JsonDecodeException;
+use gipfl\Json\JsonString;
 use gipfl\Web\Widget\Hint;
-use Icinga\Module\Eventtracker\Data\Json;
-use Icinga\Module\Eventtracker\Data\JsonException;
 use Icinga\Module\Eventtracker\Db\ConfigStore;
 use Icinga\Module\Eventtracker\Modifier\ModifierChain;
 use Icinga\Module\Eventtracker\Modifier\ModifierUtils;
@@ -86,8 +86,8 @@ class ConfigurationController extends Controller
     protected function showRules($rules)
     {
         try {
-            $modifiers = ModifierChain::fromSerialization(Json::decode($rules));
-        } catch (JsonException $e) {
+            $modifiers = ModifierChain::fromSerialization(JsonString::decode($rules));
+        } catch (JsonDecodeException $e) {
             return;
         }
         $info = Html::tag('ul');

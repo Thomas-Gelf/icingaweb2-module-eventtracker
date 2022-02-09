@@ -2,10 +2,10 @@
 
 namespace Icinga\Module\Eventtracker\Controllers;
 
+use gipfl\Json\JsonEncodeException;
+use gipfl\Json\JsonString;
 use gipfl\Web\Widget\Hint;
 use Icinga\Exception\NotFoundError;
-use Icinga\Module\Eventtracker\Data\Json;
-use Icinga\Module\Eventtracker\Data\JsonException;
 use Icinga\Module\Eventtracker\Db\ConfigStore;
 use Icinga\Module\Eventtracker\Engine\Input;
 use Icinga\Module\Eventtracker\Engine\Input\RestApiInput;
@@ -57,7 +57,7 @@ class EventController extends Controller
                 $channel->addInput($input);
             }
         }
-        $input->processObject(Json::decode($body));
+        $input->processObject(JsonString::decode($body));
 
         $response = [
             'success' => $wanted ? 'Event accepted' : 'Request valid, found no related Channel'
@@ -81,7 +81,8 @@ class EventController extends Controller
 
         /** @var Input $possibleInput */
         foreach ($inputs as $possibleInput) {
-            if ($possibleInput instanceof RestApiInput
+            if (
+                $possibleInput instanceof RestApiInput
                 && $possibleInput->getSettings()->get('token') === $token
             ) {
                 $input = $possibleInput;
@@ -118,8 +119,8 @@ class EventController extends Controller
         $this->getResponse()->setHttpResponseCode($code);
         $this->getResponse()->setHeader('Content-Type', 'application/json', true);
         try {
-            echo Json::encode($object, JSON_PRETTY_PRINT);
-        } catch (JsonException $e) {
+            echo JsonString::encode($object, JSON_PRETTY_PRINT);
+        } catch (JsonEncodeException $e) {
             $this->sendJsonError($e);
         }
         exit; // TODO: shutdown
