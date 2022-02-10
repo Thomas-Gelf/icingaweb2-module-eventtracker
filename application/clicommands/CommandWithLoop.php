@@ -6,6 +6,7 @@ use gipfl\Cli\Tty;
 use gipfl\Log\Filter\LogLevelFilter;
 use gipfl\Log\IcingaWeb\IcingaLogger;
 use gipfl\Log\Logger;
+use gipfl\Log\Writer\JournaldLogger;
 use gipfl\Log\Writer\JsonRpcWriter;
 use gipfl\Log\Writer\SystemdStdoutWriter;
 use gipfl\Log\Writer\WritableStreamWriter;
@@ -31,7 +32,6 @@ trait CommandWithLoop
 
     public function init()
     {
-        /** @var Command $this */
         $this->app->getModuleManager()->loadEnabledModules();
         $this->clearProxySettings();
         $this->initializeLogger();
@@ -96,7 +96,11 @@ trait CommandWithLoop
         }
         $loop = $this->loop();
         if (systemd::startedThisProcess()) {
-            $logger->addWriter(new SystemdStdoutWriter($loop));
+            if (@file_exists(JournaldLogger::JOURNALD_SOCKET)) {
+                $logger->addWriter((new JournaldLogger())->setIdentifier('icinga-eventtracker'));
+            } else {
+                $logger->addWriter(new SystemdStdoutWriter($loop));
+            }
         } else {
             $logger->addWriter(new WritableStreamWriter(new WritableResourceStream(STDERR, $loop)));
         }
@@ -104,7 +108,6 @@ trait CommandWithLoop
 
     protected function eventuallyFilterLog(Logger $logger)
     {
-        /** @var Command $this */
         /** @noinspection PhpStatementHasEmptyBodyInspection */
         if ($this->isDebugging) {
             // Hint: no need to filter
@@ -118,7 +121,6 @@ trait CommandWithLoop
 
     protected function isRpc()
     {
-        /** @var Command $this */
         return (bool) $this->params->get('rpc');
     }
 
