@@ -224,7 +224,7 @@ class Issue
             unset($properties['priority']);
         }
         if ($timeout !== null) {
-            $properties['ts_expiration'] = static::now() + $timeout * 1000;
+            $properties['ts_expiration'] = Time::unixMilli() + $timeout * 1000;
         }
         $properties['sender_event_checksum'] = $event->getChecksum();
         $this->setProperties($properties);
@@ -417,7 +417,7 @@ class Issue
      */
     protected function insertIntoDb(Db $db)
     {
-        $now = static::now();
+        $now = Time::unixMilli();
         $this->setProperties([
             'issue_uuid'       => Uuid::uuid4()->getBytes(),
             'cnt_events'       => 1,
@@ -450,7 +450,7 @@ class Issue
         $modifications = $this->getModifications();
         $this->setProperties([
             'cnt_events'       => $this->get('cnt_events') + 1, // might be wrong, but safes a DB roundtrip
-            'ts_last_modified' => static::now(),
+            'ts_last_modified' => Time::unixMilli(),
         ]);
         $where = $db->quoteInto('issue_uuid = ?', $this->getUuid());
         $properties = [
@@ -471,7 +471,7 @@ class Issue
             $db->insert('issue_activity', [
                 'activity_uuid' => Uuid::uuid4()->getBytes(),
                 'issue_uuid'    => $this->getUuid(),
-                'ts_modified'   => $this::now(),
+                'ts_modified'   => Time::unixMilli(),
                 'modifications' => JsonString::encode($modifications)
             ]);
         }
@@ -534,10 +534,5 @@ class Issue
         $db->delete(static::$tableName, $db->quoteInto('issue_uuid = ?', $issue->getUuid()));
 
         return true;
-    }
-
-    protected static function now()
-    {
-        return (int) floor(microtime(true) * 1000);
     }
 }
