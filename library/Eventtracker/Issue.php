@@ -472,7 +472,7 @@ class Issue
                 'activity_uuid' => Uuid::uuid4()->getBytes(),
                 'issue_uuid'    => $this->getUuid(),
                 'ts_modified'   => $this::now(),
-                'modifications' => Json::encode($modifications)
+                'modifications' => JsonString::encode($modifications)
             ]);
         }
 
