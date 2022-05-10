@@ -97,21 +97,30 @@ class EventController extends Controller
         try {
             $callback();
         } catch (NotFoundError $e) {
-            $this->sendJsonError($e, 404);
-        } catch (\Exception $e) {
+            $this->sendJsonError($e->getMessage(), 404);
+        } catch (\Throwable $e) {
             $this->sendJsonError($e);
         }
     }
 
     /**
-     * @param \Exception|string $error
+     * @param \Throwable|string $error
      * @param int $code
      */
     protected function sendJsonError($error, $code = 500)
     {
-        $this->sendJsonResponse([
-            'error' => $error instanceof \Exception ? $error->getMessage() : (string) $error,
-        ], $code);
+        $data = [];
+
+        if ($error instanceof \Exception) {
+            $message = $error->getMessage();
+            $data['trace'] = iconv('UTF-8', 'UTF-8//IGNORE', $error->getTraceAsString());
+        } else {
+            $message = (string) $error;
+        }
+
+        $data['error'] = iconv('UTF-8', 'UTF-8//IGNORE', $message);
+
+        $this->sendJsonResponse($data, $code);
     }
 
     protected function sendJsonResponse($object, $code = 200)
