@@ -42,4 +42,9 @@ class Time
             Html::tag('span', ['class' => 'time-ago'], static::ago($ms))
         );
     }
+
+    public static function unixMilli(): int
+    {
+        return (int) floor(microtime(true) * 1000);
+    }
 }
