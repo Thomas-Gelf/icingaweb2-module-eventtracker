@@ -161,7 +161,7 @@ CREATE TABLE issue_activity (
       ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE utf8mb4_bin;
 
-INSERT INTO sender (id, sender_name, implementation) VALUES ('compat', 'Compat', 99999);
+INSERT INTO sender (id, sender_name, implementation) VALUES (99999, 'compat', 'Compat');
 
 
 CREATE TABLE issue_history (
