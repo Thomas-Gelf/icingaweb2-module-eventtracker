@@ -17,6 +17,9 @@ class Issue
 
     protected static $tableName = 'issue';
 
+    /** @var FrozenMemoryFile[] */
+    protected $files = [];
+
     protected $properties = [
         'issue_uuid'            => null,
         'sender_event_checksum' => null,
@@ -229,6 +232,8 @@ class Issue
         $properties['sender_event_checksum'] = $event->getChecksum();
         $this->setProperties($properties);
 
+        $this->files = $event->getFiles();
+
         return $this;
     }
 
@@ -431,6 +436,14 @@ class Issue
         }
 
         $db->insert(self::$tableName, $properties);
+
+        foreach ($this->files as $file) {
+            if (! File::exists($file, $db)) {
+                File::persist($file, $db);
+            }
+
+            IssueFile::persist($this, $file, $db);
+        }
 
         return true;
     }
