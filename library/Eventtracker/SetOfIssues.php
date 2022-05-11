@@ -79,6 +79,7 @@ class SetOfIssues implements Countable
         return $set;
     }
 
+    #[\ReturnTypeWillChange]
     public function count()
     {
         return count($this->issues);
