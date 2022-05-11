@@ -7,7 +7,17 @@ use Icinga\Module\Eventtracker\Contract\File as FileObject;
 
 class File
 {
+    use PropertyHelpers;
+
     protected static $tableName = 'file';
+
+    protected $properties = [
+        'checksum'  => null,
+        'data'      => null,
+        'size'      => null,
+        'mime_type' => null,
+        'ctime'     => null
+    ];
 
     public static function exists(FileObject $file, Db $db)
     {
@@ -29,5 +39,53 @@ class File
             'mime_type' => $file->getMimeType(),
             'ctime'     => Time::unixMilli()
         ]);
+    }
+
+    public static function loadAllBySetOfIssues(SetOfIssues $issues, Db $db): array
+    {
+        $files = [];
+
+        $q = $db
+            ->select()
+            ->from(['f' => static::$tableName])
+            ->joinInner(
+                ['i' => IssueFile::getTableName()], 'f.checksum = i.file_checksum', ['filename', 'issue_uuid']
+            )
+            ->where('i.issue_uuid IN (?)', $issues->getUuids());
+
+        foreach ($db->fetchAll($q) as $row) {
+            $file = new static;
+            $file->properties['issue_uuid'] = null;
+            $file->properties['filename'] = null;
+            $file->setProperties($row);
+            $file->setStored();
+            $files[] = $file;
+        }
+
+        return $files;
+    }
+
+    public static function loadByIssueUuidsAndChecksums(array $uuids, array $checksums, Db $db): array
+    {
+        $files = [];
+
+        $q = $db
+            ->select()
+            ->from(['f' => static::$tableName])
+            ->joinInner(
+                ['i' => IssueFile::getTableName()], 'f.checksum = i.file_checksum', ['filename', 'issue_uuid']
+            )
+            ->where('i.issue_uuid IN (?) AND f.checksum IN (?)', [$uuids, $checksums]);
+
+        foreach ($db->fetchAll($q) as $row) {
+            $file = new static;
+            $file->properties['issue_uuid'] = null;
+            $file->properties['filename'] = null;
+            $file->setProperties($row);
+            $file->setStored();
+            $files[] = $file;
+        }
+
+        return $files;
     }
 }

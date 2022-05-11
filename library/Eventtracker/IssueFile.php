@@ -9,6 +9,11 @@ class IssueFile
 {
     protected static $tableName = 'issue_file';
 
+    public static function getTableName()
+    {
+        return static::$tableName;
+    }
+
     public static function persist(Issue $issue, FileObject $file, Db $db)
     {
         $db->insert(self::$tableName, [
