@@ -3,7 +3,9 @@
 namespace Icinga\Module\Eventtracker;
 
 use InvalidArgumentException;
+use gipfl\Json\JsonString;
 use Ramsey\Uuid\Uuid;
+use function in_array;
 
 use function ipl\Stdlib\get_php_type;
 
@@ -21,8 +23,8 @@ class Event
 
     protected $properties = [
         'host_name'       => null,
-        'object_name'     => null,
         'object_class'    => null,
+        'object_name'     => null,
         'severity'        => null,
         'priority'        => null,
         'message'         => null,
@@ -35,13 +37,13 @@ class Event
         'clear'           => null,
     ];
 
-    public function getChecksum()
+    public function getChecksum(): string
     {
         $hexUuid = $this->getHexInputUuid();
 
         if ($hexUuid === null) {
             // Legacy checksum
-            return sha1(json_encode([
+            return sha1(JsonString::encode([
                 $this->get('host_name'),
                 $this->get('object_class'),
                 $this->get('object_name'),
@@ -50,7 +52,7 @@ class Event
             ]), true);
         }
 
-        return sha1(json_encode([
+        return sha1(JsonString::encode([
             $this->get('host_name'),
             $this->get('object_class'),
             $this->get('object_name'),
@@ -60,7 +62,7 @@ class Event
         ]), true);
     }
 
-    protected function getHexInputUuid()
+    protected function getHexInputUuid(): ?string
     {
         $uuid = $this->get('input_uuid');
         if ($uuid === null) {
@@ -70,17 +72,17 @@ class Event
         return Uuid::fromBytes($uuid)->toString();
     }
 
-    public function isAcknowledged()
+    public function isAcknowledged(): bool
     {
         return (bool) $this->get('acknowledge');
     }
 
-    public function hasBeenCleared()
+    public function hasBeenCleared(): bool
     {
         return (bool) $this->get('clear');
     }
 
-    public function isProblem()
+    public function isProblem(): bool
     {
         // TODO: OK is not a problem.
         $ok = [
@@ -89,7 +91,7 @@ class Event
             'debug',
         ];
 
-        return ! \in_array($this->get('severity'), $ok);
+        return ! in_array($this->get('severity'), $ok);
     }
 
     public function getFiles(): array
