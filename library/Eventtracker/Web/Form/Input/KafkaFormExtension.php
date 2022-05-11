@@ -6,7 +6,7 @@ use gipfl\Translation\TranslationHelper;
 use Icinga\Module\Eventtracker\Engine\Input\FormExtension;
 use ipl\Html\Form;
 
-class KafkaForm implements FormExtension
+class KafkaFormExtension implements FormExtension
 {
     use TranslationHelper;
 

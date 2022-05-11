@@ -3,6 +3,7 @@
 namespace Icinga\Module\Eventtracker\Web\Form;
 
 use Icinga\Module\Eventtracker\Engine\Input;
+use Icinga\Module\Eventtracker\Engine\Input\FormExtension;
 
 class InputConfigForm extends UuidObjectForm
 {
@@ -29,11 +30,10 @@ class InputConfigForm extends UuidObjectForm
         $this->addButtons();
     }
 
-    protected function getImplementationSettingsForm($implementation)
+    protected function getImplementationSettingsForm($implementation): FormExtension
     {
         /** @var string|Input $class IDE hint */
         $class = $this->registry->getClassName($implementation);
-        $formClass = $class::getSettingsSubForm();
-        return new $formClass();
+        return $class::getFormExtension();
     }
 }

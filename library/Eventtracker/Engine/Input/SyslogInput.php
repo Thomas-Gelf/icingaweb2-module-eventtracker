@@ -5,7 +5,8 @@ namespace Icinga\Module\Eventtracker\Engine\Input;
 use Evenement\EventEmitterTrait;
 use gipfl\Translation\StaticTranslator;
 use Icinga\Module\Eventtracker\Engine\SettingsProperty;
-use Icinga\Module\Eventtracker\Web\Form\Input\SyslogForm;
+use Icinga\Module\Eventtracker\Web\Form;
+use Icinga\Module\Eventtracker\Web\Form\Input\SyslogFormExtension;
 use Icinga\Module\Eventtracker\Stream\BufferedReader;
 use Icinga\Module\Eventtracker\Syslog\SyslogParser;
 use InvalidArgumentException;
@@ -46,9 +47,9 @@ class SyslogInput extends SimpleInputConstructor
         }
     }
 
-    public static function getSettingsSubForm()
+    public static function getFormExtension(): FormExtension
     {
-        return SyslogForm::class;
+        return new SyslogFormExtension();
     }
 
     public static function getLabel()

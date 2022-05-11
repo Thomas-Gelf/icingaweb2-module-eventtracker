@@ -7,7 +7,7 @@ use Icinga\Module\Eventtracker\Engine\Input\FormExtension;
 use ipl\Html\Form;
 use Ramsey\Uuid\Uuid;
 
-class RestApiForm implements FormExtension
+class RestApiFormExtension implements FormExtension
 {
     use TranslationHelper;
 

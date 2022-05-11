@@ -5,7 +5,7 @@ namespace Icinga\Module\Eventtracker\Engine\Input;
 use Evenement\EventEmitterTrait;
 use gipfl\Translation\StaticTranslator;
 use Icinga\Module\Eventtracker\Engine\SettingsProperty;
-use Icinga\Module\Eventtracker\Web\Form\Input\KafkaForm;
+use Icinga\Module\Eventtracker\Web\Form\Input\KafkaFormExtension;
 use Icinga\Module\Eventtracker\Stream\BufferedReader;
 use Icinga\Util\Json;
 use React\ChildProcess\Process;
@@ -46,9 +46,9 @@ class KafkaInput extends SimpleInputConstructor
         $this->command = $settings->getRequired('kcat_binary');
     }
 
-    public static function getSettingsSubForm()
+    public static function getFormExtension(): FormExtension
     {
-        return KafkaForm::class;
+        return new KafkaFormExtension();
     }
 
     public static function getLabel()

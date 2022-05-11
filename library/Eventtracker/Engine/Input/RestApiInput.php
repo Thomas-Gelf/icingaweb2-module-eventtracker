@@ -5,7 +5,7 @@ namespace Icinga\Module\Eventtracker\Engine\Input;
 use Evenement\EventEmitterTrait;
 use gipfl\Translation\StaticTranslator;
 use Icinga\Module\Eventtracker\Engine\SettingsProperty;
-use Icinga\Module\Eventtracker\Web\Form\Input\RestApiForm;
+use Icinga\Module\Eventtracker\Web\Form\Input\RestApiFormExtension;
 use React\EventLoop\LoopInterface;
 
 class RestApiInput extends SimpleInputConstructor
@@ -25,9 +25,9 @@ class RestApiInput extends SimpleInputConstructor
         $this->token = $settings->getRequired('token');
     }
 
-    public static function getSettingsSubForm()
+    public static function getFormExtension(): FormExtension
     {
-        return RestApiForm::class;
+        return new RestApiFormExtension();
     }
 
     public static function getLabel()

@@ -6,7 +6,7 @@ use gipfl\Translation\TranslationHelper;
 use Icinga\Module\Eventtracker\Engine\Input\FormExtension;
 use ipl\Html\Form;
 
-class SyslogForm implements FormExtension
+class SyslogFormExtension implements FormExtension
 {
     use TranslationHelper;
 

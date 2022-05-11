@@ -3,7 +3,9 @@
 namespace Icinga\Module\Eventtracker\Engine;
 
 use Evenement\EventEmitterInterface;
+use Icinga\Module\Eventtracker\Engine\Input\FormExtension;
 use Icinga\Module\Eventtracker\Modifier\Settings;
+use Icinga\Module\Eventtracker\Web\Form;
 use Psr\Log\LoggerAwareInterface;
 use Ramsey\Uuid\UuidInterface;
 use React\EventLoop\LoopInterface;
@@ -29,10 +31,7 @@ interface Input extends EventEmitterInterface, LoggerAwareInterface
     public function pause();
     public function resume();
 
-    /**
-     * @return \ipl\Html\Form
-     */
-    public static function getSettingsSubForm();
+    public static function getFormExtension(): FormExtension;
 
     public static function getLabel();
 
