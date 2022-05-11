@@ -10,10 +10,14 @@ class SimpleNameValueParser extends BaseModifier
     {
         $parts = explode(' ', $value);
         $properties = [];
+        $key = null;
+        $catchAll = $this->settings->get('catchall_key');
 
         // TODO: Improve this.
         foreach ($parts as $part) {
-            if (($pos = strpos($part, '=')) === false) {
+            if ($catchAll && $key === $catchAll) {
+                $properties[$catchAll] .= " $part";
+            } elseif (($pos = strpos($part, '=')) === false) {
                 $key = 'invalid';
                 if (isset($properties[$key])) {
                     $properties[$key] .= " $part";
