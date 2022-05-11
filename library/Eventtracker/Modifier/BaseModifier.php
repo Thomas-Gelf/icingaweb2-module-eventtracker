@@ -21,10 +21,7 @@ abstract class BaseModifier implements Modifier
         $this->settings = $settings;
     }
 
-    /**
-     * @return string
-     */
-    public static function getName()
+    public static function getName(): string
     {
         if (self::$name === null) {
             $parts = explode('\\', get_called_class());
@@ -34,12 +31,12 @@ abstract class BaseModifier implements Modifier
         return self::$name;
     }
 
-    public function getSettings()
+    public function getSettings(): Settings
     {
         return $this->settings;
     }
 
-    public function getInstanceDescription()
+    public function getInstanceDescription(): ?string
     {
         if ($this->instanceDescriptionPattern === null) {
             return null;
@@ -53,7 +50,7 @@ abstract class BaseModifier implements Modifier
         return null;
     }
 
-    public function transform($object, $propertyName)
+    public function transform($object, string $propertyName)
     {
         $value = ObjectUtils::getSpecificValue($object, $propertyName);
         if ($value === null) {

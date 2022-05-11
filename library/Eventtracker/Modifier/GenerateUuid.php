@@ -8,7 +8,7 @@ class GenerateUuid extends BaseModifier
 {
     protected static $name = 'Generate a UUID';
 
-    public function transform($object, $propertyName)
+    public function transform($object, string $propertyName)
     {
         // TODO: other UUID versions?
         return Uuid::uuid4()->toString();

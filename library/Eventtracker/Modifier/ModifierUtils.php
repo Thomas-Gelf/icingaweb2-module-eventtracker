@@ -6,7 +6,7 @@ use Icinga\Module\Eventtracker\Data\PlainObjectRenderer;
 
 class ModifierUtils
 {
-    public static function describeModifier($propertyName, Modifier $modifier)
+    public static function describeModifier($propertyName, Modifier $modifier): string
     {
         $info = $modifier::getName() . "($propertyName";
         $settings = $modifier->getSettings()->jsonSerialize();

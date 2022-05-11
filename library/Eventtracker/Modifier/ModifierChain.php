@@ -20,7 +20,7 @@ class ModifierChain implements JsonSerializable
         }
     }
 
-    public static function fromSerialization(array $serializedModifiers)
+    public static function fromSerialization(array $serializedModifiers): ModifierChain
     {
         $modifiers = [];
         foreach ($serializedModifiers as $modifier) {
@@ -29,14 +29,14 @@ class ModifierChain implements JsonSerializable
         return new static($modifiers);
     }
 
-    protected static function makeModifier(array $modifier)
+    protected static function makeModifier(array $modifier): array
     {
-        /** @var Modifier $class Just a hint, it's a string */
+        /** @var Modifier|string $class Just a hint, it's a string */
         $class = __NAMESPACE__ . '\\' . $modifier[1];
         return [
             $modifier[0],
             new $class(
-                Settings::fromSerialization(isset($modifier[2]) ? $modifier[2] : (object) [])
+                Settings::fromSerialization($modifier[2] ?? (object) [])
             )
         ];
     }
@@ -44,7 +44,7 @@ class ModifierChain implements JsonSerializable
     /**
      * @return array of arrays, 0 => property, 1 => modifier
      */
-    public function getModifiers()
+    public function getModifiers(): array
     {
         return $this->modifiers;
     }
