@@ -61,6 +61,17 @@ class SetOfIssues implements Countable
         }
     }
 
+    public function getUuids(): array
+    {
+        $uuids = [];
+
+        foreach ($this->issues as $issue) {
+            $uuids[] = $issue->getUuid();
+        }
+
+        return $uuids;
+    }
+
     public function getWorstSeverity()
     {
         $severity = Severity::DEBUG;
