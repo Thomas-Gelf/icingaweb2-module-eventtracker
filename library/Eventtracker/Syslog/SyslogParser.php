@@ -2,6 +2,8 @@
 
 namespace Icinga\Module\Eventtracker\Syslog;
 
+use DateTime;
+
 class SyslogParser
 {
     const MONTHS_SHORT = [
@@ -33,25 +35,25 @@ class SyslogParser
         $facility = $priVal >> 3;
         $severity = $priVal & 0x07;
 
-        $datetime = false;
+        $datetime = null;
         if (in_array(substr($line, 0, 3), self::MONTHS_SHORT)) {
             try {
                 // TODO: verify structure with regex
-                $datetime = new \DateTime(substr($line, 0, 15));
+                $datetime = new DateTime(substr($line, 0, 15));
             } catch (\Exception $e) {
                 // TODO:
                 // $logger->log($e->getMessage());
             }
-            if ($datetime instanceof \DateTime) {
+            if ($datetime instanceof DateTime) {
                 $line = substr($line, 16);
             } else {
-                $datetime = new \DateTime();
+                $datetime = new DateTime();
             }
         } else {
             if (false !== ($nextSpace = strpos($line, ' '))) {
                 try {
-                    $datetime = new \DateTime(substr($line, 0, $nextSpace));
-                    if ($datetime instanceof \DateTime) {
+                    $datetime = new DateTime(substr($line, 0, $nextSpace));
+                    if ($datetime instanceof DateTime) {
                         $line = substr($line, $nextSpace);
                     }
                 } catch (\Exception $e) {
@@ -59,9 +61,6 @@ class SyslogParser
                     // $logger->log($e->getMessage());
                 }
             }
-        }
-        if (! $datetime instanceof \DateTime) {
-            $datetime = new \DateTime();
         }
 
         if (preg_match('/^([^\s]+)\s/', $line, $match)) {
@@ -87,8 +86,11 @@ class SyslogParser
             'severity'     => SyslogSeverity::mapNumericToName($severity),
             'priority'     => null,
             'message'      => $line,
-            // 'timestamp_ms' => (int) floor((float) $datetime->format('U\.u') * 1000),
         ];
+        if ($datetime) {
+            // TODO: enable once we have such property
+            // $result->ts_sender = (int) floor((float) $datetime->format('U\.u') * 1000);
+        }
 
         if ($pid !== null) {
             $result->attributes = (object) ['syslog_sender_pid' => $pid];
