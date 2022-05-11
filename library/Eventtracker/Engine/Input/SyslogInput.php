@@ -110,15 +110,20 @@ class SyslogInput extends SimpleInputConstructor
             $this->logger->notice('Got a new connection on ' . $this->socket);
             $buffer = new BufferedReader($this->loop);
             $buffer->on('line', function ($line) {
+                $this->sendHeartbeat();
                 // echo "< $line";
                 if ($line === '') {
                     return;
                 }
-                if ($line === '-- MARK --') {
+                if ($line === '-- MARK --') { // Won't happen. Would it?
                     return;
                 }
                 try {
                     $event = SyslogParser::parseLine($line);
+                    if ($event->message === '-- MARK --') {
+                        $this->logger->notice('Got a Syslog MARK');
+                        return;
+                    }
                     if ($event->object_name !== 'eventtracker'
                         || ! isset($event->attributes->syslog_sender_pid)
                         || $event->attributes->syslog_sender_pid !== posix_getpid()
