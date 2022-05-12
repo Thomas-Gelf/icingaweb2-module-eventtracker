@@ -4,6 +4,7 @@ namespace Icinga\Module\Eventtracker\Controllers;
 
 use gipfl\IcingaWeb2\Url;
 use Icinga\Exception\NotFoundError;
+use Icinga\Module\Eventtracker\File;
 use Icinga\Module\Eventtracker\Hook\EventActionsHook;
 use Icinga\Module\Eventtracker\Issue;
 use Icinga\Module\Eventtracker\IssueHistory;
@@ -78,6 +79,42 @@ class IssueController extends Controller
                     'class' => 'state-hint error'
                 ], $this->translate('There is no such issue')));
             }
+        }
+    }
+
+    public function fileAction()
+    {
+        $uuid = Uuid::toBinary($this->params->getRequired('uuid'));
+        $checksum = $this->params->getRequired('checksum');
+
+        $file = File::loadByIssueUuidAndChecksum($uuid, hex2bin($checksum), $this->db());
+        if ($file === null) {
+            throw new NotFoundError('File not found');
+        }
+
+        $this->_helper->viewRenderer->disable();
+        $this->_helper->layout()->disableLayout();
+
+        $this->getResponse()->setHeader(
+            'Cache-Control',
+            'public, max-age=1814400, stale-while-revalidate=604800',
+            true
+        );
+
+        if (
+            $this->getRequest()->getHeader('Cache-Control') !== 'no-cache'
+            && $this->getRequest()->getHeader('If-None-Match') === $checksum
+        ) {
+            $this
+                ->getResponse()
+                ->setHttpResponseCode(304);
+        } else {
+            $this
+                ->getResponse()
+                ->setHeader('ETag', $checksum, true)
+                ->setHeader('Content-Type', $file->get('mime_type'), true)
+                ->setHeader('Content-Disposition', sprintf('attachment; filename="%s"', $file->get('filename')))
+                ->setBody($file->get('data'));
         }
     }
 
