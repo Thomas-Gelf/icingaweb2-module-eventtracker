@@ -17,10 +17,11 @@ class IssueFile
     public static function persist(Issue $issue, FileObject $file, Db $db)
     {
         $db->insert(self::$tableName, [
-            'issue_uuid'    => $issue->getUuid(),
-            'file_checksum' => $file->getChecksum(),
-            'filename'      => $file->getName(),
-            'ctime'         => Time::unixMilli()
+            'issue_uuid'        => $issue->getUuid(),
+            'file_checksum'     => $file->getChecksum(),
+            'filename'          => $file->getName(),
+            'filename_checksum' => hex2bin(sha1($file->getName())),
+            'ctime'             => Time::unixMilli()
         ]);
     }
 }

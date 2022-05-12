@@ -295,8 +295,9 @@ class IssueHeader extends BaseHtmlElement
 
                 $links[] = Html::tag('a', [
                     'href' => Url::fromPath('eventtracker/issue/file', [
-                        'uuid'     => $issue->getNiceUuid(),
-                        'checksum' => bin2hex($file->get('checksum'))
+                        'uuid'              => $issue->getNiceUuid(),
+                        'checksum'          => bin2hex($file->get('checksum')),
+                        'filename_checksum' => sha1($file->get('filename'))
                     ]),
                     'target' => '_blank'
                 ], sprintf('%s (%s)', $file->get('filename'), Format::bytes($file->get('size'))));
