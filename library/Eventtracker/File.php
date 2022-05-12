@@ -51,7 +51,8 @@ class File
             ->joinInner(
                 ['i' => IssueFile::getTableName()], 'f.checksum = i.file_checksum', ['filename', 'issue_uuid']
             )
-            ->where('i.issue_uuid = ?', $issue->getUuid());
+            ->where('i.issue_uuid = ?', $issue->getUuid())
+            ->order('i.ctime');
 
         foreach ($db->fetchAll($q) as $row) {
             $file = new static;
@@ -75,7 +76,8 @@ class File
             ->joinInner(
                 ['i' => IssueFile::getTableName()], 'f.checksum = i.file_checksum', ['filename', 'issue_uuid']
             )
-            ->where('i.issue_uuid IN (?)', $issues->getUuids());
+            ->where('i.issue_uuid IN (?)', $issues->getUuids())
+            ->order('i.ctime');
 
         foreach ($db->fetchAll($q) as $row) {
             $file = new static;
@@ -99,7 +101,8 @@ class File
             ->joinInner(
                 ['i' => IssueFile::getTableName()], 'f.checksum = i.file_checksum', ['filename', 'issue_uuid']
             )
-            ->where('i.issue_uuid IN (?) AND f.checksum IN (?)', [$uuids, $checksums]);
+            ->where('i.issue_uuid IN (?) AND f.checksum IN (?)', [$uuids, $checksums])
+            ->order('i.ctime');
 
         foreach ($db->fetchAll($q) as $row) {
             $file = new static;
@@ -123,7 +126,8 @@ class File
             )
             ->where('i.issue_uuid = ?', $uuid)
             ->where('i.file_checksum = ?', $checksum)
-            ->where('i.filename_checksum = ?', $filenameChecksum);
+            ->where('i.filename_checksum = ?', $filenameChecksum)
+            ->order('i.ctime');
 
         $row = $db->fetchRow($q);
         if ($row === false) {
