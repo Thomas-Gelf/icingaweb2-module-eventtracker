@@ -113,7 +113,7 @@ class File
         return $files;
     }
 
-    public static function loadByIssueUuidAndChecksum(string $uuid, string $checksum, Db $db): ?self
+    public static function loadByIssueUuidAndChecksum(string $uuid, string $checksum, string $filenameChecksum, Db $db): ?self
     {
         $q = $db
             ->select()
@@ -122,7 +122,8 @@ class File
                 ['i' => IssueFile::getTableName()], 'f.checksum = i.file_checksum', ['filename', 'issue_uuid']
             )
             ->where('i.issue_uuid = ?', $uuid)
-            ->where('f.checksum = ?', $checksum);
+            ->where('i.file_checksum = ?', $checksum)
+            ->where('i.filename_checksum = ?', $filenameChecksum);
 
         $row = $db->fetchRow($q);
         if ($row === false) {

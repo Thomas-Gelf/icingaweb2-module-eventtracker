@@ -86,8 +86,9 @@ class IssueController extends Controller
     {
         $uuid = Uuid::toBinary($this->params->getRequired('uuid'));
         $checksum = $this->params->getRequired('checksum');
+        $filenameChecksum = $this->params->getRequired('filename_checksum');
 
-        $file = File::loadByIssueUuidAndChecksum($uuid, hex2bin($checksum), $this->db());
+        $file = File::loadByIssueUuidAndChecksum($uuid, hex2bin($checksum), hex2bin($filenameChecksum), $this->db());
         if ($file === null) {
             throw new NotFoundError('File not found');
         }
