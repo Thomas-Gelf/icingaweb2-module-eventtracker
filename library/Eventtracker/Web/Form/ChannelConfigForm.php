@@ -12,6 +12,7 @@ class ChannelConfigForm extends UuidObjectForm
     {
         $this->addElement('text', 'label', [
             'label' => $this->translate('Label'),
+            'required' => true,
         ]);
         $this->addElement('textarea', 'rules', [
             'label' => $this->translate('Rules'),
@@ -19,11 +20,12 @@ class ChannelConfigForm extends UuidObjectForm
             'validators' => [
                 new ModifierChainValidator()
             ],
+            'value' => '[]',
+            'required' => true,
         ]);
-        $this->addElement('select', 'input_uuids', [
+        $this->addElement('multiSelect', 'input_uuids', [
             'label'       => $this->translate('Single Inputs'),
             'description' => $this->translate('Wire specific inputs to this channel'),
-            'multiple'    => true,
             'options'     => $this->store->enumObjects('input'),
         ]);
         $this->addElement('select', 'input_implementation', [
