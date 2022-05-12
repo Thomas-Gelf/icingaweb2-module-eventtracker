@@ -10,6 +10,7 @@ use gipfl\ZfDb\Adapter\Adapter as Db;
 use Icinga\Authentication\Auth;
 use Icinga\Date\DateFormatter;
 use Icinga\Module\Eventtracker\DbFactory;
+use Icinga\Module\Eventtracker\File;
 use Icinga\Module\Eventtracker\Hook\EventActionsHook;
 use Icinga\Module\Eventtracker\Issue;
 use Icinga\Module\Eventtracker\Web\Form\ChangePriorityForm;
@@ -19,12 +20,16 @@ use Icinga\Module\Eventtracker\Web\Form\LinkLikeForm;
 use Icinga\Module\Eventtracker\Web\Form\ReOpenIssueForm;
 use Icinga\Module\Eventtracker\Web\Form\TakeIssueForm;
 use Icinga\Module\Eventtracker\Web\HtmlPurifier;
+use Icinga\Util\Format;
 use Icinga\Web\Hook;
 use Icinga\Web\Response;
 use ipl\Html\BaseHtmlElement;
 use ipl\Html\Html;
 use ipl\Html\HtmlDocument;
+use ipl\Html\HtmlString;
+use ipl\Html\ValidHtml;
 use Psr\Http\Message\ServerRequestInterface;
+
 use function date;
 
 class IssueHeader extends BaseHtmlElement
@@ -135,6 +140,7 @@ class IssueHeader extends BaseHtmlElement
             "\n",
             Html::tag('strong', 'Ticket: '),
             $this->renderTicket($issue),
+            $this->renderFiles($issue),
         ];
     }
 
@@ -274,6 +280,35 @@ class IssueHeader extends BaseHtmlElement
         }
 
         return $result;
+    }
+
+    protected function renderFiles(Issue $issue): ?ValidHtml
+    {
+        $files = File::loadAllByIssue($issue, $this->db);
+        if (! empty($files)) {
+            $links = [];
+
+            foreach ($files as $file) {
+                if (! empty($links)) {
+                    $links[] = new HtmlString("\n       ");
+                }
+
+                $links[] = Html::tag('a', [
+                    'href' => Url::fromPath('eventtracker/issue/file', [
+                        'uuid'     => $issue->getNiceUuid(),
+                        'checksum' => bin2hex($file->get('checksum'))
+                    ]),
+                    'target' => '_blank'
+                ], sprintf('%s (%s)', $file->get('filename'), Format::bytes($file->get('size'))));
+            }
+
+            return (new HtmlDocument())
+                ->add("\n")
+                ->add(Html::tag('strong', 'Files: '))
+                ->addHtml(...$links);
+        }
+
+        return null;
     }
 
     protected function getMyUsername()
