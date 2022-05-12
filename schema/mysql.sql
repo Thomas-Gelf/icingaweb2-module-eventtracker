@@ -176,8 +176,9 @@ CREATE TABLE issue_file (
   issue_uuid VARBINARY(16) NOT NULL,
   file_checksum binary(20) NOT NULL,
   filename varchar(255) NOT NULL,
+  filename_checksum binary(20) NOT NULL,
   ctime bigint(20) NOT NULL,
-  PRIMARY KEY (issue_uuid, file_checksum),
+  PRIMARY KEY (issue_uuid, file_checksum, filename_checksum),
   CONSTRAINT fk_issue_file_issue
     FOREIGN KEY (issue_uuid)
       REFERENCES issue (issue_uuid)
@@ -268,4 +269,4 @@ CREATE TABLE eventtracker_schema_migration (
 
 INSERT INTO eventtracker_schema_migration
   (schema_version, migration_time)
-VALUES (5, NOW());
+VALUES (6, NOW());
