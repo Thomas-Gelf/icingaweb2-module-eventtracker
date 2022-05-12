@@ -437,12 +437,21 @@ class Issue
 
         $db->insert(self::$tableName, $properties);
 
+        $files = [];
         foreach ($this->files as $file) {
             if (! File::exists($file, $db)) {
                 File::persist($file, $db);
             }
 
+            // Deduplication based on content and filename.
+            $key = sprintf('%s!%s', bin2hex($file->getChecksum()), $file->getName());
+            if (isset($files[$key])) {
+                continue;
+            }
+
             IssueFile::persist($this, $file, $db);
+
+            $files[$key] = true;
         }
 
         return true;
