@@ -10,6 +10,10 @@ class ModifierChainValidator extends SimpleValidator
 {
     public function isValid($value)
     {
+        // Hint: IMHO null should not reach this method. Will be addressed separately
+        if ($value === null) {
+            return true;
+        }
         try {
             ModifierChain::fromSerialization(JsonString::decode($value));
             return true;
