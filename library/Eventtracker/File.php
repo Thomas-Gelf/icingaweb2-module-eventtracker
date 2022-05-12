@@ -41,6 +41,30 @@ class File
         ]);
     }
 
+    public static function loadAllByIssue(Issue $issue, Db $db): array
+    {
+        $files = [];
+
+        $q = $db
+            ->select()
+            ->from(['f' => static::$tableName])
+            ->joinInner(
+                ['i' => IssueFile::getTableName()], 'f.checksum = i.file_checksum', ['filename', 'issue_uuid']
+            )
+            ->where('i.issue_uuid = ?', $issue->getUuid());
+
+        foreach ($db->fetchAll($q) as $row) {
+            $file = new static;
+            $file->properties['issue_uuid'] = null;
+            $file->properties['filename'] = null;
+            $file->setProperties($row);
+            $file->setStored();
+            $files[] = $file;
+        }
+
+        return $files;
+    }
+
     public static function loadAllBySetOfIssues(SetOfIssues $issues, Db $db): array
     {
         $files = [];
@@ -87,5 +111,30 @@ class File
         }
 
         return $files;
+    }
+
+    public static function loadByIssueUuidAndChecksum(string $uuid, string $checksum, Db $db): ?self
+    {
+        $q = $db
+            ->select()
+            ->from(['f' => static::$tableName])
+            ->joinInner(
+                ['i' => IssueFile::getTableName()], 'f.checksum = i.file_checksum', ['filename', 'issue_uuid']
+            )
+            ->where('i.issue_uuid = ?', $uuid)
+            ->where('f.checksum = ?', $checksum);
+
+        $row = $db->fetchRow($q);
+        if ($row === false) {
+            return null;
+        }
+
+        $file = new static;
+        $file->properties['issue_uuid'] = null;
+        $file->properties['filename'] = null;
+        $file->setProperties($row);
+        $file->setStored();
+
+        return $file;
     }
 }
