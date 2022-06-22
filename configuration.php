@@ -36,7 +36,7 @@ $this->providePermission(
     $this->translate('Operators are allowed to modify issues (Priority, Owner...)')
 );
 if ($this->getConfig()->get('scom', 'db_resource')) {
-    $section->add(N_('SCOM Alerts'))
-        ->setUrl('eventtracker/scom/alerts')
-        ->setPermission('eventtracker/admin');
+    // $section->add(N_('SCOM Alerts'))
+    //     ->setUrl('eventtracker/scom/alerts')
+    //     ->setPermission('eventtracker/admin');
 }
