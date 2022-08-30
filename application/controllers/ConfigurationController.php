@@ -10,6 +10,7 @@ use gipfl\Web\Widget\Hint;
 use Icinga\Module\Eventtracker\Db\ConfigStore;
 use Icinga\Module\Eventtracker\Engine\Action\ActionRegistry;
 use Icinga\Module\Eventtracker\Modifier\ModifierChain;
+use Icinga\Module\Eventtracker\Modifier\ModifierUtils;
 use Icinga\Module\Eventtracker\Web\Form\ApiTokenForm;
 use Icinga\Module\Eventtracker\Web\Form\ChannelConfigForm;
 use Icinga\Module\Eventtracker\Web\Form\InputConfigForm;
