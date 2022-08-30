@@ -15,7 +15,7 @@ class InputRunner
     protected $store;
 
     /** @var Input[] */
-    protected $inputs;
+    protected $inputs = [];
 
     /** @var Channel[] */
     protected $channels;
