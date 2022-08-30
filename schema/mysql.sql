@@ -40,6 +40,17 @@ CREATE TABLE api_token (
   UNIQUE INDEX(label)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE utf8mb4_bin;
 
+CREATE TABLE action (
+  uuid VARBINARY(16) NOT NULL,
+  label VARCHAR(32) NOT NULL,
+  implementation VARCHAR(64) NOT NULL,
+  settings TEXT DEFAULT NULL,
+  filter TEXT DEFAULT NULL,
+  enabled ENUM('y', 'n') NOT NULL,
+  PRIMARY KEY (uuid),
+  UNIQUE INDEX(label)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE utf8mb4_bin;
+
 CREATE TABLE icinga_ci (
   object_id BIGINT(20) UNSIGNED NOT NULL,
   host_id BIGINT(20) UNSIGNED NULL DEFAULT NULL,
@@ -277,4 +288,4 @@ CREATE TABLE eventtracker_schema_migration (
 
 INSERT INTO eventtracker_schema_migration
   (schema_version, migration_time)
-VALUES (7, NOW());
+VALUES (8, NOW());
