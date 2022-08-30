@@ -3,6 +3,7 @@
 namespace Icinga\Module\Eventtracker\Controllers;
 
 use gipfl\IcingaWeb2\Url;
+use Icinga\Application\Hook;
 use Icinga\Exception\NotFoundError;
 use Icinga\Module\Eventtracker\File;
 use Icinga\Module\Eventtracker\Hook\EventActionsHook;
