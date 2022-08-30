@@ -3,8 +3,9 @@
 namespace Icinga\Module\Eventtracker\Engine\Input;
 
 use Icinga\Module\Eventtracker\Engine\Input;
+use Icinga\Module\Eventtracker\Engine\Registry;
 
-class InputRegistry
+class InputRegistry implements Registry
 {
     protected $senderClasses = [
         'syslog'     => SyslogInput::class,

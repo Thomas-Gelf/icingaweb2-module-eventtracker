@@ -5,7 +5,7 @@ namespace Icinga\Module\Eventtracker\Web\Form;
 use gipfl\Translation\TranslationHelper;
 use gipfl\Web\Form;
 use Icinga\Module\Eventtracker\Db\ConfigStore;
-use Icinga\Module\Eventtracker\Engine\Input\InputRegistry;
+use Icinga\Module\Eventtracker\Engine\Registry;
 use Icinga\Web\Notification;
 use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\UuidInterface;
@@ -14,7 +14,7 @@ class UuidObjectForm extends Form
 {
     use TranslationHelper;
 
-    /** @var InputRegistry */
+    /** @var Registry */
     protected $registry;
 
     /** @var ConfigStore */
@@ -30,7 +30,7 @@ class UuidObjectForm extends Form
 
     protected $mainProperties;
 
-    public function __construct(InputRegistry $registry, ConfigStore $store)
+    public function __construct(Registry $registry, ConfigStore $store)
     {
         $this->registry = $registry;
         $this->store = $store;
@@ -100,7 +100,9 @@ class UuidObjectForm extends Form
                 unset($values[$property]);
             }
 
-            $properties['settings'] = $values;
+            if (! empty($settings)) {
+                $properties['settings'] = $values;
+            }
         } else {
             $properties = $values;
         }
