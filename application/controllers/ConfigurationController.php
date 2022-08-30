@@ -4,22 +4,26 @@ namespace Icinga\Module\Eventtracker\Controllers;
 
 use gipfl\IcingaWeb2\Link;
 use gipfl\IcingaWeb2\Url;
-use gipfl\Web\Form;
 use gipfl\Json\JsonDecodeException;
 use gipfl\Json\JsonString;
 use gipfl\Web\Widget\Hint;
 use Icinga\Module\Eventtracker\Db\ConfigStore;
+use Icinga\Module\Eventtracker\Engine\Action\ActionRegistry;
 use Icinga\Module\Eventtracker\Modifier\ModifierChain;
-use Icinga\Module\Eventtracker\Modifier\ModifierUtils;
+use Icinga\Module\Eventtracker\Web\Form\ApiTokenForm;
 use Icinga\Module\Eventtracker\Web\Form\ChannelConfigForm;
 use Icinga\Module\Eventtracker\Web\Form\InputConfigForm;
 use Icinga\Module\Eventtracker\Engine\Input\InputRegistry;
 use Icinga\Module\Eventtracker\Web\Form\UuidObjectForm;
+use Icinga\Module\Eventtracker\Web\Table\ApiTokensTable;
 use Icinga\Module\Eventtracker\Web\Table\BaseTable;
+use Icinga\Module\Eventtracker\Web\Table\ChannelRulesTable;
 use Icinga\Module\Eventtracker\Web\Table\ConfiguredChannelsTable;
 use Icinga\Module\Eventtracker\Web\Table\ConfiguredInputsTable;
+use Icinga\Module\Eventtracker\Web\Table\ConfiguredActionsTable;
 use ipl\Html\Html;
 use Ramsey\Uuid\Uuid;
+use Ramsey\Uuid\UuidInterface;
 
 class ConfigurationController extends Controller
 {
@@ -41,6 +45,7 @@ class ConfigurationController extends Controller
                 'url'      => 'eventtracker/configuration/input',
                 'table_class' => ConfiguredInputsTable::class,
                 'form_class'  => InputConfigForm::class,
+                'registry'    => InputRegistry::class,
             ],
             'channels' => [
                 'singular' => $this->translate('Channel'),
@@ -50,6 +55,17 @@ class ConfigurationController extends Controller
                 'url'      => 'eventtracker/configuration/channel',
                 'table_class' => ConfiguredChannelsTable::class,
                 'form_class'  => ChannelConfigForm::class,
+                'registry'    => InputRegistry::class,
+            ],
+            'actions' => [
+                'singular' => $this->translate('Action'),
+                'plural'   => $this->translate('Actions'),
+                'table'    => 'notification',
+                'list_url' => 'eventtracker/configuration/actions',
+                'url'      => 'eventtracker/configuration/action',
+                'table_class' => ConfiguredActionsTable::class,
+                'form_class'  => ChannelConfigForm::class,
+                'registry'    => ActionRegistry::class,
             ],
         ];
     }
@@ -68,7 +84,8 @@ class ConfigurationController extends Controller
     public function inputAction()
     {
         $this->variant = 'inputs';
-        $this->showForm();
+        $this->addObjectTab();
+        $this->content()->add($this->getForm());
     }
 
     public function channelsAction()
@@ -80,10 +97,25 @@ class ConfigurationController extends Controller
     public function channelAction()
     {
         $this->variant = 'channels';
-        $form = $this->showForm();
+        $this->addObjectTab();
+        $form = $this->getForm();
+        $this->content()->add($form);
         if ($rules = $form->getElementValue('rules')) {
             $this->showRules($rules);
         }
+    }
+
+    public function actionsAction()
+    {
+        $this->variant = 'actions';
+        $this->showList();
+    }
+
+    public function actionAction()
+    {
+        $this->variant = 'actions';
+        $this->addObjectTab();
+        $this->content()->add($this->getForm());
     }
 
     protected function showRules($rules)
@@ -124,38 +156,40 @@ class ConfigurationController extends Controller
         }
     }
 
-    protected function showForm()
+    protected function createForm(): UuidObjectForm
     {
-        $store = new ConfigStore($this->db());
-        /** @var string|Form $formClass IDE hint */
+        $store = $this->getStore();
+        /** @var string|UuidObjectForm $formClass IDE hint */
         $formClass = $this->variant('form_class');
-        $form = new $formClass(new InputRegistry(), $store);
-        $objectType = $this->variant('singular');
-        if ($uuid = $this->params->get('uuid')) {
-            $uuid = Uuid::fromString($uuid);
-            $object = $store->fetchObject($this->variant('table'), $uuid);
-            if (isset($object->settings)) {
-                foreach ($object->settings as $key => $value) {
-                    $object->$key = $value;
-                }
-                unset($object->settings);
-            }
-            $form->populate((array) $object);
-            $this->addTitle("$objectType: %s", $object->label);
-        } else {
-            $this->addTitle($this->translate('Define a new %s'), $objectType);
-        }
-        $this->addSingleTab(sprintf($this->translate('%s Configuration'), $objectType));
+        $registryClass = $this->variant('registry');
+        $form = new $formClass(new $registryClass, $store);
         $form->on($form::ON_SUCCESS, function (UuidObjectForm $form) {
             $this->redirectNow(Url::fromPath($this->variant('url'), [
                 'uuid' => $form->getUuid()->toString()
             ]));
         });
+        return $form;
+    }
+
+    protected function getForm(): UuidObjectForm
+    {
+        $form = $this->createForm();
+        $objectType = $this->variant('singular');
+        if ($this->params->has('uuid')) {
+            $object = $this->getObject();
+            if (isset($object->permissions)) {
+                $object->permissions = JsonString::decode($object->permissions);
+            }
+            $this->flattenObjectSettings($object);
+            $form->populate((array) $object);
+            $this->addTitle("$objectType: %s", $object->label);
+        } else {
+            $this->addTitle($this->translate('Define a new %s'), $objectType);
+        }
         $form->handleRequest($this->getServerRequest());
         if ($form->hasBeenDeleted()) {
             $this->redirectNow($this->variant('list_url'));
         }
-        $this->content()->add($form);
 
         return $form;
     }
