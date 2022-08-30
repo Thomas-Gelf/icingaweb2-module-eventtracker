@@ -1,0 +1,12 @@
+<?php
+
+namespace Icinga\Module\Eventtracker\Engine\Action;
+
+use Icinga\Module\Eventtracker\Engine\SimpleRegistry;
+
+class ActionRegistry extends SimpleRegistry
+{
+    protected $implementations = [
+        'mail' => MailAction::class
+    ];
+}
