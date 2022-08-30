@@ -26,17 +26,17 @@ class Severity
         self::EMERGENCY     => self::EMERGENCY,
     ];
 
-    public static function isValid($value)
+    public static function isValid($value): bool
     {
         return \array_key_exists($value, static::ENUM_LIST);
     }
 
-    public static function isHighest($value)
+    public static function isHighest($value): bool
     {
         return $value === static::EMERGENCY;
     }
 
-    public static function isLowest($value)
+    public static function isLowest($value): bool
     {
         return $value === static::DEBUG;
     }

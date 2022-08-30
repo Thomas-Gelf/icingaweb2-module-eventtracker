@@ -13,7 +13,7 @@ trait SettingsProperty
         $this->settings = $settings;
     }
 
-    public function getSettings()
+    public function getSettings(): Settings
     {
         return $this->settings;
     }

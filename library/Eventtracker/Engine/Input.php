@@ -14,15 +14,11 @@ interface Input extends EventEmitterInterface, LoggerAwareInterface
 {
     public function __construct(Settings $settings, UuidInterface $uuid, $name);
 
-    /**
-     * @return UuidInterface
-     */
-    public function getUuid();
+    public function getUuid(): UuidInterface;
 
     public function getName();
 
-    /** @return Settings */
-    public function getSettings();
+    public function getSettings(): Settings;
 
     public function run(LoopInterface $loop);
 

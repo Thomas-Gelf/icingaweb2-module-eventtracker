@@ -13,19 +13,19 @@ trait PropertyHelpers
         $this->storedProperties = $this->properties;
     }
 
-    public function hasChanged()
+    public function hasChanged(): bool
     {
         return $this->storedProperties !== $this->properties;
     }
 
-    public function set($key, $value)
+    public function set(string $key, $value)
     {
         $this->assertPropertyExists($key);
         $this->properties[$key] = $value;
         return $this;
     }
 
-    public function get($key, $default = null)
+    public function get(string $key, $default = null)
     {
         $this->assertPropertyExists($key);
         if ($this->properties[$key] === null) {
@@ -58,7 +58,7 @@ trait PropertyHelpers
         return $modified;
     }
 
-    public function getModifications()
+    public function getModifications(): array
     {
         $modified = $this->getModifiedProperties();
         foreach ($modified as $key => $value) {
@@ -72,7 +72,7 @@ trait PropertyHelpers
         return $modified;
     }
 
-    public function hasModifiedProperty($key)
+    public function hasModifiedProperty($key): bool
     {
         if ($this->isNew()) {
             return true;
@@ -90,7 +90,7 @@ trait PropertyHelpers
         }
     }
 
-    public function getProperties()
+    public function getProperties(): array
     {
         return $this->properties;
     }

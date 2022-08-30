@@ -42,12 +42,12 @@ abstract class SimpleInputConstructor implements Input
         // You might want to override this method
     }
 
-    public function getUuid()
+    public function getUuid(): UuidInterface
     {
         return $this->uuid;
     }
 
-    public function getName()
+    public function getName(): string
     {
         return $this->name;
     }
