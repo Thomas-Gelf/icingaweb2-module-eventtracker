@@ -6,7 +6,7 @@ use Evenement\EventEmitterTrait;
 use gipfl\Translation\StaticTranslator;
 use Icinga\Module\Eventtracker\Engine\FormExtension;
 use Icinga\Module\Eventtracker\Engine\SettingsProperty;
-use Icinga\Module\Eventtracker\Engine\SimpleInputConstructor;
+use Icinga\Module\Eventtracker\Engine\SimpleTaskConstructor;
 use Icinga\Module\Eventtracker\Web\Form\Input\KafkaFormExtension;
 use Icinga\Module\Eventtracker\Stream\BufferedReader;
 use Icinga\Util\Json;
@@ -14,7 +14,7 @@ use React\ChildProcess\Process;
 use React\EventLoop\LoopInterface;
 use RuntimeException;
 
-class KafkaInput extends SimpleInputConstructor
+class KafkaInput extends SimpleTaskConstructor
 {
     use EventEmitterTrait;
     use SettingsProperty;
