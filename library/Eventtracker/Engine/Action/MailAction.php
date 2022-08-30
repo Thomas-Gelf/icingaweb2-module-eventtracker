@@ -4,6 +4,7 @@ namespace Icinga\Module\Eventtracker\Engine\Action;
 
 use Evenement\EventEmitterTrait;
 use gipfl\Translation\StaticTranslator;
+use Icinga\Module\Eventtracker\Engine\Action;
 use Icinga\Module\Eventtracker\Engine\FormExtension;
 use Icinga\Module\Eventtracker\Engine\SettingsProperty;
 use Icinga\Module\Eventtracker\Engine\SimpleTaskConstructor;
@@ -12,7 +13,7 @@ use React\EventLoop\LoopInterface;
 use Zend_Mail;
 use Zend_Mail_Transport_Sendmail;
 
-class MailAction extends SimpleTaskConstructor
+class MailAction extends SimpleTaskConstructor implements Action
 {
     use EventEmitterTrait;
     use SettingsProperty;

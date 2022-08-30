@@ -5,6 +5,7 @@ namespace Icinga\Module\Eventtracker\Engine\Input;
 use Evenement\EventEmitterTrait;
 use gipfl\Translation\StaticTranslator;
 use Icinga\Module\Eventtracker\Engine\FormExtension;
+use Icinga\Module\Eventtracker\Engine\Input;
 use Icinga\Module\Eventtracker\Engine\SettingsProperty;
 use Icinga\Module\Eventtracker\Engine\SimpleTaskConstructor;
 use Icinga\Module\Eventtracker\Web\Form\Input\KafkaFormExtension;
@@ -14,7 +15,7 @@ use React\ChildProcess\Process;
 use React\EventLoop\LoopInterface;
 use RuntimeException;
 
-class KafkaInput extends SimpleTaskConstructor
+class KafkaInput extends SimpleTaskConstructor implements Input
 {
     use EventEmitterTrait;
     use SettingsProperty;
