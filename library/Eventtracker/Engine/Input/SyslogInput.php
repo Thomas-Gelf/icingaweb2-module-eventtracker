@@ -6,7 +6,7 @@ use Evenement\EventEmitterTrait;
 use gipfl\Translation\StaticTranslator;
 use Icinga\Module\Eventtracker\Engine\FormExtension;
 use Icinga\Module\Eventtracker\Engine\SettingsProperty;
-use Icinga\Module\Eventtracker\Engine\SimpleInputConstructor;
+use Icinga\Module\Eventtracker\Engine\SimpleTaskConstructor;
 use Icinga\Module\Eventtracker\Web\Form;
 use Icinga\Module\Eventtracker\Web\Form\Input\SyslogFormExtension;
 use Icinga\Module\Eventtracker\Stream\BufferedReader;
@@ -16,7 +16,7 @@ use React\EventLoop\LoopInterface;
 use React\Socket\ConnectionInterface;
 use React\Socket\UnixServer;
 
-class SyslogInput extends SimpleInputConstructor
+class SyslogInput extends SimpleTaskConstructor
 {
     const ON_EVENT = 'event';
     const ON_ERROR = 'error';
