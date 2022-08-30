@@ -10,7 +10,5 @@
     <arg name="report-summary"/>
     <arg name="encoding" value="UTF-8"/>
 
-    <rule ref="PSR12">
-        <exclude name="PSR12.Properties.ConstantVisibility.NotFound" />
-    </rule>
+    <rule ref="PSR2" />
 </ruleset>
