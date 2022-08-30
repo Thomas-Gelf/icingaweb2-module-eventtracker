@@ -125,7 +125,9 @@ class Channel implements LoggerAwareInterface
         $issue = $receiver->processEvent($event);
         if ($issue) {
             $this->logger->info("Issue " . $issue->getNiceUuid());
-            $this->emit(static::ON_ISSUE, [$issue]);
+            if ($issue->hasBeenCreatedNow()) {
+                $this->emit(static::ON_ISSUE, [$issue]);
+            }
         } else {
             $this->logger->debug("No Issue");
         }
