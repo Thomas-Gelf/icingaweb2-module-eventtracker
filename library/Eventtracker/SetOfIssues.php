@@ -90,8 +90,7 @@ class SetOfIssues implements Countable
         return $set;
     }
 
-    #[\ReturnTypeWillChange]
-    public function count()
+    public function count(): int
     {
         return count($this->issues);
     }
