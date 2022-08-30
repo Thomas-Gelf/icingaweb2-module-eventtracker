@@ -1,9 +1,7 @@
 <?php
 
-namespace Icinga\Module\Eventtracker\Engine\Input;
+namespace Icinga\Module\Eventtracker\Engine;
 
-use Icinga\Module\Eventtracker\Engine\Input;
-use Icinga\Module\Eventtracker\Engine\SettingsProperty;
 use Icinga\Module\Eventtracker\Modifier\Settings;
 use Psr\Log\LoggerAwareTrait;
 use Psr\Log\LoggerInterface;
