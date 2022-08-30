@@ -196,13 +196,14 @@ class ConfigurationController extends Controller
 
     protected function tabForList($name)
     {
-        $this->tabs()->add('inputs', [
-            'label' => $this->translate('Inputs'),
-            'url'   => 'eventtracker/configuration/inputs',
-        ])->add('channels', [
-            'label' => $this->translate('Channels'),
-            'url'   => 'eventtracker/configuration/channels',
-        ])->activate($name);
+        $tabs = $this->tabs();
+        foreach ($this->variants as $key => $variant) {
+            $tabs->add($key, [
+                'label' => $variant['plural'],
+                'url'   => $variant['list_url']
+            ]);
+        }
+        $tabs->activate($name);
     }
 
     protected function addObjectTab()
