@@ -27,6 +27,9 @@ class ConfigurationController extends Controller
 
     protected $variant;
 
+    /** @var ConfigStore */
+    protected $store;
+
     public function init()
     {
         $this->variants = [
@@ -166,5 +169,65 @@ class ConfigurationController extends Controller
             'label' => $this->translate('Channels'),
             'url'   => 'eventtracker/configuration/channels',
         ])->activate($name);
+    }
+
+    protected function addObjectTab()
+    {
+        $this->addSingleTab(sprintf($this->translate('%s Configuration'), $this->variant('singular')));
+    }
+
+    protected function getTableName()
+    {
+        return $this->variant('table');
+    }
+
+    protected function getStore()
+    {
+        if ($this->store === null) {
+            $this->store = new ConfigStore($this->db());
+        }
+
+        return $this->store;
+    }
+
+    /**
+     * @param UuidInterface $uuid
+     * @param string $table
+     * @return object
+     */
+    protected function loadObject(UuidInterface $uuid, $table)
+    {
+        return $this->getStore()->fetchObject($table, $uuid);
+    }
+
+    /**
+     * @return object|null
+     */
+    protected function getObject()
+    {
+        if ($uuid = $this->params->get('uuid')) {
+            return $this->loadObject(Uuid::fromString($uuid), $this->getTableName());
+        }
+
+        return null;
+    }
+
+    /**
+     * @return object
+     * @throws \Icinga\Exception\MissingParameterException
+     */
+    protected function requireObject()
+    {
+        return $this->loadObject(Uuid::fromString($this->params->getRequired('uuid')), $this->getTableName());
+    }
+
+    protected function flattenObjectSettings($object)
+    {
+        if (isset($object->settings)) {
+            foreach ($object->settings as $key => $value) {
+                $object->$key = $value;
+            }
+            unset($object->settings);
+        }
     }
 }
