@@ -4,10 +4,12 @@ namespace Icinga\Module\Eventtracker\Engine\Action;
 
 use Evenement\EventEmitterTrait;
 use gipfl\Translation\StaticTranslator;
+use Icinga\Module\Eventtracker\ConfigHelper;
 use Icinga\Module\Eventtracker\Engine\Action;
 use Icinga\Module\Eventtracker\Engine\FormExtension;
 use Icinga\Module\Eventtracker\Engine\SettingsProperty;
 use Icinga\Module\Eventtracker\Engine\SimpleTaskConstructor;
+use Icinga\Module\Eventtracker\Issue;
 use Icinga\Module\Eventtracker\Web\Form\Action\MailFormExtension;
 use React\EventLoop\LoopInterface;
 use Zend_Mail;
@@ -88,7 +90,7 @@ class MailAction extends SimpleTaskConstructor implements Action
         $this->paused = false;
     }
 
-    protected function mail()
+    public function process(Issue $issue): void
     {
         if ($this->paused) {
             $this->logger->info('Not sending Mail, Action has been paused');
@@ -97,8 +99,8 @@ class MailAction extends SimpleTaskConstructor implements Action
             ->setFrom($this->from)
             ->addTo($this->to);
 
-        $mail->setSubject($this->subject);
-        $mail->setBodyText($this->body);
+        $mail->setSubject(ConfigHelper::fillPlaceholders($this->subject, $issue));
+        $mail->setBodyText(ConfigHelper::fillPlaceholders($this->body, $issue));
 
         $mail->send(new Zend_Mail_Transport_Sendmail('-f ' . escapeshellarg($this->from)));
         $this->logger->debug('A mail has been sent to ' . $this->to);
