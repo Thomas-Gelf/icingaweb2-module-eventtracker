@@ -10,15 +10,14 @@ use Icinga\Module\Eventtracker\Hook\EventActionsHook;
 use Icinga\Module\Eventtracker\Issue;
 use Icinga\Module\Eventtracker\IssueHistory;
 use Icinga\Module\Eventtracker\SetOfIssues;
-use Icinga\Module\Eventtracker\Uuid;
 use Icinga\Module\Eventtracker\Web\Form\CloseIssueForm;
 use Icinga\Module\Eventtracker\Web\Form\TakeIssueForm;
 use Icinga\Module\Eventtracker\Web\Widget\IdoDetails;
 use Icinga\Module\Eventtracker\Web\Widget\IssueActivities;
 use Icinga\Module\Eventtracker\Web\Widget\IssueDetails;
 use Icinga\Module\Eventtracker\Web\Widget\IssueHeader;
-use Icinga\Web\Hook;
 use ipl\Html\Html;
+use Ramsey\Uuid\Uuid;
 
 class IssueController extends Controller
 {
@@ -61,18 +60,15 @@ class IssueController extends Controller
                 $this->content()->add($this->issueHeader($issue));
             }
         } else {
-            $uuid = Uuid::toBinary($uuid);
-            if ($issue = Issue::loadIfExists($uuid, $db)) {
+            $binaryUuid = Uuid::fromString($uuid)->getBytes();
+            if ($issue = Issue::loadIfExists($binaryUuid, $db)) {
                 $this->showIssue($issue);
-            } elseif (IssueHistory::exists($uuid, $db)) {
+            } elseif (IssueHistory::exists($binaryUuid, $db)) {
                 $this->addTitle($this->translate('Issue has been closed'));
                 $this->content()->add(Html::tag('p', [
                     'class' => 'state-hint ok'
-                ], $this->translate('This issue has been closed.')
-                    // . ' '
-                    // . $this->translate('Future versions will show an Issue history in this place')
-                ));
-                $issue = Issue::loadFromHistory($uuid, $db);
+                ], $this->translate('This issue has been closed.')));
+                $issue = Issue::loadFromHistory($binaryUuid, $db);
                 $this->showIssue($issue);
             } else {
                 $this->addTitle($this->translate('Not found'));
@@ -85,7 +81,7 @@ class IssueController extends Controller
 
     public function fileAction()
     {
-        $uuid = Uuid::toBinary($this->params->getRequired('uuid'));
+        $uuid = Uuid::fromString($this->params->getRequired('uuid'));
         $checksum = $this->params->getRequired('checksum');
         $filenameChecksum = $this->params->getRequired('filename_checksum');
 
