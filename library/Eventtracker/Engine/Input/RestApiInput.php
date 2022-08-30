@@ -6,6 +6,7 @@ use Evenement\EventEmitterTrait;
 use gipfl\Translation\StaticTranslator;
 use Icinga\Module\Eventtracker\Engine\FormExtension;
 use Icinga\Module\Eventtracker\Engine\Input;
+use Icinga\Module\Eventtracker\Engine\InputRunner;
 use Icinga\Module\Eventtracker\Engine\SettingsProperty;
 use Icinga\Module\Eventtracker\Engine\SimpleTaskConstructor;
 use Icinga\Module\Eventtracker\Web\Form\Input\RestApiFormExtension;
@@ -47,7 +48,7 @@ class RestApiInput extends SimpleTaskConstructor implements Input
 
     public function processObject($object)
     {
-        $this->emit('event', [$object]);
+        $this->emit(InputRunner::ON_EVENT, [$object]);
     }
 
     public function run(LoopInterface $loop)

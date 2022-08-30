@@ -14,6 +14,7 @@ use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\UuidInterface;
+use stdClass;
 
 class Channel implements LoggerAwareInterface
 {
@@ -94,12 +95,12 @@ class Channel implements LoggerAwareInterface
     {
         $this->logger->info("Wiring " . $input->getName() . ' to ' . $this->name);
         $inputUuid = $input->getUuid();
-        $input->on('event', function (\stdClass $event) use ($inputUuid, $ignoreUnknown) {
+        $input->on(InputRunner::ON_EVENT, function (stdClass $event) use ($inputUuid, $ignoreUnknown) {
             $this->process($inputUuid, $event, $ignoreUnknown);
         });
     }
 
-    public function process(UuidInterface $inputUuid, \stdClass $object, $ignoreUnknown = false)
+    public function process(UuidInterface $inputUuid, stdClass $object, $ignoreUnknown = false)
     {
         $this->rules->process($object);
         $db = DbFactory::db();

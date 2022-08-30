@@ -10,6 +10,9 @@ use React\EventLoop\LoopInterface;
 
 class InputRunner
 {
+    public const ON_EVENT = 'event';
+    public const ON_ERROR = 'error';
+
     /** @var LoopInterface */
     protected $loop;
 
@@ -54,7 +57,7 @@ class InputRunner
     {
         foreach ($this->inputs as $input) {
             $loop->futureTick(function () use ($input, $loop) {
-                $input->on('error', function ($error) {
+                $input->on(self::ON_ERROR, function ($error) {
                     echo $error->getMessage() . "\n";
                     // TODO: log error, detach and restart input
                 });
@@ -64,7 +67,7 @@ class InputRunner
 
         foreach ($this->actions as $action) {
             $loop->futureTick(function () use ($action, $loop) {
-                $action->on('error', function ($error) {
+                $action->on(self::ON_ERROR, function ($error) {
                     echo $error->getMessage() . "\n";
                     // TODO: log error, detach and restart input
                 });

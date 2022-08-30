@@ -6,6 +6,7 @@ use Evenement\EventEmitterTrait;
 use gipfl\Translation\StaticTranslator;
 use Icinga\Module\Eventtracker\Engine\FormExtension;
 use Icinga\Module\Eventtracker\Engine\Input;
+use Icinga\Module\Eventtracker\Engine\InputRunner;
 use Icinga\Module\Eventtracker\Engine\SettingsProperty;
 use Icinga\Module\Eventtracker\Engine\SimpleTaskConstructor;
 use Icinga\Module\Eventtracker\Web\Form\Input\KafkaFormExtension;
@@ -163,8 +164,7 @@ class KafkaInput extends SimpleTaskConstructor implements Input
         }
 
         try {
-            // TODO: JSON decoding class
-            $this->emit('event', [Json::decode($line)]);
+            $this->emit(InputRunner::ON_EVENT, [Json::decode($line)]);
         } catch (\Exception $e) {
             $this->logger->error("Failed to process '$line': " . $e->getMessage());
         }
@@ -173,7 +173,7 @@ class KafkaInput extends SimpleTaskConstructor implements Input
     protected function processSpecialLine($line)
     {
         if (substr($line, 0, 7) === 'ERROR: ') {
-            $this->emit('error', [new RuntimeException(rtrim(substr($line, 7)))]);
+            $this->emit(InputRunner::ON_ERROR, [new RuntimeException(rtrim(substr($line, 7)))]);
         } elseif (preg_match('/^Reached end of topic (.+?) \[(\d+)] at offset (\d+)$/', $line, $match)) {
             list(, $topic, $partition, $offset) = $match;
             // printf("New offset for %s[%s] is %d\n", $topic, $partition, $offset);
