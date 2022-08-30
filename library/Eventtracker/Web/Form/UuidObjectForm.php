@@ -100,7 +100,7 @@ class UuidObjectForm extends Form
                 unset($values[$property]);
             }
 
-            if (! empty($settings)) {
+            if (! empty($values)) {
                 $properties['settings'] = $values;
             }
         } else {
