@@ -100,17 +100,7 @@ class Channel implements LoggerAwareInterface
         $this->rules->process($object);
         $db = DbFactory::db();
         $receiver = new EventReceiver($db);
-
-        $enforced = ModifierChain::fromSerialization([
-            ['object_name', 'ShortenString', (object) ['max_length' => 128]],
-            ['object_class', 'ShortenString', (object) ['max_length' => 128]],
-            ['object_class', 'ClassInventoryLookup'],
-            ['priority', 'FallbackValue', (object) ['value' => 'normal']],
-            ['input_uuid', 'SetValue', (object) ['value' => $inputUuid->toString()]],
-            ['sender_id', 'SetValue', (object) ['value' => '99999']],
-        ]);
-
-        $enforced->process($object);
+        $this->getEnforcedModifiers($inputUuid)->process($object);
         // print_r($object);
         // $object->sender_event_id = Uuid::uuid4()->toString();
 
@@ -134,5 +124,17 @@ class Channel implements LoggerAwareInterface
         } else {
             $this->logger->debug("No Issue");
         }
+    }
+
+    protected function getEnforcedModifiers(UuidInterface $inputUuid): ModifierChain
+    {
+        return ModifierChain::fromSerialization([
+            ['object_name', 'ShortenString', (object) ['max_length' => 128]],
+            ['object_class', 'ShortenString', (object) ['max_length' => 128]],
+            ['object_class', 'ClassInventoryLookup'],
+            ['priority', 'FallbackValue', (object) ['value' => 'normal']],
+            ['input_uuid', 'SetValue', (object) ['value' => $inputUuid->toString()]],
+            ['sender_id', 'SetValue', (object) ['value' => '99999']],
+        ]);
     }
 }
