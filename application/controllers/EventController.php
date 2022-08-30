@@ -80,8 +80,7 @@ class EventController extends Controller
 
         /** @var Input $possibleInput */
         foreach ($inputs as $possibleInput) {
-            if (
-                $possibleInput instanceof RestApiInput
+            if ($possibleInput instanceof RestApiInput
                 && $possibleInput->getSettings()->get('token') === $token
             ) {
                 $input = $possibleInput;

@@ -26,8 +26,7 @@ abstract class Controller extends CompatController
      */
     public function init()
     {
-        if (
-            ! $this->getRequest()->isApiRequest()
+        if (! $this->getRequest()->isApiRequest()
             && $this->Config()->get('ui', 'disabled', 'no') === 'yes'
         ) {
             throw new NotFoundError('Not found');

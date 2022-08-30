@@ -99,8 +99,7 @@ class IssueController extends Controller
             true
         );
 
-        if (
-            $this->getRequest()->getHeader('Cache-Control') !== 'no-cache'
+        if ($this->getRequest()->getHeader('Cache-Control') !== 'no-cache'
             && $this->getRequest()->getHeader('If-None-Match') === $checksum
         ) {
             $this

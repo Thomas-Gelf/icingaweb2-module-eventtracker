@@ -236,8 +236,7 @@ class MSendCommandLine
 
                 if ($inQuote === "'") {
                     // we're within a 'single quoted' string
-                    if (
-                        $c === '\\'
+                    if ($c === '\\'
                         && isset($command[$i + 1])
                         && ($command[$i + 1] === "'" || $command[$i + 1] === '\\')
                     ) {

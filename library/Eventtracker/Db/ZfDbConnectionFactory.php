@@ -119,7 +119,6 @@ class ZfDbConnectionFactory
                 // have several columns with explicit COLLATE instructions
                 $command .= ' COLLATE latin1_general_ci';
             }
-
         }
 
         $command .= ", time_zone='" . static::defaultTimezoneOffset() . "';";

@@ -167,7 +167,8 @@ class KafkaInput extends SimpleInputConstructor
         }
     }
 
-    protected function processSpecialLine($line) {
+    protected function processSpecialLine($line)
+    {
         if (substr($line, 0, 7) === 'ERROR: ') {
             $this->emit('error', [new RuntimeException(rtrim(substr($line, 7)))]);
         } elseif (preg_match('/^Reached end of topic (.+?) \[(\d+)] at offset (\d+)$/', $line, $match)) {

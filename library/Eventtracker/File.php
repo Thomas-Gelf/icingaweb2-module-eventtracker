@@ -64,10 +64,11 @@ class File
     public static function loadByIssueUuidAndChecksum(
         UuidInterface $uuid,
         string $checksum,
-        string $filenameChecksum, Db $db
-    ): ?self
-    {
-        $row = $db->fetchRow(static::selectFiles($db)
+        string $filenameChecksum,
+        Db $db
+    ): ?self {
+        $row = $db->fetchRow(
+            static::selectFiles($db)
             ->where('i.issue_uuid = ?', $uuid->getBytes())
             ->where('i.file_checksum = ?', $checksum)
             ->where('i.filename_checksum = ?', $filenameChecksum)
@@ -81,12 +82,9 @@ class File
 
     protected static function selectFiles(Db $db): Select
     {
-        return $db
-            ->select()
+        return $db->select()
             ->from(['f' => static::$tableName])
-            ->joinInner(
-                ['i' => IssueFile::getTableName()], 'f.checksum = i.file_checksum', ['filename', 'issue_uuid']
-            )
+            ->joinInner(['i' => IssueFile::getTableName()], 'f.checksum = i.file_checksum', ['filename', 'issue_uuid'])
             ->order('i.ctime');
     }
 

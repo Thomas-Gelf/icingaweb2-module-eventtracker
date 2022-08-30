@@ -16,6 +16,5 @@ class ModifierRegistry
 
     public function getInstance($name, Settings $settings)
     {
-
     }
 }

@@ -167,7 +167,6 @@ class IdoDetails extends BaseHtmlElement
                 'style' => 'width: 50%; display: inline-block'
             ]);
             $details->addNameValuePairs((array) $ci->vars);
-
         } else {
             $details = $this->translate('No related host is known to Icinga');
         }

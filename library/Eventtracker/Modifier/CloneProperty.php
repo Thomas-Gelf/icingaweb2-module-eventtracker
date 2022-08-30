@@ -9,7 +9,11 @@ class CloneProperty extends BaseModifier
     public function transform($object, string $propertyName)
     {
         $target = $this->settings->getRequired('target_property');
-        ObjectUtils::setSpecificValue($object, $target, ObjectUtils::deepClone(ObjectUtils::getSpecificValue($object, $propertyName)));
+        ObjectUtils::setSpecificValue(
+            $object,
+            $target,
+            ObjectUtils::deepClone(ObjectUtils::getSpecificValue($object, $propertyName))
+        );
         return ObjectUtils::getSpecificValue($object, $propertyName);
     }
 }
