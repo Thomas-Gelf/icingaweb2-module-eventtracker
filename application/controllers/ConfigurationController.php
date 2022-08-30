@@ -57,6 +57,16 @@ class ConfigurationController extends Controller
                 'form_class'  => ChannelConfigForm::class,
                 'registry'    => InputRegistry::class,
             ],
+            'apitokens' => [
+                'singular' => $this->translate('API Token'),
+                'plural'   => $this->translate('Api Tokens'),
+                'table'    => 'api_token',
+                'list_url' => 'eventtracker/configuration/apitokens',
+                'url'      => 'eventtracker/configuration/apitoken',
+                'table_class' => ApiTokensTable::class,
+                'form_class'  => ApiTokenForm::class,
+                'registry'    => InputRegistry::class,
+            ],
             'actions' => [
                 'singular' => $this->translate('Action'),
                 'plural'   => $this->translate('Actions'),
@@ -84,6 +94,19 @@ class ConfigurationController extends Controller
     public function inputAction()
     {
         $this->variant = 'inputs';
+        $this->addObjectTab();
+        $this->content()->add($this->getForm());
+    }
+
+    public function apitokensAction()
+    {
+        $this->variant = 'apitokens';
+        $this->showList();
+    }
+
+    public function apitokenAction()
+    {
+        $this->variant = 'apitokens';
         $this->addObjectTab();
         $this->content()->add($this->getForm());
     }

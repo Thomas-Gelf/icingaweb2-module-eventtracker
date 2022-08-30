@@ -32,6 +32,14 @@ CREATE TABLE channel (
   UNIQUE INDEX(label)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE utf8mb4_bin;
 
+CREATE TABLE api_token (
+  uuid VARBINARY(16) NOT NULL,
+  label VARCHAR(32) NOT NULL,
+  permissions TEXT DEFAULT NULL,
+  PRIMARY KEY (uuid),
+  UNIQUE INDEX(label)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE utf8mb4_bin;
+
 CREATE TABLE icinga_ci (
   object_id BIGINT(20) UNSIGNED NOT NULL,
   host_id BIGINT(20) UNSIGNED NULL DEFAULT NULL,
@@ -269,4 +277,4 @@ CREATE TABLE eventtracker_schema_migration (
 
 INSERT INTO eventtracker_schema_migration
   (schema_version, migration_time)
-VALUES (6, NOW());
+VALUES (7, NOW());
