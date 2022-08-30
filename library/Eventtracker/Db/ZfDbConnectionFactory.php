@@ -135,7 +135,7 @@ class ZfDbConnectionFactory
         ];
         foreach ($generic as $key) {
             $value = $config->get($key);
-            if (strlen($value) > 0) {
+            if ($value !== null && strlen($value) > 0) {
                 $params[$key] = $value;
             }
         }
