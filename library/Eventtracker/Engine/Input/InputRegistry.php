@@ -7,39 +7,35 @@ use Icinga\Module\Eventtracker\Engine\Registry;
 
 class InputRegistry implements Registry
 {
-    protected $senderClasses = [
+    protected $implementations = [
         'syslog'     => SyslogInput::class,
         'kafka'      => KafkaInput::class,
         'restApi'    => RestApiInput::class,
         // 'scom_alert' =>
     ];
 
-    /**
-     * @param string $identifier
-     * @return Input
-     */
-    public function getInstance($identifier)
+    public function getInstance(string $identifier): Input
     {
         $class = $this->getClassName($identifier);
         return new $class;
     }
 
-    public function addSender($identifier, $class)
+    public function addImplementation(string $identifier, string $class)
     {
-        $this->senderClasses[$identifier] = $class;
+        $this->implementations[$identifier] = $class;
     }
 
-    public function getClassName($identifier)
+    public function getClassName(string $identifier): string
     {
         // TODO: Throw if not set
-        return $this->senderClasses[$identifier];
+        return $this->implementations[$identifier];
     }
 
-    public function listImplementations()
+    public function listImplementations(): array
     {
         /** @var string|Input $class */
         $implementations = [];
-        foreach ($this->senderClasses as $key => $class) {
+        foreach ($this->implementations as $key => $class) {
             $implementations[$key] = $class::getLabel();
         }
 

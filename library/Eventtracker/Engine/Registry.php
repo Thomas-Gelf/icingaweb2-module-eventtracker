@@ -4,13 +4,9 @@ namespace Icinga\Module\Eventtracker\Engine;
 
 interface Registry
 {
-    /**
-     * @param string $identifier
-     * @return object
-     */
-    public function getInstance($identifier);
+    public function getInstance(string $identifier);
 
-    public function getClassName($identifier);
+    public function getClassName(string $identifier): string;
 
-    public function listImplementations();
+    public function listImplementations(): array;
 }
