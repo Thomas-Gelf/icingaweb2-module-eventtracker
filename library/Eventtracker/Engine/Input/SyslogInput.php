@@ -16,6 +16,9 @@ use React\Socket\UnixServer;
 
 class SyslogInput extends SimpleInputConstructor
 {
+    const ON_EVENT = 'event';
+    const ON_ERROR = 'error';
+
     use EventEmitterTrait;
     use SettingsProperty;
 
@@ -128,7 +131,7 @@ class SyslogInput extends SimpleInputConstructor
                         || ! isset($event->attributes->syslog_sender_pid)
                         || $event->attributes->syslog_sender_pid !== posix_getpid()
                     ) {
-                        $this->emit('event', [$event]);
+                        $this->emit(self::ON_EVENT, [$event]);
                     }
                 } catch (\Exception $e) {
                     $this->logger->error("Failed to process '$line': " . $e->getMessage());
@@ -141,7 +144,7 @@ class SyslogInput extends SimpleInputConstructor
             });
         });
         $server->on('error', function ($error) {
-            $this->emit('error', [$error]);
+            $this->emit(self::ON_ERROR, [$error]);
         });
     }
 
