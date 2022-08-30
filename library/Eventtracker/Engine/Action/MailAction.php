@@ -32,6 +32,8 @@ class MailAction extends SimpleTaskConstructor
     /** @var string */
     protected $body;
 
+    protected $paused = true;
+
     protected function initialize()
     {
         $settings = $this->getSettings();
@@ -66,22 +68,29 @@ class MailAction extends SimpleTaskConstructor
 
     public function start()
     {
+        $this->resume();
     }
 
     public function stop()
     {
+        $this->pause();
     }
 
     public function pause()
     {
+        $this->paused = true;
     }
 
     public function resume()
     {
+        $this->paused = false;
     }
 
     protected function mail()
     {
+        if ($this->paused) {
+            $this->logger->info('Not sending Mail, Action has been paused');
+        }
         $mail = (new Zend_Mail('UTF-8'))
             ->setFrom($this->from)
             ->addTo($this->to);
@@ -90,5 +99,6 @@ class MailAction extends SimpleTaskConstructor
         $mail->setBodyText($this->body);
 
         $mail->send(new Zend_Mail_Transport_Sendmail('-f ' . escapeshellarg($this->from)));
+        $this->logger->debug('A mail has been sent to ' . $this->to);
     }
 }
