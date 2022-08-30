@@ -15,6 +15,7 @@ use Zend_Mail_Transport_Sendmail;
 
 class MailAction extends SimpleTaskConstructor implements Action
 {
+    use ActionProperties;
     use EventEmitterTrait;
     use SettingsProperty;
 

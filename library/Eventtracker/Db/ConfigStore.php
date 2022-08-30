@@ -4,9 +4,13 @@ namespace Icinga\Module\Eventtracker\Db;
 
 use gipfl\Json\JsonString;
 use gipfl\ZfDb\Adapter\Adapter;
+use Icinga\Module\Eventtracker\Engine\Action;
+use Icinga\Module\Eventtracker\Engine\Action\ActionRegistry;
 use Icinga\Module\Eventtracker\Engine\Channel;
 use Icinga\Module\Eventtracker\Engine\Input;
 use Icinga\Module\Eventtracker\Engine\Input\InputRegistry;
+use Icinga\Module\Eventtracker\Engine\Registry;
+use Icinga\Module\Eventtracker\Engine\Task;
 use Icinga\Module\Eventtracker\Modifier\Settings;
 use Psr\Log\LoggerInterface;
 use Ramsey\Uuid\Uuid;
@@ -17,9 +21,6 @@ class ConfigStore
 {
     protected $db;
 
-    /** @var InputRegistry */
-    protected $registry;
-
     protected $serializedProperties = ['settings', 'rules', 'input_uuids'];
 
     /** @var LoggerInterface */
@@ -28,7 +29,6 @@ class ConfigStore
     public function __construct(Adapter $db, LoggerInterface $logger = null)
     {
         $this->db = $db;
-        $this->registry = new InputRegistry();
         $this->logger = $logger;
     }
 
@@ -37,17 +37,17 @@ class ConfigStore
         $inputs = [];
         foreach ($this->fetchObjects('input', $filter) as $row) {
             $row->uuid = Uuid::fromBytes($row->uuid);
-            $inputs[$row->uuid->toString()] = $this->initializeInputFromDbRow($row);
+            $inputs[$row->uuid->toString()] = $this->initializeTaskFromDbRow($row, new InputRegistry(), Input::class);
         }
 
         return $inputs;
     }
 
-    protected function initializeInputFromDbRow($row)
+    protected function initializeTaskFromDbRow($row, Registry $registry, $contract): Task
     {
-        $implementation = $this->registry->getClassName($row->implementation);
+        $implementation = $registry->getClassName($row->implementation);
         $interfaces = class_implements($implementation);
-        if (isset($interfaces[Input::class])) {
+        if (isset($interfaces[$contract])) {
             return new $implementation(
                 Settings::fromSerialization($row->settings),
                 $row->uuid,
@@ -55,7 +55,7 @@ class ConfigStore
                 $this->logger
             );
         } else {
-            throw new RuntimeException("Input ignored, $implementation is no valid implementation\n");
+            throw new RuntimeException("Task ignored, $implementation is no valid implementation for $contract");
         }
     }
 
@@ -76,6 +76,21 @@ class ConfigStore
         }
 
         return $channels;
+    }
+
+    public function loadActions($filter = []): array
+    {
+        $actions = [];
+        foreach ($this->fetchObjects('action', $filter) as $row) {
+            $row->uuid = Uuid::fromBytes($row->uuid);
+            /** @var Action $action */
+            $action = $this->initializeTaskFromDbRow($row, new ActionRegistry(), Action::class);
+            $actions[$row->uuid->toString()] = $action
+                ->setEnabled($row->enabled === 'y')
+                ->setFilter($row->filter);
+        }
+
+        return $actions;
     }
 
     public function fetchObject($table, UuidInterface $uuid)
