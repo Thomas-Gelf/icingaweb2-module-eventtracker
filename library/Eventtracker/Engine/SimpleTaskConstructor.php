@@ -8,7 +8,7 @@ use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 use Ramsey\Uuid\UuidInterface;
 
-abstract class SimpleTaskConstructor implements Task
+abstract class SimpleTaskConstructor
 {
     use LoggerAwareTrait;
     use SettingsProperty;

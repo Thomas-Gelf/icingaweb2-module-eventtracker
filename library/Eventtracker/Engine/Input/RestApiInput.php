@@ -5,12 +5,13 @@ namespace Icinga\Module\Eventtracker\Engine\Input;
 use Evenement\EventEmitterTrait;
 use gipfl\Translation\StaticTranslator;
 use Icinga\Module\Eventtracker\Engine\FormExtension;
+use Icinga\Module\Eventtracker\Engine\Input;
 use Icinga\Module\Eventtracker\Engine\SettingsProperty;
 use Icinga\Module\Eventtracker\Engine\SimpleTaskConstructor;
 use Icinga\Module\Eventtracker\Web\Form\Input\RestApiFormExtension;
 use React\EventLoop\LoopInterface;
 
-class RestApiInput extends SimpleTaskConstructor
+class RestApiInput extends SimpleTaskConstructor implements Input
 {
     use EventEmitterTrait;
     use SettingsProperty;

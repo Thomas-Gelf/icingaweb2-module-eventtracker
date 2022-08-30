@@ -5,6 +5,7 @@ namespace Icinga\Module\Eventtracker\Engine\Input;
 use Evenement\EventEmitterTrait;
 use gipfl\Translation\StaticTranslator;
 use Icinga\Module\Eventtracker\Engine\FormExtension;
+use Icinga\Module\Eventtracker\Engine\Input;
 use Icinga\Module\Eventtracker\Engine\SettingsProperty;
 use Icinga\Module\Eventtracker\Engine\SimpleTaskConstructor;
 use Icinga\Module\Eventtracker\Web\Form;
@@ -16,7 +17,7 @@ use React\EventLoop\LoopInterface;
 use React\Socket\ConnectionInterface;
 use React\Socket\UnixServer;
 
-class SyslogInput extends SimpleTaskConstructor
+class SyslogInput extends SimpleTaskConstructor implements Input
 {
     const ON_EVENT = 'event';
     const ON_ERROR = 'error';
