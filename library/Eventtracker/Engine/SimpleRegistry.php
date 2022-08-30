@@ -18,9 +18,7 @@ abstract class SimpleRegistry implements Registry
     public function getClassName($identifier): string
     {
         if (! isset($this->implementations[$identifier])) {
-            throw new InvalidArgumentException(sprintf(
-                'No class found for %s', $identifier
-            ));
+            throw new InvalidArgumentException("No class found for $identifier");
         }
 
         return $this->implementations[$identifier];
