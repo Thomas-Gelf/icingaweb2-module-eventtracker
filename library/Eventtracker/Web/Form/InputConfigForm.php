@@ -2,8 +2,8 @@
 
 namespace Icinga\Module\Eventtracker\Web\Form;
 
+use Icinga\Module\Eventtracker\Engine\FormExtension;
 use Icinga\Module\Eventtracker\Engine\Input;
-use Icinga\Module\Eventtracker\Engine\Input\FormExtension;
 
 class InputConfigForm extends UuidObjectForm
 {

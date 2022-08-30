@@ -1,6 +1,6 @@
 <?php
 
-namespace Icinga\Module\Eventtracker\Engine\Input;
+namespace Icinga\Module\Eventtracker\Engine;
 
 use ipl\Html\Form;
 
