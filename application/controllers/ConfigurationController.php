@@ -11,6 +11,7 @@ use Icinga\Module\Eventtracker\Db\ConfigStore;
 use Icinga\Module\Eventtracker\Engine\Action\ActionRegistry;
 use Icinga\Module\Eventtracker\Modifier\ModifierChain;
 use Icinga\Module\Eventtracker\Modifier\ModifierUtils;
+use Icinga\Module\Eventtracker\Web\Form\ActionConfigForm;
 use Icinga\Module\Eventtracker\Web\Form\ApiTokenForm;
 use Icinga\Module\Eventtracker\Web\Form\ChannelConfigForm;
 use Icinga\Module\Eventtracker\Web\Form\InputConfigForm;
@@ -71,11 +72,11 @@ class ConfigurationController extends Controller
             'actions' => [
                 'singular' => $this->translate('Action'),
                 'plural'   => $this->translate('Actions'),
-                'table'    => 'notification',
+                'table'    => 'action',
                 'list_url' => 'eventtracker/configuration/actions',
                 'url'      => 'eventtracker/configuration/action',
                 'table_class' => ConfiguredActionsTable::class,
-                'form_class'  => ChannelConfigForm::class,
+                'form_class'  => ActionConfigForm::class,
                 'registry'    => ActionRegistry::class,
             ],
         ];
