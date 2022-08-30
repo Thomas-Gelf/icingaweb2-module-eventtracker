@@ -2,6 +2,7 @@
 
 namespace Icinga\Module\Eventtracker\Engine;
 
+use Evenement\EventEmitterTrait;
 use Icinga\Module\Eventtracker\DbFactory;
 use Icinga\Module\Eventtracker\Event;
 use Icinga\Module\Eventtracker\EventReceiver;
@@ -16,8 +17,11 @@ use Ramsey\Uuid\UuidInterface;
 
 class Channel implements LoggerAwareInterface
 {
+    use EventEmitterTrait;
     use LoggerAwareTrait;
     use SettingsProperty;
+
+    public const ON_ISSUE = 'issue';
 
     /** @var UuidInterface */
     protected $uuid;
@@ -121,6 +125,7 @@ class Channel implements LoggerAwareInterface
         $issue = $receiver->processEvent($event);
         if ($issue) {
             $this->logger->info("Issue " . $issue->getNiceUuid());
+            $this->emit(static::ON_ISSUE, [$issue]);
         } else {
             $this->logger->debug("No Issue");
         }
