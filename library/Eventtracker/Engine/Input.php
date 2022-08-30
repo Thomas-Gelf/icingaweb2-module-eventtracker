@@ -3,7 +3,6 @@
 namespace Icinga\Module\Eventtracker\Engine;
 
 use Evenement\EventEmitterInterface;
-use Icinga\Module\Eventtracker\Engine\Input\FormExtension;
 use Icinga\Module\Eventtracker\Modifier\Settings;
 use Icinga\Module\Eventtracker\Web\Form;
 use Psr\Log\LoggerAwareInterface;

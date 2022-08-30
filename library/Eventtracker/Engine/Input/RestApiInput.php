@@ -4,6 +4,7 @@ namespace Icinga\Module\Eventtracker\Engine\Input;
 
 use Evenement\EventEmitterTrait;
 use gipfl\Translation\StaticTranslator;
+use Icinga\Module\Eventtracker\Engine\FormExtension;
 use Icinga\Module\Eventtracker\Engine\SettingsProperty;
 use Icinga\Module\Eventtracker\Web\Form\Input\RestApiFormExtension;
 use React\EventLoop\LoopInterface;

@@ -2,7 +2,6 @@
 
 namespace Icinga\Module\Eventtracker\Engine;
 
-use Icinga\Module\Eventtracker\Engine\Input\FormExtension;
 use Icinga\Module\Eventtracker\Modifier\Settings;
 use Psr\Log\LoggerAwareInterface;
 use Ramsey\Uuid\UuidInterface;
