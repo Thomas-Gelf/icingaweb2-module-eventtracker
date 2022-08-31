@@ -119,16 +119,23 @@ class CommandAction extends SimpleTaskConstructor implements Action
         });
 
         $process->start($this->loop);
-        $process->stdout->on('data', function ($chunk) {
-            // TODO: Logging
+        $process->stdout->on('data', function ($chunk, $issue) {
+            $this->logger->debug("{$issue->getUuid()}: {$this->command}: ($chunk)");
         });
-        $process->on('exit', function ($exitCode, $termSignal) use ($deferred) {
-            // TODO: Logging
+        $process->stderr->on('data', function ($chunk, $issue) {
+            $this->logger->error("{$issue->getUuid()}: {$this->command}: [$chunk]");
+        });
+        $process->on('exit', function ($exitCode, $termSignal) use ($deferred, $issue) {
             $state = new FinishedProcessState($exitCode, $termSignal);
             if ($state->succeeded()) {
                 $deferred->resolve();
             } else {
-                $deferred->reject(new Exception($state->getReason()));
+                $deferred->reject(new Exception(sprintf(
+                    'Command %s failed for issue %s: %s',
+                    $this->command,
+                    $issue->getUuid(),
+                    $state->getReason()
+                )));
             }
         });
 
