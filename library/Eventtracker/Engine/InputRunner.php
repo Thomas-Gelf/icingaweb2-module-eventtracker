@@ -6,10 +6,15 @@ use Closure;
 use Icinga\Module\Eventtracker\Db\ConfigStore;
 use Icinga\Module\Eventtracker\Engine\Input\KafkaInput;
 use Icinga\Module\Eventtracker\Issue;
+use Psr\Log\LoggerAwareInterface;
+use Psr\Log\LoggerAwareTrait;
+use Psr\Log\NullLogger;
 use React\EventLoop\LoopInterface;
 
-class InputRunner
+class InputRunner implements LoggerAwareInterface
 {
+    use LoggerAwareTrait;
+
     public const ON_EVENT = 'event';
     public const ON_ERROR = 'error';
 
@@ -34,6 +39,8 @@ class InputRunner
         // they changed. Implementations must reload/restart on their own.
         // This one is about a single Input
         $this->store = $store;
+
+        $this->logger = new NullLogger();
     }
 
     public function start(LoopInterface $loop)
@@ -104,7 +111,9 @@ class InputRunner
                 continue;
             }
 
-            $action->process($issue);
+            $action->process($issue)->then(null, function ($reason) {
+                $this->logger->error($reason);
+            });
         }
     }
 }
