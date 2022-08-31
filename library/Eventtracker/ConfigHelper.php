@@ -105,11 +105,12 @@ class ConfigHelper
     /**
      * @param $string
      * @param Event|Issue|object $issue
+     * @param callable|null $callback
      * @return string|null
      */
-    public static function fillPlaceholders($string, $issue)
+    public static function fillPlaceholders($string, $issue, callable $callback = null)
     {
-        return \preg_replace_callback('/({[^}]+})/', function ($match) use ($issue) {
+        $replace = function ($match) use ($issue) {
             $property = \trim($match[1], '{}');
             list($property, $modifier) = static::extractPropertyModifier($property);
             if ($issue instanceof Issue) {
@@ -132,7 +133,18 @@ class ConfigHelper
             static::applyPropertyModifier($value, $modifier);
 
             return $value;
-        }, $string);
+        };
+
+        if ($callback !== null) {
+            $_replace = $replace;
+            $replace = function ($match) use ($callback, $_replace) {
+                $value = $_replace($match);
+
+                return $callback($value);
+            };
+        }
+
+        return \preg_replace_callback('/({[^}]+})/', $replace, $string);
     }
 
     protected static function applyPropertyModifier(&$value, $modifier)
