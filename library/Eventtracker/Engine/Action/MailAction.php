@@ -12,8 +12,10 @@ use Icinga\Module\Eventtracker\Engine\SimpleTaskConstructor;
 use Icinga\Module\Eventtracker\Issue;
 use Icinga\Module\Eventtracker\Web\Form\Action\MailFormExtension;
 use React\EventLoop\LoopInterface;
+use React\Promise\PromiseInterface;
 use Zend_Mail;
 use Zend_Mail_Transport_Sendmail;
+use function React\Promise\resolve;
 
 class MailAction extends SimpleTaskConstructor implements Action
 {
@@ -90,11 +92,21 @@ class MailAction extends SimpleTaskConstructor implements Action
         $this->paused = false;
     }
 
-    public function process(Issue $issue): void
+    public function process(Issue $issue): PromiseInterface
+    {
+        $this->mail($issue);
+
+        return resolve();
+    }
+
+    protected function mail(Issue $issue): void
     {
         if ($this->paused) {
             $this->logger->info('Not sending Mail, Action has been paused');
+
+            return;
         }
+
         $mail = (new Zend_Mail('UTF-8'))
             ->setFrom($this->from)
             ->addTo($this->to);

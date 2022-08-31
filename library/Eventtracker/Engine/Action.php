@@ -4,6 +4,7 @@ namespace Icinga\Module\Eventtracker\Engine;
 
 use Icinga\Data\Filter\Filter;
 use Icinga\Module\Eventtracker\Issue;
+use React\Promise\PromiseInterface;
 
 interface Action extends Task
 {
@@ -15,5 +16,5 @@ interface Action extends Task
 
     public function getFilter(): ?Filter;
 
-    public function process(Issue $issue): void;
+    public function process(Issue $issue): PromiseInterface;
 }
