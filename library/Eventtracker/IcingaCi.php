@@ -2,6 +2,7 @@
 
 namespace Icinga\Module\Eventtracker;
 
+use gipfl\Json\JsonString;
 use gipfl\ZfDb\Adapter\Adapter as Db;
 use Icinga\Application\Config;
 
@@ -119,7 +120,7 @@ class IcingaCi
         $vars = [];
         foreach ($db->fetchAll($query) as $var) {
             if ($var->varformat === 'json') {
-                $vars[$var->varname] = \json_decode($var->varvalue);
+                $vars[$var->varname] = JsonString::decode($var->varvalue);
             } else {
                 $vars[$var->varname] = (string) $var->varvalue;
             }
