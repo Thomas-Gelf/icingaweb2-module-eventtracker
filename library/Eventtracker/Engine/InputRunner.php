@@ -111,7 +111,7 @@ class InputRunner implements LoggerAwareInterface
 
             $create = array_diff_key($actions, $this->actions);
             $update = array_intersect_key($actions, $this->actions);
-            $delete = array_diff($this->actions, $actions);
+            $delete = array_diff_key($this->actions, $actions);
 
             /** @var Action $action */
             foreach ($create as $k => $action) {
@@ -137,7 +137,7 @@ class InputRunner implements LoggerAwareInterface
             }
 
             foreach ($delete as $k => $action) {
-                // $action is from array_diff($this->actions, $actions) from above.
+                // $action is from array_diff_key($this->actions, $actions) from above.
                 $action->stop();
                 unset($this->actions[$k]);
             }
