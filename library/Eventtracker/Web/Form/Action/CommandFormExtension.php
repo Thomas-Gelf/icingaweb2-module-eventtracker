@@ -20,13 +20,13 @@ Placeholders are expressed with %s where %s can reference any issue property.
 Issue attributes can be accessed via %s and custom variables via %s.
 EOT
             ),
-                Html::tag('b', '${placeholder}'),
+                Html::tag('b', '{placeholder}'),
                 Html::tag('b', 'placeholder'),
                 Html::tag('b', 'attributes.key'),
                 Html::tag('b', 'host.vars.key')
             ),
             'label'       => $this->translate('Command line'),
-            'placeholder' => '/path/to/command --severity ${severity} --attribute ${attributes.env} --os ${host.vars.os}',
+            'placeholder' => '/path/to/command --severity {severity} --attribute {attributes.env} --os {host.vars.os}',
             'required'    => true
         ]);
     }

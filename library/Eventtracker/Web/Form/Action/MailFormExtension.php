@@ -35,13 +35,13 @@ Placeholders are expressed with %s where %s can reference any issue property.
 Issue attributes can be accessed via  and custom variables via %s.
 EOT,
             ),
-                Html::tag('b', '${placeholder}'),
+                Html::tag('b', '{placeholder}'),
                 Html::tag('b', 'placeholder'),
                 Html::tag('b', 'attributes.key'),
                 Html::tag('b', 'host.vars.key')
             ),
             'label'       => $this->translate('Subject'),
-            'placeholder' => '${severity} issue on ${host_name} '
+            'placeholder' => '{severity} issue on {host_name} '
         ]);
         $form->addElement('textarea', 'body', [
             'description' => $this->translate(
@@ -49,9 +49,9 @@ EOT,
             ),
             'label'       => $this->translate('Body'),
             'placeholder' => <<<'EOT'
-${message}
-Env: ${attributes.env}
-OS: ${host.vars.os}'
+{message}
+Env: {attributes.env}
+OS: {host.vars.os}'
 EOT,
             'rows'        => 3
         ]);
