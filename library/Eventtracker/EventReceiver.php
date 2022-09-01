@@ -7,7 +7,7 @@ use Icinga\Module\Eventtracker\Db\ConfigStore;
 use Icinga\Module\Eventtracker\Engine\Action;
 use Icinga\Module\Eventtracker\Engine\Action\ActionHelper;
 use Icinga\Module\Eventtracker\Engine\Counters;
-use React\EventLoop\Loop;
+use React\EventLoop\Factory;
 use function Clue\React\Block\await as block_await;
 
 class EventReceiver
@@ -71,7 +71,7 @@ class EventReceiver
 
         if ($this->runActions && $issue->hasBeenCreatedNow()) {
             $actions = (new ConfigStore($this->db))->loadActions(['enabled' => 'y']);
-            $loop = Loop::get();
+            $loop = Factory::create();
             /** @var Action $action */
             foreach ($actions as $action) {
                 $action->run($loop);
