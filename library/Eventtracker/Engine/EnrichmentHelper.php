@@ -1,6 +1,6 @@
 <?php
 
-namespace Icinga\Module\Eventtracker\Engine\Action;
+namespace Icinga\Module\Eventtracker\Engine;
 
 use gipfl\Json\JsonString;
 use gipfl\ZfDb\Adapter\Adapter;

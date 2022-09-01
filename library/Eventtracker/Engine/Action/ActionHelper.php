@@ -5,6 +5,7 @@ namespace Icinga\Module\Eventtracker\Engine\Action;
 use gipfl\ZfDb\Adapter\Adapter;
 use Icinga\Module\Eventtracker\ActionHistory;
 use Icinga\Module\Eventtracker\Engine\Action;
+use Icinga\Module\Eventtracker\Engine\EnrichmentHelper;
 use Icinga\Module\Eventtracker\Issue;
 use React\Promise\ExtendedPromiseInterface;
 use Throwable;
