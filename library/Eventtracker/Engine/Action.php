@@ -8,6 +8,10 @@ use React\Promise\PromiseInterface;
 
 interface Action extends Task
 {
+    public function setActionDescription(string $description);
+
+    public function getActionDescription(): ?string;
+
     public function setEnabled(bool $enabled);
 
     public function isEnabled(): bool;

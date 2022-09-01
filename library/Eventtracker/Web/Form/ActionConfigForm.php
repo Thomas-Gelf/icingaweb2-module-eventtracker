@@ -10,7 +10,7 @@ class ActionConfigForm extends UuidObjectForm
 {
     protected $table = 'action';
 
-    protected $mainProperties = ['label', 'implementation', 'enabled', 'filter'];
+    protected $mainProperties = ['label', 'implementation', 'enabled', 'filter', 'description'];
 
     protected function assemble()
     {
@@ -29,6 +29,10 @@ class ActionConfigForm extends UuidObjectForm
             ],
             'required'    => true,
             'value'       => 'y'
+        ]);
+        $this->addElement('textarea', 'description', [
+            'label' => $this->translate('Description'),
+            'rows'  => 3
         ]);
         $this->addElement('text', 'filter', [
             'label'       => $this->translate('Filter'),
