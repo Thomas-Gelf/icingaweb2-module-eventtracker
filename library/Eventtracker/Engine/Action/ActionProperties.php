@@ -6,11 +6,26 @@ use Icinga\Data\Filter\Filter;
 
 trait ActionProperties
 {
+    /** @var string */
+    protected $description;
+
     /** @var bool */
     protected $enabled;
 
     /** @var Filter */
     protected $filter;
+
+    public function getActionDescription(): ?string
+    {
+        return $this->description;
+    }
+
+    public function setActionDescription(string $description): self
+    {
+        $this->description = $description;
+
+        return $this;
+    }
 
     public function setEnabled(bool $enabled): self
     {

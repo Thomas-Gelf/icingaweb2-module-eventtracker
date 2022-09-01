@@ -47,6 +47,7 @@ CREATE TABLE action (
   settings TEXT DEFAULT NULL,
   filter TEXT DEFAULT NULL,
   enabled ENUM('y', 'n') NOT NULL,
+  description MEDIUMTEXT DEFAULT NULL,
   PRIMARY KEY (uuid),
   UNIQUE INDEX(label)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE utf8mb4_bin;
@@ -298,4 +299,4 @@ CREATE TABLE eventtracker_schema_migration (
 
 INSERT INTO eventtracker_schema_migration
   (schema_version, migration_time)
-VALUES (9, NOW());
+VALUES (10, NOW());

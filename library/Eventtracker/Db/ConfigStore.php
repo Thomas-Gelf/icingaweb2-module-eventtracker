@@ -86,6 +86,7 @@ class ConfigStore
             /** @var Action $action */
             $action = $this->initializeTaskFromDbRow($row, new ActionRegistry(), Action::class);
             $actions[$row->uuid->toString()] = $action
+                ->setActionDescription($row->description)
                 ->setEnabled($row->enabled === 'y')
                 ->setFilter($row->filter);
         }
