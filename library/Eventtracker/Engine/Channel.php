@@ -43,7 +43,7 @@ class Channel implements LoggerAwareInterface
     protected $logger;
 
     /** @var bool */
-    protected $daemonized;
+    protected $daemonized = false;
 
     public function __construct(Settings $settings, UuidInterface $uuid, $name, LoggerInterface $logger = null)
     {
