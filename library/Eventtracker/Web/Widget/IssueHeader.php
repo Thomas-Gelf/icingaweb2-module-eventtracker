@@ -10,9 +10,11 @@ use gipfl\ZfDb\Adapter\Adapter as Db;
 use Icinga\Authentication\Auth;
 use Icinga\Date\DateFormatter;
 use Icinga\Module\Eventtracker\DbFactory;
+use Icinga\Module\Eventtracker\Input;
 use Icinga\Module\Eventtracker\File;
 use Icinga\Module\Eventtracker\Hook\EventActionsHook;
 use Icinga\Module\Eventtracker\Issue;
+use Icinga\Module\Eventtracker\Sender;
 use Icinga\Module\Eventtracker\Web\Form\ChangePriorityForm;
 use Icinga\Module\Eventtracker\Web\Form\CloseIssueForm;
 use Icinga\Module\Eventtracker\Web\Form\GiveOwnerShipForm;
@@ -30,6 +32,7 @@ use ipl\Html\HtmlString;
 use ipl\Html\ValidHtml;
 use Psr\Http\Message\ServerRequestInterface;
 
+use Ramsey\Uuid\Uuid;
 use function date;
 
 class IssueHeader extends BaseHtmlElement
@@ -140,7 +143,8 @@ class IssueHeader extends BaseHtmlElement
             "\n",
             Html::tag('strong', 'Ticket: '),
             $this->renderTicket($issue),
-            $this->renderFiles($issue),
+            $this->renderInputAndSender($issue),
+            $this->renderFiles($issue)
         ];
     }
 
@@ -310,6 +314,33 @@ class IssueHeader extends BaseHtmlElement
         }
 
         return null;
+    }
+
+    protected function renderInputAndSender(Issue $issue): ?ValidHtml
+    {
+        $html = new HtmlDocument();
+
+        $inputUuid = $issue->get('input_uuid');
+        if ($inputUuid !== null) {
+            $input = Input::byId(Uuid::fromBytes($inputUuid), $this->db);
+            if ($input !== null) {
+                $html->add("\n");
+                $html->addHtml(Html::tag('strong', 'Input:  '));
+                $html->add($input->get('label'));
+            }
+        }
+
+        $senderId = $issue->get('sender_id');
+        if ($senderId !== null) {
+            $sender = Sender::byId($senderId, $this->db);
+            if ($sender !== null) {
+                $html->add("\n");
+                $html->addHtml(Html::tag('strong', 'Sender: '));
+                $html->add($sender->get('sender_name'));
+            }
+        }
+
+        return $html->isEmpty() ? null : $html;
     }
 
     protected function getMyUsername()
