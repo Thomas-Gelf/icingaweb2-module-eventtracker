@@ -14,8 +14,10 @@ use Icinga\Module\Eventtracker\Modifier\Settings;
 use Icinga\Module\Eventtracker\Web\Form\Action\MailFormExtension;
 use React\EventLoop\LoopInterface;
 use React\Promise\PromiseInterface;
+use Throwable;
 use Zend_Mail;
 use Zend_Mail_Transport_Sendmail;
+use function React\Promise\reject;
 use function React\Promise\resolve;
 
 class MailAction extends SimpleTaskConstructor implements Action
@@ -96,7 +98,11 @@ class MailAction extends SimpleTaskConstructor implements Action
 
     public function process(Issue $issue): PromiseInterface
     {
-        $this->mail($issue);
+        try {
+            $this->mail($issue);
+        } catch (Throwable $e) {
+            return reject($e);
+        }
 
         return resolve("Mail has been sent to {$this->to}");
     }
