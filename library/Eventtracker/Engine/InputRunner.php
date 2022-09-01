@@ -131,9 +131,8 @@ class InputRunner implements LoggerAwareInterface
                     continue;
                 }
 
-                $this->actions[$k]
-                    ->applySettings($action->getSettings())
-                    ->setFilter($action->getFilter());
+                $this->actions[$k]->setFilter($action->getFilter());
+                $this->actions[$k]->applySettings($action->getSettings());
             }
 
             foreach ($delete as $k => $action) {
