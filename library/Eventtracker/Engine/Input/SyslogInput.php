@@ -115,7 +115,6 @@ class SyslogInput extends SimpleTaskConstructor implements Input
             $this->logger->notice('Got a new connection on ' . $this->socket);
             $buffer = new BufferedReader($this->loop);
             $buffer->on('line', function ($line) {
-                $this->sendHeartbeat();
                 // echo "< $line";
                 if ($line === '') {
                     return;
