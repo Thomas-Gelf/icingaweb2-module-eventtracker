@@ -23,10 +23,7 @@ class ActionHelper
                 }
             }
 
-            if (
-                $filter !== null
-                && ! $action->getFilter()->matches($issue->getProperties())
-            ) {
+            if ($filter !== null && ! $filter->matches($issue->getProperties())) {
                 continue;
             }
 
