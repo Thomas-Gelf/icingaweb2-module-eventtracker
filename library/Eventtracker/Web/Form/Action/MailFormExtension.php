@@ -18,8 +18,8 @@ class MailFormExtension implements FormExtension
                 'Sender address with which the mails should be sent.'
             ),
             'label'       => $this->translate('From'),
+            'placeholder' => 'mail@eventtracker',
             'required'    => true,
-            'value'       => 'mail@eventtracker'
         ]);
         $form->addElement('text', 'to', [
             'description' => $this->translate(
