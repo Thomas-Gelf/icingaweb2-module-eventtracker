@@ -164,8 +164,14 @@ class InputRunner implements LoggerAwareInterface
 
     public function onIssue(Issue $issue): void
     {
-        ActionHelper::processIssue($this->actions, $issue, $this->store->getDb())->otherwise(function (Throwable $reason) {
-            $this->logger->error($reason);
+        $this->loop->futureTick(function () use ($issue): void {
+            ActionHelper::processIssue(
+                $this->actions,
+                $issue,
+                $this->store->getDb()
+            )->otherwise(function (Throwable $reason) {
+                $this->logger->error($reason);
+            });
         });
     }
 }
