@@ -6,7 +6,6 @@ use gipfl\ZfDb\Adapter\Adapter;
 use Icinga\Module\Eventtracker\ActionHistory;
 use Icinga\Module\Eventtracker\Engine\Action;
 use Icinga\Module\Eventtracker\Issue;
-use Icinga\Module\Eventtracker\Web\Widget\IdoDetails;
 use React\Promise\ExtendedPromiseInterface;
 use Throwable;
 use function React\Promise\all;
@@ -20,16 +19,8 @@ class ActionHelper
         /** @var Action $action */
         foreach ($actions as $action) {
             $filter = $action->getFilter();
-            $details = new IdoDetails($issue, $db);
-            $object = (object) $issue->getProperties();
-            if ($details->hasHost()) {
-                $host = $details->getHost();
-                foreach ($host->customvars as $varName => $varValue) {
-                    $object->{"host.vars.$varName"} = $varValue;
-                }
-            }
-
-            if ($filter !== null && ! $filter->matches($issue->getProperties())) {
+            $object = EnrichmentHelper::enrichIssueForFilter($issue, $db);
+            if ($filter !== null && ! $filter->matches($object)) {
                 continue;
             }
 
