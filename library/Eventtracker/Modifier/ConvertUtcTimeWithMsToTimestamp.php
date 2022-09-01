@@ -10,7 +10,7 @@ class ConvertUtcTimeWithMsToTimestamp extends BaseModifier
     {
         $tz = date_default_timezone_get();
         date_default_timezone_set('UTC');
-        $tsPattern = '/(\d{4}-\d{2}-\d{2})T(\d{2}:\d{2}:\d{2})\.(\d{3})Z$/';
+        $tsPattern = '/(\d{4}-\d{2}-\d{2})T(\d{2}:\d{2}:\d{2})\.(\d{3,6})Z$/';
         if (preg_match($tsPattern, $value, $match)) {
             $result = strtotime($match[1] . ' ' . $match[2]) * 1000 + (int) $match[3];
         } else {
