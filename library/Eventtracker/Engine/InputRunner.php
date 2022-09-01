@@ -57,8 +57,8 @@ class InputRunner implements LoggerAwareInterface
         $this->channels = $this->store->loadChannels();
         $this->actions = $this->store->loadActions(['enabled' => 'y']);
         $this->linkInputsToChannels();
-        $this->startInputs($this->loop);
-        $this->reloadConfigTimer = $this->startPeriodConfigReload($this->loop);
+        $this->startInputs();
+        $this->reloadConfigTimer = $this->startPeriodConfigReload();
     }
 
     public function stop()
@@ -74,37 +74,37 @@ class InputRunner implements LoggerAwareInterface
         }
     }
 
-    protected function startAction(Action $action, LoopInterface $loop)
+    protected function startAction(Action $action)
     {
-        $loop->futureTick(function () use ($action, $loop) {
+        $this->loop->futureTick(function () use ($action) {
             $action->on(self::ON_ERROR, function ($error) {
                 echo $error->getMessage() . "\n";
                 // TODO: log error, detach and restart input
             });
-            $action->run($loop);
+            $action->run($this->loop);
         });
     }
 
-    protected function startInputs(LoopInterface $loop)
+    protected function startInputs()
     {
         foreach ($this->inputs as $input) {
-            $loop->futureTick(function () use ($input, $loop) {
+            $this->loop->futureTick(function () use ($input) {
                 $input->on(self::ON_ERROR, function ($error) {
                     echo $error->getMessage() . "\n";
                     // TODO: log error, detach and restart input
                 });
-                $input->run($loop);
+                $input->run($this->loop);
             });
         }
 
         foreach ($this->actions as $action) {
-            $this->startAction($action, $loop);
+            $this->startAction($action);
         }
     }
 
-    protected function startPeriodConfigReload(LoopInterface $loop)
+    protected function startPeriodConfigReload()
     {
-        return $loop->addPeriodicTimer(static::RELOAD_CONFIG_TIMER, function (): void {
+        return $this->loop->addPeriodicTimer(static::RELOAD_CONFIG_TIMER, function (): void {
             // Load actions without filter for enabled yes,
             // because we want to stop and remove running actions that have been disabled.
             $actions = $this->store->loadActions();
@@ -120,7 +120,7 @@ class InputRunner implements LoggerAwareInterface
                     continue;
                 }
 
-                $this->startAction($action, $this->loop);
+                $this->startAction($action);
                 $this->actions[$k] = $action;
             }
 
