@@ -9,6 +9,7 @@ use Icinga\Module\Eventtracker\Engine\Input;
 use Icinga\Module\Eventtracker\Engine\InputRunner;
 use Icinga\Module\Eventtracker\Engine\SettingsProperty;
 use Icinga\Module\Eventtracker\Engine\SimpleTaskConstructor;
+use Icinga\Module\Eventtracker\Modifier\Settings;
 use Icinga\Module\Eventtracker\Web\Form\Input\RestApiFormExtension;
 use React\EventLoop\LoopInterface;
 
@@ -23,10 +24,11 @@ class RestApiInput extends SimpleTaskConstructor implements Input
     /** @var string */
     protected $token;
 
-    protected function initialize()
+    public function applySettings(Settings $settings)
     {
-        $settings = $this->getSettings();
         $this->token = $settings->getRequired('token');
+
+        $this->setSettings($settings);
     }
 
     public static function getFormExtension(): FormExtension
