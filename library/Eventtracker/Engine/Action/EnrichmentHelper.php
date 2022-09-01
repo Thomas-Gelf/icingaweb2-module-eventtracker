@@ -33,7 +33,7 @@ class EnrichmentHelper
     public static function enrichIssueForFilter(Issue $issue, Adapter $db): object
     {
         $details = new IdoDetails($issue, $db);
-        $object = self::getPlainIssue($issue);
+        $object = self::getPlainIssue($issue, true);
         if ($details->hasHost()) {
             $host = $details->getHost();
             foreach ($host->customvars as $varName => $varValue) {
@@ -44,7 +44,7 @@ class EnrichmentHelper
         return $object;
     }
 
-    protected static function getPlainIssue(Issue $issue): object
+    protected static function getPlainIssue(Issue $issue, $flat = false): object
     {
         $object = (object) $issue->getProperties();
         foreach (['issue_uuid', 'input_uuid'] as $key) {
@@ -58,7 +58,14 @@ class EnrichmentHelper
             }
         }
         if ($object->attributes) {
-            $object->attributes = JsonString::decode($object->attributes);
+            if ($flat) {
+                foreach (JsonString::decode($object->attributes) as $key => $value) {
+                    $object->{"attributes.$key"} = $value;
+                }
+                unset($object->attributes);
+            } else {
+                $object->attributes = JsonString::decode($object->attributes);
+            }
         }
 
         return $object;
