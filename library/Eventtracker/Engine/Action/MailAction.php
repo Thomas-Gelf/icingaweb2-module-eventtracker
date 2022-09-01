@@ -10,6 +10,7 @@ use Icinga\Module\Eventtracker\Engine\FormExtension;
 use Icinga\Module\Eventtracker\Engine\SettingsProperty;
 use Icinga\Module\Eventtracker\Engine\SimpleTaskConstructor;
 use Icinga\Module\Eventtracker\Issue;
+use Icinga\Module\Eventtracker\Modifier\Settings;
 use Icinga\Module\Eventtracker\Web\Form\Action\MailFormExtension;
 use React\EventLoop\LoopInterface;
 use React\Promise\PromiseInterface;
@@ -40,13 +41,14 @@ class MailAction extends SimpleTaskConstructor implements Action
 
     protected $paused = true;
 
-    protected function initialize()
+    public function applySettings(Settings $settings)
     {
-        $settings = $this->getSettings();
         $this->from = $settings->getRequired('from');
         $this->to = $settings->getRequired('to');
         $this->subject = $settings->get('subject');
         $this->body = $settings->get('body');
+
+        $this->setSettings($settings);
     }
 
     public static function getFormExtension(): FormExtension

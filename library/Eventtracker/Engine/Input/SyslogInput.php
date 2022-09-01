@@ -9,6 +9,7 @@ use Icinga\Module\Eventtracker\Engine\Input;
 use Icinga\Module\Eventtracker\Engine\InputRunner;
 use Icinga\Module\Eventtracker\Engine\SettingsProperty;
 use Icinga\Module\Eventtracker\Engine\SimpleTaskConstructor;
+use Icinga\Module\Eventtracker\Modifier\Settings;
 use Icinga\Module\Eventtracker\Web\Form\Input\SyslogFormExtension;
 use Icinga\Module\Eventtracker\Stream\BufferedReader;
 use Icinga\Module\Eventtracker\Syslog\SyslogParser;
@@ -31,9 +32,8 @@ class SyslogInput extends SimpleTaskConstructor implements Input
     /** @var LoopInterface */
     protected $loop;
 
-    protected function initialize()
+    public function applySettings(Settings $settings)
     {
-        $settings = $this->getSettings();
         // socket_type: unix, udp;
         //   unix -> socket_path
         //   udp -> listening_address, listening_port -> not yet
@@ -48,6 +48,8 @@ class SyslogInput extends SimpleTaskConstructor implements Input
                     $settings->getRequired('socket_type') . ' is not a valid Syslog socket type'
                 );
         }
+
+        $this->setSettings($settings);
     }
 
     public static function getFormExtension(): FormExtension

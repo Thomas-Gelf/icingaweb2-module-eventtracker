@@ -8,7 +8,7 @@ use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 use Ramsey\Uuid\UuidInterface;
 
-abstract class SimpleTaskConstructor
+abstract class SimpleTaskConstructor implements Task
 {
     use LoggerAwareTrait;
     use SettingsProperty;
@@ -31,7 +31,7 @@ abstract class SimpleTaskConstructor
         }
         $this->uuid = $uuid;
         $this->name = $name;
-        $this->setSettings($settings);
+        $this->applySettings($settings);
         $this->initialize();
     }
 

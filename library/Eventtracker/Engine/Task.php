@@ -18,6 +18,8 @@ interface Task extends EventEmitterInterface, LoggerAwareInterface
 
     public function getSettings(): Settings;
 
+    public function applySettings(Settings $settings);
+
     public function run(LoopInterface $loop);
 
     public function start();

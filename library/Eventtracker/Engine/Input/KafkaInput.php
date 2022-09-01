@@ -9,6 +9,7 @@ use Icinga\Module\Eventtracker\Engine\Input;
 use Icinga\Module\Eventtracker\Engine\InputRunner;
 use Icinga\Module\Eventtracker\Engine\SettingsProperty;
 use Icinga\Module\Eventtracker\Engine\SimpleTaskConstructor;
+use Icinga\Module\Eventtracker\Modifier\Settings;
 use Icinga\Module\Eventtracker\Web\Form\Input\KafkaFormExtension;
 use Icinga\Module\Eventtracker\Stream\BufferedReader;
 use Icinga\Util\Json;
@@ -41,13 +42,14 @@ class KafkaInput extends SimpleTaskConstructor implements Input
 
     protected $stopping = false;
 
-    protected function initialize()
+    public function applySettings(Settings $settings)
     {
-        $settings = $this->getSettings();
         $this->topic = $settings->getRequired('topic');
         $this->groupId = $settings->getRequired('group_id');
         $this->servers = $settings->getRequired('bootstrap_servers');
         $this->command = $settings->getRequired('kcat_binary');
+
+        $this->setSettings($settings);
     }
 
     public static function getFormExtension(): FormExtension

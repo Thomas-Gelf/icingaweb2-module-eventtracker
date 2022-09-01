@@ -13,6 +13,7 @@ use Icinga\Module\Eventtracker\Engine\FormExtension;
 use Icinga\Module\Eventtracker\Engine\SettingsProperty;
 use Icinga\Module\Eventtracker\Engine\SimpleTaskConstructor;
 use Icinga\Module\Eventtracker\Issue;
+use Icinga\Module\Eventtracker\Modifier\Settings;
 use Icinga\Module\Eventtracker\Web\Form\Action\CommandFormExtension;
 use React\ChildProcess\Process;
 use React\EventLoop\LoopInterface;
@@ -41,9 +42,14 @@ class CommandAction extends SimpleTaskConstructor implements Action
 
     protected function initialize()
     {
-        $settings = $this->getSettings();
-        $this->command = $settings->getRequired('command');
         $this->promises = new SplObjectStorage();
+    }
+
+    public function applySettings(Settings $settings)
+    {
+        $this->command = $settings->getRequired('command');
+
+        $this->setSettings($settings);
     }
 
     public static function getFormExtension(): FormExtension
