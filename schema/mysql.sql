@@ -266,7 +266,7 @@ CREATE TABLE action_history (
   success ENUM('y', 'n') NOT NULL,
   message TEXT NOT NULL,
   PRIMARY KEY (uuid),
-  INDEX timestamp (ts)
+  INDEX timestamp (ts_done)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE utf8mb4_bin;
 
 CREATE TABLE daemon_info (
