@@ -98,7 +98,7 @@ class MailAction extends SimpleTaskConstructor implements Action
     {
         $this->mail($issue);
 
-        return resolve();
+        return resolve("Mail has been sent to {$this->to}");
     }
 
     protected function mail(Issue $issue): void

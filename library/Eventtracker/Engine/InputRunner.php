@@ -3,6 +3,7 @@
 namespace Icinga\Module\Eventtracker\Engine;
 
 use Closure;
+use Icinga\Module\Eventtracker\ActionHistory;
 use Icinga\Module\Eventtracker\Db\ConfigStore;
 use Icinga\Module\Eventtracker\Engine\Input\KafkaInput;
 use Icinga\Module\Eventtracker\Issue;
@@ -182,8 +183,10 @@ class InputRunner implements LoggerAwareInterface
                 continue;
             }
 
-            $action->process($issue)->then(null, function ($reason) {
-                $this->logger->error($reason);
+            $action->process($issue)->then(function (string $message) use ($action, $issue, $db): void {
+                ActionHistory::persist($action, $issue, true, $message, $db);
+            }, function ($reason) use ($action, $issue, $db): void {
+                ActionHistory::persist($action, $issue, false, (string) $reason, $db);
             });
         }
     }
