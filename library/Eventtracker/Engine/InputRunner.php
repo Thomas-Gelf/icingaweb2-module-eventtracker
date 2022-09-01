@@ -3,16 +3,16 @@
 namespace Icinga\Module\Eventtracker\Engine;
 
 use Closure;
-use Icinga\Module\Eventtracker\ActionHistory;
 use Icinga\Module\Eventtracker\Db\ConfigStore;
+use Icinga\Module\Eventtracker\Engine\Action\ActionHelper;
 use Icinga\Module\Eventtracker\Engine\Input\KafkaInput;
 use Icinga\Module\Eventtracker\Issue;
-use Icinga\Module\Eventtracker\Web\Widget\IdoDetails;
 use Psr\Log\LoggerAwareInterface;
 use Psr\Log\LoggerAwareTrait;
 use Psr\Log\NullLogger;
 use React\EventLoop\LoopInterface;
 use React\EventLoop\TimerInterface;
+use Throwable;
 
 class InputRunner implements LoggerAwareInterface
 {
@@ -148,6 +148,7 @@ class InputRunner implements LoggerAwareInterface
     protected function linkInputsToChannels()
     {
         foreach ($this->channels as $channel) {
+            $channel->setDaemonized();
             $channel->on(Channel::ON_ISSUE, Closure::fromCallable([$this, 'onIssue']));
 
             foreach ($this->inputs as $input) {
@@ -164,30 +165,8 @@ class InputRunner implements LoggerAwareInterface
 
     public function onIssue(Issue $issue): void
     {
-        $db = $this->store->getDb();
-        foreach ($this->actions as $action) {
-            $filter = $action->getFilter();
-            $details = new IdoDetails($issue, $db);
-            $object = (object) $issue->getProperties();
-            if ($details->hasHost()) {
-                $host = $details->getHost();
-                foreach ($host->customvars as $varName => $varValue) {
-                    $object->{"host.vars.$varName"} = $varValue;
-                }
-            }
-
-            if (
-                $filter !== null
-                && ! $action->getFilter()->matches($issue->getProperties())
-            ) {
-                continue;
-            }
-
-            $action->process($issue)->then(function (string $message) use ($action, $issue, $db): void {
-                ActionHistory::persist($action, $issue, true, $message, $db);
-            }, function ($reason) use ($action, $issue, $db): void {
-                ActionHistory::persist($action, $issue, false, (string) $reason, $db);
-            });
-        }
+        ActionHelper::processIssue($this->actions, $issue, $this->store->getDb())->otherwise(function (Throwable $reason) {
+            $this->logger->error($reason);
+        });
     }
 }
