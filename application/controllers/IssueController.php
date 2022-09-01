@@ -4,7 +4,10 @@ namespace Icinga\Module\Eventtracker\Controllers;
 
 use gipfl\IcingaWeb2\Url;
 use Icinga\Application\Hook;
+use Icinga\Exception\Http\HttpNotFoundException;
 use Icinga\Exception\NotFoundError;
+use Icinga\Module\Eventtracker\Data\PlainObjectRenderer;
+use Icinga\Module\Eventtracker\Engine\EnrichmentHelper;
 use Icinga\Module\Eventtracker\File;
 use Icinga\Module\Eventtracker\Hook\EventActionsHook;
 use Icinga\Module\Eventtracker\Issue;
@@ -21,10 +24,25 @@ use Ramsey\Uuid\Uuid;
 
 class IssueController extends Controller
 {
+    public function init()
+    {
+        parent::init();
+
+        $this->tabs()
+            ->add('issue', [
+                'label' => $this->translate('Issue'),
+                'url'   => Url::fromPath('eventtracker/issue')->setParam('uuid', $this->params->get('uuid'))
+            ])
+            ->add('raw', [
+                'label' => $this->translate('Raw Data'),
+                'url'   => Url::fromPath('eventtracker/issue/raw')->setParam('uuid', $this->params->get('uuid'))
+            ]);
+    }
+
     public function indexAction()
     {
+        $this->tabs()->activate('issue');
         $db = $this->db();
-        $this->addSingleTab($this->translate('Issue'));
         $uuid = $this->params->get('uuid');
         if ($uuid === null) {
             $issues = SetOfIssues::fromUrl($this->url(), $db);
@@ -113,6 +131,34 @@ class IssueController extends Controller
                 ->setHeader('Content-Disposition', sprintf('attachment; filename="%s"', $file->get('filename')))
                 ->setBody($file->get('data'));
         }
+    }
+
+    public function rawAction()
+    {
+        $this->tabs()->activate('raw');
+        $binaryUuid = Uuid::fromString($this->params->getRequired('uuid'))->getBytes();
+        $db = $this->db();
+        $issue = Issue::loadIfExists($binaryUuid, $db);
+        if ($issue === null) {
+            throw new HttpNotFoundException($this->translate('Issue not found'));
+        }
+
+        if ($hostname = $issue->get('host_name')) {
+            $this->addTitle(sprintf(
+                '%s (%s)',
+                $issue->get('object_name'),
+                $hostname
+            ));
+        } else {
+            $this->addTitle($issue->get('object_name'));
+        }
+
+        $this->content()->addHtml(
+            Html::tag('h3', 'Raw'),
+            Html::tag('pre', PlainObjectRenderer::render(EnrichmentHelper::enrichIssue($issue, $db))),
+            Html::tag('h3', 'Raw for filters'),
+            Html::tag('pre', PlainObjectRenderer::render(EnrichmentHelper::enrichIssueForFilter($issue, $db)))
+        );
     }
 
     protected function showIssue(Issue $issue)
