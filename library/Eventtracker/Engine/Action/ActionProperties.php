@@ -26,7 +26,7 @@ trait ActionProperties
 
     public function setFilter($filter): self
     {
-        if (! $filter instanceof Filter) {
+        if ($filter !== null && ! $filter instanceof Filter) {
             $filter = Filter::fromQueryString($filter);
         }
         $this->filter = $filter;
