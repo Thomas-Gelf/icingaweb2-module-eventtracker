@@ -24,7 +24,7 @@ class IssueController extends Controller
     public function indexAction()
     {
         $db = $this->db();
-        $this->addSingleTab('Event');
+        $this->addSingleTab($this->translate('Issue'));
         $uuid = $this->params->get('uuid');
         if ($uuid === null) {
             $issues = SetOfIssues::fromUrl($this->url(), $db);
@@ -150,7 +150,7 @@ class IssueController extends Controller
 
     protected function closedAction()
     {
-        $this->addSingleTab($this->translate('Event'));
+        $this->addSingleTab($this->translate('Issue'));
         $this->addTitle($this->translate('Issues closed'));
         $this->content()->add(
             Html::tag('p', [
