@@ -2,16 +2,22 @@
 
 namespace Icinga\Module\Eventtracker\Engine\Action;
 
-use Exception;
 use gipfl\ZfDb\Adapter\Adapter;
 use Icinga\Module\Eventtracker\ActionHistory;
+use Icinga\Module\Eventtracker\Engine\Action;
 use Icinga\Module\Eventtracker\Issue;
 use Icinga\Module\Eventtracker\Web\Widget\IdoDetails;
+use React\Promise\ExtendedPromiseInterface;
+use Throwable;
+use function React\Promise\all;
 
 class ActionHelper
 {
-    public static function processIssue(array $actions, Issue $issue, Adapter $db)
+    public static function processIssue(array $actions, Issue $issue, Adapter $db): ExtendedPromiseInterface
     {
+        $promises = [];
+
+        /** @var Action $action */
         foreach ($actions as $action) {
             $filter = $action->getFilter();
             $details = new IdoDetails($issue, $db);
@@ -27,11 +33,13 @@ class ActionHelper
                 continue;
             }
 
-            $action->process($issue)->then(function ($message) use ($action, $issue, $db): void {
+            $promises[] = $action->process($issue)->then(function ($message) use ($action, $issue, $db): void {
                 ActionHistory::persist($action, $issue, true, (string) $message, $db);
-            }, function (Exception $reason) use ($action, $issue, $db): void {
+            }, function (Throwable $reason) use ($action, $issue, $db): void {
                 ActionHistory::persist($action, $issue, false, (string) $reason, $db);
             });
         }
+
+        return all($promises);
     }
 }

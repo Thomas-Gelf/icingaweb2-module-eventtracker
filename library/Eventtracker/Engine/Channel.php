@@ -42,6 +42,9 @@ class Channel implements LoggerAwareInterface
     /** @var NullLogger */
     protected $logger;
 
+    /** @var bool */
+    protected $daemonized;
+
     public function __construct(Settings $settings, UuidInterface $uuid, $name, LoggerInterface $logger = null)
     {
         $this->uuid = $uuid;
@@ -52,6 +55,18 @@ class Channel implements LoggerAwareInterface
             $this->logger = $logger;
         }
         $this->applySettings($settings);
+    }
+
+    public function isDaemonized(): bool
+    {
+        return $this->daemonized;
+    }
+
+    public function setDaemonized(bool $daemonized = true): self
+    {
+        $this->daemonized = $daemonized;
+
+        return $this;
     }
 
     /**
@@ -104,7 +119,7 @@ class Channel implements LoggerAwareInterface
     {
         $this->rules->process($object);
         $db = DbFactory::db();
-        $receiver = new EventReceiver($db);
+        $receiver = new EventReceiver($db, ! $this->isDaemonized());
         $this->getEnforcedModifiers($inputUuid)->process($object);
         // print_r($object);
         // $object->sender_event_id = Uuid::uuid4()->toString();

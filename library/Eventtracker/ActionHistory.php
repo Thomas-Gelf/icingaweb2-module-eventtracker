@@ -14,7 +14,7 @@ class ActionHistory
     {
         $db->insert(self::$tableName, [
             'uuid'        => Uuid::uuid4()->getBytes(),
-            'action_uuid' => $action->getUuid(),
+            'action_uuid' => $action->getUuid()->getBytes(),
             'issue_uuid'  => $issue->getUuid(),
             'ts_done'     => Time::unixMilli(),
             'success'     => $success ? 'y' : 'n',

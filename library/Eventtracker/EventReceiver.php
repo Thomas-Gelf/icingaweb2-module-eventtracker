@@ -3,7 +3,12 @@
 namespace Icinga\Module\Eventtracker;
 
 use gipfl\ZfDb\Adapter\Adapter as Db;
+use Icinga\Module\Eventtracker\Db\ConfigStore;
+use Icinga\Module\Eventtracker\Engine\Action;
+use Icinga\Module\Eventtracker\Engine\Action\ActionHelper;
 use Icinga\Module\Eventtracker\Engine\Counters;
+use React\EventLoop\Loop;
+use function Clue\React\Block\await as block_await;
 
 class EventReceiver
 {
@@ -12,15 +17,21 @@ class EventReceiver
     const CNT_RECOVERED = 'recovered';
     const CNT_REFRESHED = 'refreshed';
 
+    public const ACTION_TIMEOUT = 15;
+
     /** @var Db */
     protected $db;
 
     protected $counters;
 
-    public function __construct(Db $db)
+    /** @var bool */
+    protected $runActions;
+
+    public function __construct(Db $db, $runActions = true)
     {
         $this->db = $db;
         $this->counters = new Counters();
+        $this->runActions = $runActions;
     }
 
     /**
@@ -56,6 +67,16 @@ class EventReceiver
             return null;
         } else {
             $this->counters->increment(self::CNT_IGNORED);
+        }
+
+        if ($this->runActions && $issue->hasBeenCreatedNow()) {
+            $actions = (new ConfigStore($this->db))->loadActions(['enabled' => 'y']);
+            $loop = Loop::get();
+            /** @var Action $action */
+            foreach ($actions as $action) {
+                $action->run($loop);
+            }
+            block_await(ActionHelper::processIssue($actions, $issue, $this->db), $loop, static::ACTION_TIMEOUT);
         }
 
         return $issue;
