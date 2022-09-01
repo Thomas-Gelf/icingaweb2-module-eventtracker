@@ -20,7 +20,7 @@ trait ActionProperties
         return $this->description;
     }
 
-    public function setActionDescription(string $description): self
+    public function setActionDescription(?string $description): self
     {
         $this->description = $description;
 
