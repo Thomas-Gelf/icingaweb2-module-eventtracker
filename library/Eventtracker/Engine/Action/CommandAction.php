@@ -134,7 +134,7 @@ class CommandAction extends SimpleTaskConstructor implements Action
         $process->on('exit', function ($exitCode, $termSignal) use ($deferred, $issue) {
             $state = new FinishedProcessState($exitCode, $termSignal);
             if ($state->succeeded()) {
-                $deferred->resolve();
+                $deferred->resolve("Executed command {$this->command}");
             } else {
                 $deferred->reject(new Exception(sprintf(
                     'Command %s failed for issue %s: %s',
