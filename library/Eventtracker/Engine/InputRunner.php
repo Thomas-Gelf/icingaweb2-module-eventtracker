@@ -6,6 +6,7 @@ use Closure;
 use Icinga\Module\Eventtracker\Db\ConfigStore;
 use Icinga\Module\Eventtracker\Engine\Input\KafkaInput;
 use Icinga\Module\Eventtracker\Issue;
+use Icinga\Module\Eventtracker\Web\Widget\IdoDetails;
 use Psr\Log\LoggerAwareInterface;
 use Psr\Log\LoggerAwareTrait;
 use Psr\Log\NullLogger;
@@ -162,8 +163,18 @@ class InputRunner implements LoggerAwareInterface
 
     public function onIssue(Issue $issue): void
     {
+        $db = $this->store->getDb();
         foreach ($this->actions as $action) {
             $filter = $action->getFilter();
+            $details = new IdoDetails($issue, $db);
+            $object = (object) $issue->getProperties();
+            if ($details->hasHost()) {
+                $host = $details->getHost();
+                foreach ($host->customvars as $varName => $varValue) {
+                    $object->{"host.vars.$varName"} = $varValue;
+                }
+            }
+
             if (
                 $filter !== null
                 && ! $action->getFilter()->matches($issue->getProperties())

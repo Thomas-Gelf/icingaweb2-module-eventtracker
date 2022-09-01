@@ -58,6 +58,24 @@ class IdoDetails extends BaseHtmlElement
         }
     }
 
+    /**
+     * @deprecated
+     * @return bool
+     */
+    public function hasHost()
+    {
+        return $this->host !== null;
+    }
+
+    /**
+     * @deprecated
+     * @return Host
+     */
+    public function getHost(): Host
+    {
+        return $this->host;
+    }
+
     protected function eventuallyCheckForFqdn($hostname, $objectName = null)
     {
         $domain = Config::module('eventtracker')->get('ido-sync', 'search_domain');

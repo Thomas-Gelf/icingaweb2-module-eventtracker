@@ -172,6 +172,15 @@ class ConfigStore
         return $uuid;
     }
 
+    /**
+     * @deprecated
+     * @return Adapter
+     */
+    public function getDb()
+    {
+        return $this->db;
+    }
+
     protected function quotedWhere(UuidInterface $uuid)
     {
         return $this->db->quoteInto('uuid = ?', $uuid->getBytes());
