@@ -153,12 +153,12 @@ class IssueController extends Controller
             $this->addTitle($issue->get('object_name'));
         }
 
-        $this->content()->addHtml(
+        $this->content()->add([
             Html::tag('h3', 'Raw'),
             Html::tag('pre', PlainObjectRenderer::render(EnrichmentHelper::enrichIssue($issue, $db))),
             Html::tag('h3', 'Raw for filters'),
             Html::tag('pre', PlainObjectRenderer::render(EnrichmentHelper::enrichIssueForFilter($issue, $db)))
-        );
+        ]);
     }
 
     protected function showIssue(Issue $issue)
