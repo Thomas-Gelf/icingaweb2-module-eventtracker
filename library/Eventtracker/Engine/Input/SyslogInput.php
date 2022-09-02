@@ -4,6 +4,7 @@ namespace Icinga\Module\Eventtracker\Engine\Input;
 
 use Evenement\EventEmitterTrait;
 use gipfl\Translation\StaticTranslator;
+use Icinga\Module\Eventtracker\Daemon\Application;
 use Icinga\Module\Eventtracker\Engine\FormExtension;
 use Icinga\Module\Eventtracker\Engine\Input;
 use Icinga\Module\Eventtracker\Engine\InputRunner;
@@ -128,7 +129,7 @@ class SyslogInput extends SimpleTaskConstructor implements Input
                         $this->logger->notice('Got a Syslog MARK');
                         return;
                     }
-                    if ($event->object_name !== 'eventtracker'
+                    if ($event->object_name !== Application::LOG_NAME
                         || ! isset($event->attributes->syslog_sender_pid)
                         || $event->attributes->syslog_sender_pid !== posix_getpid()
                     ) {

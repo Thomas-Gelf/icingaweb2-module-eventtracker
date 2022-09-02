@@ -13,6 +13,7 @@ use gipfl\Log\Writer\WritableStreamWriter;
 use gipfl\Protocol\JsonRpc\Connection;
 use gipfl\Protocol\NetString\StreamWrapper;
 use gipfl\SystemD\systemd;
+use Icinga\Module\Eventtracker\Daemon\Application;
 use React\EventLoop\Factory as Loop;
 use React\EventLoop\LoopInterface;
 use React\Stream\ReadableResourceStream;
@@ -97,7 +98,7 @@ trait CommandWithLoop
         $loop = $this->loop();
         if (systemd::startedThisProcess()) {
             if (@file_exists(JournaldLogger::JOURNALD_SOCKET)) {
-                $logger->addWriter((new JournaldLogger())->setIdentifier('icinga-eventtracker'));
+                $logger->addWriter((new JournaldLogger())->setIdentifier(Application::LOG_NAME));
             } else {
                 $logger->addWriter(new SystemdStdoutWriter($loop));
             }

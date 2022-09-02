@@ -77,7 +77,7 @@ class BackgroundDaemon
     protected function initialize()
     {
         $this->registerSignalHandlers($this->loop);
-        $this->processState = new DaemonProcessState('icinga::eventtracker');
+        $this->processState = new DaemonProcessState(Application::PROCESS_NAME);
         $this->jobRunner = new JobRunner($this->loop);
         $this->systemd = $this->eventuallyInitializeSystemd();
         $this->processState->setSystemd($this->systemd);
