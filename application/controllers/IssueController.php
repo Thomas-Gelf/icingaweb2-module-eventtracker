@@ -154,10 +154,14 @@ class IssueController extends Controller
         }
 
         $this->content()->add([
-            Html::tag('h3', 'Raw'),
-            Html::tag('pre', PlainObjectRenderer::render(EnrichmentHelper::enrichIssue($issue, $db))),
-            Html::tag('h3', 'Raw for filters'),
-            Html::tag('pre', PlainObjectRenderer::render(EnrichmentHelper::enrichIssueForFilter($issue, $db)))
+            Html::tag('h3', $this->translate('Raw')),
+            Html::tag('pre', [
+                'class' => 'plain-object'
+            ], PlainObjectRenderer::render(EnrichmentHelper::enrichIssue($issue, $db))),
+            Html::tag('h3', $this->translate('Raw for filters')),
+            Html::tag('pre', [
+                'class' => 'plain-object'
+            ], PlainObjectRenderer::render(EnrichmentHelper::enrichIssueForFilter($issue, $db)))
         ]);
     }
 
