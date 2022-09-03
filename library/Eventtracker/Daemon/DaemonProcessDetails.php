@@ -2,7 +2,10 @@
 
 namespace Icinga\Module\Eventtracker\Daemon;
 
+use gipfl\Json\JsonString;
 use gipfl\LinuxHealth\Memory;
+use gipfl\Process\ProcessInfo;
+use gipfl\Process\ProcessList;
 use Icinga\Application\Platform;
 use React\ChildProcess\Process;
 use gipfl\Cli\Process as CliProcess;
@@ -43,7 +46,7 @@ class DaemonProcessDetails
         return [
             'ts_last_update' => DaemonUtil::timestampWithMilliseconds(),
             'ts_stopped'     => null,
-            'process_info'   => \json_encode($this->collectProcessInfo()),
+            'process_info'   => JsonString::encode($this->collectProcessInfo()),
         ];
     }
 
@@ -69,7 +72,7 @@ class DaemonProcessDetails
 
     protected function refreshProcessInfo()
     {
-        $this->set('process_info', \json_encode($this->collectProcessInfo()));
+        $this->set('process_info', JsonString::encode($this->collectProcessInfo()));
     }
 
     protected function collectProcessInfo()
@@ -81,8 +84,9 @@ class DaemonProcessDetails
         ]];
 
         foreach ($this->processLists as $processList) {
-            foreach ($processList->getOverview() as $pid => $details) {
-                $info->$pid = $details;
+            foreach ($processList as $process) {
+                $processInfo = ProcessInfo::forProcess($process);
+                $info->{$processInfo->getPid()} = $processInfo;
             }
         }
 

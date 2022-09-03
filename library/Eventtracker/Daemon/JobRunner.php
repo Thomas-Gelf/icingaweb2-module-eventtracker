@@ -2,13 +2,15 @@
 
 namespace Icinga\Module\Eventtracker\Daemon;
 
-use gipfl\IcingaCliDaemon\FinishedProcessState;
 use gipfl\IcingaCliDaemon\IcingaCliRpc;
+use gipfl\Process\ProcessKiller;
+use gipfl\Process\ProcessList;
 use gipfl\ZfDb\Adapter\Adapter as Db;
 use Icinga\Application\Logger;
 use React\ChildProcess\Process;
 use React\EventLoop\LoopInterface;
 use React\Promise\Promise;
+use function React\Promise\all;
 use function React\Promise\resolve;
 
 class JobRunner implements DbBasedComponent
@@ -99,7 +101,11 @@ class JobRunner implements DbBasedComponent
             $this->loop->cancelTimer($this->timer);
             $this->timer = null;
         }
-        $allFinished = $this->running->killOrTerminate();
+        $kill = [];
+        foreach ($this->running as $processes) {
+            $kill[] = ProcessKiller::terminateProcesses($processes, $this->loop);
+        }
+        $allFinished = all($kill);
         foreach ($this->runningTasks as $id => $promise) {
             $promise->cancel();
         }
