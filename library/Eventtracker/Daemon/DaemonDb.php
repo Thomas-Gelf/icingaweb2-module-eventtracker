@@ -24,12 +24,13 @@ class DaemonDb
 {
     use EventEmitterTrait;
 
+    public const ON_SCHEMA_CHANGE = 'schemaChange';
     const TABLE_NAME = 'daemon_info';
 
     /** @var LoopInterface */
     private $loop;
 
-    /** @var ZfDb */
+    /** @var ZfDb|Mysql */
     protected $db;
 
     /** @var DaemonProcessDetails */
@@ -203,7 +204,7 @@ class DaemonDb
             }
         }
         if ($this->schemaIsOutdated()) {
-            $this->emit('schemaChange', [
+            $this->emit(self::ON_SCHEMA_CHANGE, [
                 $this->getStartupSchemaVersion(),
                 $this->getDbSchemaVersion()
             ]);

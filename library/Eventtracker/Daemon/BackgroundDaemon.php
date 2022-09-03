@@ -153,7 +153,7 @@ class BackgroundDaemon
             // TODO: level is sent but not used
             $processState->setComponentState('db', $state);
         });
-        $db->on('schemaChange', function ($startupSchema, $dbSchema) {
+        $db->on(DaemonDb::ON_SCHEMA_CHANGE, function ($startupSchema, $dbSchema) {
             $this->logger->info(sprintf(
                 "DB schema version changed. Started with %d, DB has %d. Restarting.",
                 $startupSchema,
