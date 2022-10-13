@@ -698,47 +698,6 @@ div.action-bar > ul > li:hover {
 }
 /** END of dropdown in action bar **/
 
-/** BEGIN state-hint, stolen from Director **/
-p.state-hint {
-  border: 1px solid @text-color;
-  padding: 0.5em;
-  line-height: 2em;
-  max-width: 60em;
-  border-left-width: 3em;
-  &:before {
-    position: relative;
-    margin-left: -1.5em;
-    margin-right: 0.5em;
-    height: 100%;
-    vertical-align: middle;
-    font-family: 'ifont';
-    color: @text-color-inverted;
-    font-size: 2em;
-  }
-  &.ok {
-    border-color: @color-ok;
-  }
-  &.warning {
-    border-color: @color-warning;
-  }
-  &.error {
-    border-color: @color-critical;
-  }
-  &.critical:before, &.error:before {
-    content: '\e885';
-  }
-  &.warning:before {
-    content: '\e885';
-  }
-  &.ok:before {
-    content: '\e803';
-  }
-  a {
-    text-decoration: underline;
-  }
-}/** END of state-hint, stolen from Director **/
-
-
 /** php-diff **/
 
 .Differences {

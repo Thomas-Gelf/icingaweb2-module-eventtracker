@@ -3,6 +3,7 @@
 namespace Icinga\Module\Eventtracker\Controllers;
 
 use gipfl\IcingaWeb2\Url;
+use gipfl\Web\Widget\Hint;
 use Icinga\Application\Hook;
 use Icinga\Exception\Http\HttpNotFoundException;
 use Icinga\Exception\NotFoundError;
@@ -50,9 +51,9 @@ class IssueController extends Controller
             $this->addTitle($this->translate('%d issues'), $count);
             $maxIssues = $this->Config()->get('ui', 'multiselect_max_issues', 50);
             if ($count > $maxIssues) {
-                $this->content()->add(Html::tag('p', [
-                    'class' => 'state-hint warning'
-                ], \sprintf($this->translate('Please select no more than %s issues'), $maxIssues)));
+                $this->content()->add(Hint::warning(
+                    \sprintf($this->translate('Please select no more than %s issues'), $maxIssues)
+                ));
 
                 return;
             }
@@ -83,16 +84,12 @@ class IssueController extends Controller
                 $this->showIssue($issue);
             } elseif (IssueHistory::exists($binaryUuid, $db)) {
                 $this->addTitle($this->translate('Issue has been closed'));
-                $this->content()->add(Html::tag('p', [
-                    'class' => 'state-hint ok'
-                ], $this->translate('This issue has been closed.')));
+                $this->content()->add(Hint::info($this->translate('This issue has been closed.')));
                 $issue = Issue::loadFromHistory($binaryUuid, $db);
                 $this->showIssue($issue);
             } else {
                 $this->addTitle($this->translate('Not found'));
-                $this->content()->add(Html::tag('p', [
-                    'class' => 'state-hint error'
-                ], $this->translate('There is no such issue')));
+                $this->content()->add(Hint::error($this->translate('There is no such issue')));
             }
         }
     }
@@ -202,14 +199,10 @@ class IssueController extends Controller
     {
         $this->addSingleTab($this->translate('Issue'));
         $this->addTitle($this->translate('Issues closed'));
-        $this->content()->add(
-            Html::tag('p', [
-                'class' => 'state-hint ok'
-            ], \sprintf(
-                $this->translate('%d issues have been closed'),
-                $this->params->getRequired('cnt')
-            ))
-        );
+        $this->content()->add(Hint::ok(\sprintf(
+            $this->translate('%d issues have been closed'),
+            $this->params->getRequired('cnt')
+        )));
     }
 
     protected function issueHeader(Issue $issue)
