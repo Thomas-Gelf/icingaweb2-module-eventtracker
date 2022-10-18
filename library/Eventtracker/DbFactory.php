@@ -12,10 +12,7 @@ class DbFactory
     /** @var Db */
     protected static $db;
 
-    /**
-     * @return Db
-     */
-    public static function db()
+    public static function db(): Db
     {
         if (self::$db === null) {
             self::$db = ZfDbConnectionFactory::connection(
