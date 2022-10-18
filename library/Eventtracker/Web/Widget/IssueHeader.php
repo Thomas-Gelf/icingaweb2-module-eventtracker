@@ -138,7 +138,7 @@ class IssueHeader extends BaseHtmlElement
             $this->renderPriority($issue),
             "\n",
             */
-            Html::tag('strong', 'Owner: '),
+            Html::tag('strong', 'Owner:  '),
             $this->renderOwner($issue),
             "\n",
             Html::tag('strong', 'Ticket: '),
