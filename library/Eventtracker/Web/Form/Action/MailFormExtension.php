@@ -29,12 +29,13 @@ class MailFormExtension implements FormExtension
             'required'    => true
         ]);
         $form->addElement('text', 'subject', [
-            'description' => Html::sprintf($this->translate(<<<'EOT'
+            'description' => Html::sprintf(
+                $this->translate(<<<'EOT'
 You can use placeholders to have the subject replaced by real values.
 Placeholders are expressed with %s where %s can reference any issue property.
 Issue attributes can be accessed via  and custom variables via %s.
-EOT,
-            ),
+EOT
+                ),
                 Html::tag('b', '{placeholder}'),
                 Html::tag('b', 'placeholder'),
                 Html::tag('b', 'attributes.key'),
