@@ -9,10 +9,12 @@ use gipfl\Json\JsonString;
 use gipfl\Web\Widget\Hint;
 use Icinga\Module\Eventtracker\Db\ConfigStore;
 use Icinga\Module\Eventtracker\Engine\Action\ActionRegistry;
+use Icinga\Module\Eventtracker\Engine\Bucket\BucketRegistry;
 use Icinga\Module\Eventtracker\Modifier\ModifierChain;
 use Icinga\Module\Eventtracker\Modifier\ModifierUtils;
 use Icinga\Module\Eventtracker\Web\Form\ActionConfigForm;
 use Icinga\Module\Eventtracker\Web\Form\ApiTokenForm;
+use Icinga\Module\Eventtracker\Web\Form\BucketConfigForm;
 use Icinga\Module\Eventtracker\Web\Form\ChannelConfigForm;
 use Icinga\Module\Eventtracker\Web\Form\InputConfigForm;
 use Icinga\Module\Eventtracker\Engine\Input\InputRegistry;
@@ -20,7 +22,9 @@ use Icinga\Module\Eventtracker\Web\Form\UuidObjectForm;
 use Icinga\Module\Eventtracker\Web\Table\ApiTokensTable;
 use Icinga\Module\Eventtracker\Web\Table\BaseTable;
 use Icinga\Module\Eventtracker\Web\Table\ChannelRulesTable;
+use Icinga\Module\Eventtracker\Web\Table\ConfiguredBucketsTable;
 use Icinga\Module\Eventtracker\Web\Table\ConfiguredChannelsTable;
+use Icinga\Module\Eventtracker\Web\Table\ConfiguredHostListsTable;
 use Icinga\Module\Eventtracker\Web\Table\ConfiguredInputsTable;
 use Icinga\Module\Eventtracker\Web\Table\ConfiguredActionsTable;
 use ipl\Html\Html;
@@ -78,6 +82,16 @@ class ConfigurationController extends Controller
                 'table_class' => ConfiguredActionsTable::class,
                 'form_class'  => ActionConfigForm::class,
                 'registry'    => ActionRegistry::class,
+            ],
+            'buckets' => [
+                'singular' => $this->translate('Bucket'),
+                'plural'   => $this->translate('Buckets'),
+                'table'    => 'bucket',
+                'list_url' => 'eventtracker/configuration/buckets',
+                'url'      => 'eventtracker/configuration/bucket',
+                'table_class' => ConfiguredBucketsTable::class,
+                'form_class'  => BucketConfigForm::class,
+                'registry'    => BucketRegistry::class,
             ],
         ];
     }
@@ -139,6 +153,19 @@ class ConfigurationController extends Controller
     public function actionAction()
     {
         $this->variant = 'actions';
+        $this->addObjectTab();
+        $this->content()->add($this->getForm());
+    }
+
+    public function bucketsAction()
+    {
+        $this->variant = 'buckets';
+        $this->showList();
+    }
+
+    public function bucketAction()
+    {
+        $this->variant = 'buckets';
         $this->addObjectTab();
         $this->content()->add($this->getForm());
     }
