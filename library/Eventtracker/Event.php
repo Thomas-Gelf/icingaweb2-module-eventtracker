@@ -102,39 +102,43 @@ class Event
     public function set($key, $value)
     {
         if ($key === static::FILES_PROPERTY) {
-            if (! is_array($value)) {
-                throw new InvalidArgumentException(sprintf(
-                    'Expected array for property %s, got %s instead',
-                    static::FILES_PROPERTY,
-                    get_php_type($value)
-                ));
-            }
-
-            foreach ($value as $pos => $spec) {
-                foreach (['name', 'data'] as $requiredKey) {
-                    if (! isset($spec->$requiredKey)) {
-                        throw new InvalidArgumentException(sprintf(
-                            'key "%s" expected for file at position %s',
-                            $requiredKey,
-                            // $pos is intentionally treated as a string,
-                            // since senders can provide a key even if it's useless and %d would then fail
-                            $pos
-                        ));
-                    }
-                }
-
-                if (substr($spec->data, 0, 7) === 'base64,') {
-                    $file = FrozenMemoryFile::fromBase64($spec->name, substr($spec->data, 7));
-                } else {
-                    $file = FrozenMemoryFile::fromBinary($spec->name, $spec->data);
-                }
-
-                $this->files[] = $file;
-            }
-
+            $this->appendFiles($value);
             return $this;
         }
 
         return $this->setProperty($key, $value);
+    }
+
+    protected function appendFiles($files)
+    {
+        if (! is_array($files)) {
+            throw new InvalidArgumentException(sprintf(
+                'Expected array for property %s, got %s instead',
+                static::FILES_PROPERTY,
+                get_php_type($files)
+            ));
+        }
+
+        foreach ($files as $pos => $spec) {
+            foreach (['name', 'data'] as $requiredKey) {
+                if (! isset($spec->$requiredKey)) {
+                    throw new InvalidArgumentException(sprintf(
+                        'key "%s" expected for file at position %s',
+                        $requiredKey,
+                        // $pos is intentionally treated as a string,
+                        // since senders can provide a key even if it's useless and %d would then fail
+                        $pos
+                    ));
+                }
+            }
+
+            if (substr($spec->data, 0, 7) === 'base64,') {
+                $file = FrozenMemoryFile::fromBase64($spec->name, substr($spec->data, 7));
+            } else {
+                $file = FrozenMemoryFile::fromBinary($spec->name, $spec->data);
+            }
+
+            $this->files[] = $file;
+        }
     }
 }
