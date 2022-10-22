@@ -10,12 +10,14 @@ use gipfl\Web\Widget\Hint;
 use Icinga\Module\Eventtracker\Db\ConfigStore;
 use Icinga\Module\Eventtracker\Engine\Action\ActionRegistry;
 use Icinga\Module\Eventtracker\Engine\Bucket\BucketRegistry;
+use Icinga\Module\Eventtracker\Engine\Downtime\DowntimeRule;
 use Icinga\Module\Eventtracker\Modifier\ModifierChain;
 use Icinga\Module\Eventtracker\Modifier\ModifierUtils;
 use Icinga\Module\Eventtracker\Web\Form\ActionConfigForm;
 use Icinga\Module\Eventtracker\Web\Form\ApiTokenForm;
 use Icinga\Module\Eventtracker\Web\Form\BucketConfigForm;
 use Icinga\Module\Eventtracker\Web\Form\ChannelConfigForm;
+use Icinga\Module\Eventtracker\Web\Form\DowntimeForm;
 use Icinga\Module\Eventtracker\Web\Form\InputConfigForm;
 use Icinga\Module\Eventtracker\Engine\Input\InputRegistry;
 use Icinga\Module\Eventtracker\Web\Form\UuidObjectForm;
@@ -27,6 +29,8 @@ use Icinga\Module\Eventtracker\Web\Table\ConfiguredChannelsTable;
 use Icinga\Module\Eventtracker\Web\Table\ConfiguredHostListsTable;
 use Icinga\Module\Eventtracker\Web\Table\ConfiguredInputsTable;
 use Icinga\Module\Eventtracker\Web\Table\ConfiguredActionsTable;
+use Icinga\Module\Eventtracker\Web\Table\DowntimeRulesTable;
+use Icinga\Module\Eventtracker\Web\Table\DowntimeScheduleTable;
 use ipl\Html\Html;
 use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\UuidInterface;
@@ -92,6 +96,15 @@ class ConfigurationController extends Controller
                 'table_class' => ConfiguredBucketsTable::class,
                 'form_class'  => BucketConfigForm::class,
                 'registry'    => BucketRegistry::class,
+            ],
+            'downtimes' => [
+                'singular' => $this->translate('Downtime'),
+                'plural'   => $this->translate('Downtimes'),
+                'table'    => 'downtime_rule',
+                'list_url' => 'eventtracker/configuration/downtimes',
+                'url'      => 'eventtracker/configuration/downtime',
+                'table_class' => DowntimeRulesTable::class,
+                'form_class'  => DowntimeForm::class,
             ],
         ];
     }
@@ -168,6 +181,24 @@ class ConfigurationController extends Controller
         $this->variant = 'buckets';
         $this->addObjectTab();
         $this->content()->add($this->getForm());
+    }
+
+    public function downtimesAction()
+    {
+        $this->variant = 'downtimes';
+        $this->showList();
+    }
+
+    public function downtimeAction()
+    {
+        $this->variant = 'downtimes';
+        $this->addObjectTab();
+        /** @var DowntimeForm $form */
+        $form = $this->getForm();
+        $this->content()->add($form);
+        if ($form->hasObject()) {
+            $this->content()->add(new DowntimeScheduleTable($this->db(), $form->getObject()));
+        }
     }
 
     protected function showRules($rules)
