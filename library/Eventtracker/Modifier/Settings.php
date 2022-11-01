@@ -33,6 +33,7 @@ class Settings implements JsonSerializable
     {
         static::assertSerializableValue($value);
         $this->settings[$name] = $value;
+        ksort($this->settings);
     }
 
     public function get($name, $default = null)
@@ -53,7 +54,7 @@ class Settings implements JsonSerializable
         return $default;
     }
 
-    public function requireArray($name)
+    public function requireArray($name): array
     {
         return (array) $this->getRequired(($name));
     }
@@ -80,7 +81,7 @@ class Settings implements JsonSerializable
         throw new InvalidArgumentException("Setting '$name' is not available");
     }
 
-    public function has($name)
+    public function has($name): bool
     {
         return \array_key_exists($name, $this->settings);
     }
@@ -89,16 +90,15 @@ class Settings implements JsonSerializable
      * TODO: Check whether json_encode() is faster
      *
      * @param mixed $value
-     * @return bool
      */
     protected static function assertSerializableValue($value)
     {
         if ($value === null || is_scalar($value)) {
-            return true;
+            return;
         }
         if (is_object($value)) {
             if ($value instanceof JsonSerializable) {
-                return true;
+                return;
             }
 
             if ($value instanceof stdClass) {
@@ -106,7 +106,7 @@ class Settings implements JsonSerializable
                     static::assertSerializableValue($val);
                 }
 
-                return true;
+                return;
             }
         }
 
@@ -115,13 +115,13 @@ class Settings implements JsonSerializable
                 static::assertSerializableValue($val);
             }
 
-            return true;
+            return;
         }
 
         throw new InvalidArgumentException('Serializable value expected, got ' . static::getPhpType($value));
     }
 
-    protected static function getPhpType($var)
+    protected static function getPhpType($var): string
     {
         if (is_object($var)) {
             return get_class($var);
@@ -131,7 +131,7 @@ class Settings implements JsonSerializable
     }
 
     #[\ReturnTypeWillChange]
-    public function jsonSerialize()
+    public function jsonSerialize(): object
     {
         return (object) $this->settings;
     }
