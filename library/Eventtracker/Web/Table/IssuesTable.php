@@ -116,6 +116,11 @@ class IssuesTable extends BaseTable
             ])->setRenderer(function ($row) {
                 return Time::agoFormatted($row->received);
             })->setDefaultSortDirection('DESC'),
+            $this->createColumn('modified', $this->translate('Modified'), [
+                'modified' => 'i.ts_last_modified'
+            ])->setRenderer(function ($row) {
+                return Time::agoFormatted($row->modified);
+            })->setDefaultSortDirection('DESC'),
             $this->createColumn('host_name', $this->translate('Host'), [
                 'host_name' => 'i.host_name'
             ])->setSortExpression([
