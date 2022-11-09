@@ -14,12 +14,13 @@ class CommandFormExtension implements FormExtension
     public function enhanceForm(Form $form)
     {
         $form->addElement('text', 'command', [
-            'description' => Html::sprintf($this->translate(<<<'EOT'
+            'description' => Html::sprintf(
+                $this->translate(<<<'EOT'
 You can use placeholders to have command arguments replaced by real values.
 Placeholders are expressed with %s where %s can reference any issue property.
 Issue attributes can be accessed via %s and custom variables via %s.
 EOT
-            ),
+                ),
                 Html::tag('b', '{placeholder}'),
                 Html::tag('b', 'placeholder'),
                 Html::tag('b', 'attributes.key'),
