@@ -38,12 +38,12 @@ class PatternHelper
         }
     }
 
-    protected static function missingProperty($property)
+    protected static function missingProperty($property): string
     {
         return '{' . $property . '}';
     }
 
-    protected static function extractPropertyModifier($property)
+    protected static function extractPropertyModifier($property): array
     {
         $modifier = null;
         // TODO: make property modifiers dynamic
