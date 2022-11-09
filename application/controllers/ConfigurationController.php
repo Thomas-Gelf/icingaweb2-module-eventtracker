@@ -18,6 +18,7 @@ use Icinga\Module\Eventtracker\Web\Form\ApiTokenForm;
 use Icinga\Module\Eventtracker\Web\Form\BucketConfigForm;
 use Icinga\Module\Eventtracker\Web\Form\ChannelConfigForm;
 use Icinga\Module\Eventtracker\Web\Form\DowntimeForm;
+use Icinga\Module\Eventtracker\Web\Form\HostListForm;
 use Icinga\Module\Eventtracker\Web\Form\InputConfigForm;
 use Icinga\Module\Eventtracker\Engine\Input\InputRegistry;
 use Icinga\Module\Eventtracker\Web\Form\UuidObjectForm;
@@ -105,6 +106,15 @@ class ConfigurationController extends Controller
                 'url'      => 'eventtracker/configuration/downtime',
                 'table_class' => DowntimeRulesTable::class,
                 'form_class'  => DowntimeForm::class,
+            ],
+            'hostlists' => [
+                'singular' => $this->translate('Host list'),
+                'plural'   => $this->translate('Host lists'),
+                'table'    => 'host_list',
+                'list_url' => 'eventtracker/configuration/hostlists',
+                'url'      => 'eventtracker/configuration/hostlist',
+                'table_class' => ConfiguredHostListsTable::class,
+                'form_class'  => HostListForm::class,
             ],
         ];
     }
