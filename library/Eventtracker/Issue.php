@@ -180,7 +180,7 @@ class Issue
         return $issue;
     }
 
-    public static function create(Event $event, Db $db)
+    public static function create(Event $event): Issue
     {
         $issue = new Issue();
         $issue->createdNow = true;
@@ -233,8 +233,6 @@ class Issue
         $this->setProperties($properties);
 
         $this->files = $event->getFiles();
-
-        return $this;
     }
 
     public function hasBeenCreatedNow()
@@ -242,22 +240,22 @@ class Issue
         return $this->createdNow;
     }
 
-    public function isNew()
+    public function isNew(): bool
     {
         return $this->getStoredRepeatCount() === 0;
     }
 
-    public function isClosed()
+    public function isClosed(): bool
     {
         return $this->get('status') === 'closed';
     }
 
-    public function getStoredRepeatCount()
+    public function getStoredRepeatCount(): int
     {
         return (int) $this->get('cnt_events');
     }
 
-    public function getUuid()
+    public function getUuid(): ?string
     {
         return $this->get('issue_uuid');
     }
@@ -271,7 +269,7 @@ class Issue
         return bin2hex($this->get('issue_uuid'));
     }
 
-    public function getNiceUuid()
+    public function getNiceUuid(): string
     {
         return Uuid::fromBytes($this->get('issue_uuid'))->toString();
     }
@@ -292,7 +290,7 @@ class Issue
      * @throws \gipfl\ZfDb\Adapter\Exception\AdapterException
      * @throws \gipfl\ZfDb\Statement\Exception\StatementException
      */
-    public function storeToDb(Db $db)
+    public function storeToDb(Db $db): bool
     {
         $action = $this->detectEventualHookAction();
         if ($this->isNew()) {
@@ -312,10 +310,8 @@ class Issue
 
     /**
      * Could be externalized
-     *
-     * @return string|null
      */
-    protected function detectEventualHookAction()
+    protected function detectEventualHookAction(): ?string
     {
         if ($this->isNew()) {
             return 'onCreate';
@@ -463,7 +459,7 @@ class Issue
      * @throws \gipfl\ZfDb\Adapter\Exception\AdapterException
      * @throws \gipfl\ZfDb\Statement\Exception\StatementException
      */
-    protected function updateDb(Db $db)
+    protected function updateDb(Db $db): bool
     {
         if (! $this->hasChanged()) {
             return false;
