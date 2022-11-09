@@ -7,6 +7,7 @@ use gipfl\Web\Form;
 use Icinga\Module\Eventtracker\Db\ConfigStore;
 use Icinga\Module\Eventtracker\Engine\Registry;
 use Icinga\Web\Notification;
+use ipl\Html\FormElement\SubmitElement;
 use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\UuidInterface;
 
@@ -14,14 +15,14 @@ class UuidObjectForm extends Form
 {
     use TranslationHelper;
 
-    /** @var Registry */
-    protected $registry;
-
     /** @var ConfigStore */
     protected $store;
 
-    /** @var UuidInterface */
-    protected $uuid;
+    /** @var ?Registry */
+    protected $registry;
+
+    /** @var ?UuidInterface */
+    protected $uuid = null;
 
     /** @var bool */
     protected $deleted = false;
@@ -30,10 +31,10 @@ class UuidObjectForm extends Form
 
     protected $mainProperties;
 
-    public function __construct(Registry $registry, ConfigStore $store)
+    public function __construct(ConfigStore $store, ?Registry $registry = null)
     {
-        $this->registry = $registry;
         $this->store = $store;
+        $this->registry = $registry;
     }
 
     public function populate($values)
@@ -57,39 +58,50 @@ class UuidObjectForm extends Form
                 'label' => $this->translate('Create')
             ]);
         }
+        $submit = $this->getElement('submit');
+        assert($submit instanceof SubmitElement);
+        $this->setSubmitButton($submit);
     }
 
     protected function addDeleteButton()
     {
         $button = $this->createElement('submit', 'delete', [
-            'label' => $this->translate('Delete')
+            'label' => $this->translate('Delete'),
+            'formnovalidate' => true,
         ]);
         $this->addElement($button);
-        $labelReally = $this->translate('YES, I really want to delete this');
+        $label = $this->getObjectLabel();
+        $labelReally = sprintf($this->translate('YES, I really want to delete %s'), $label);
         if ($button->hasBeenPressed()) {
             $this->remove($button);
             $this->addElement('submit', 'really_delete', [
                 'label' => $labelReally,
+                'formnovalidate' => true,
             ]);
         }
         if ($this->getSentValue('really_delete') === $labelReally) {
             $this->store->deleteObject($this->table, $this->uuid);
             $this->deleted = true;
-            Notification::success(sprintf($this->translate('%s has been deleted'), $this->getElementValue('label')));
+            Notification::success(sprintf($this->translate('%s has been deleted'), $this->getObjectLabel()));
         }
     }
 
-    public function hasBeenDeleted()
+    protected function getObjectLabel()
+    {
+        return $this->getElementValue('label', $this->translate('A new object'));
+    }
+
+    public function hasBeenDeleted(): bool
     {
         return $this->deleted;
     }
 
-    public function getUuid()
+    public function getUuid(): ?UuidInterface
     {
         return $this->uuid;
     }
 
-    public function onSuccess()
+    protected function storeObject()
     {
         $values = $this->getValues();
 
@@ -110,15 +122,21 @@ class UuidObjectForm extends Form
         if ($this->uuid) {
             $properties['uuid'] = $this->uuid->toString();
         }
-        $result = $this->store->storeObject($this->table, $properties);
+
+        return $this->store->storeObject($this->table, $properties);
+    }
+
+    public function onSuccess()
+    {
+        $result = $this->storeObject();
         if ($result === true) {
             Notification::success(sprintf(
                 $this->translate('%s has been modified'),
-                $properties['label']
+                $this->getObjectLabel()
             ));
         } elseif ($result instanceof UuidInterface) {
             $this->uuid = $result;
-            Notification::success($this->translate('A new XXX has been defined'));
+            Notification::success(sprintf($this->translate('%s has been created'), $this->getObjectLabel()));
         }
     }
 }

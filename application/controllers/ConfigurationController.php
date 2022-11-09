@@ -7,12 +7,13 @@ use gipfl\IcingaWeb2\Url;
 use gipfl\Json\JsonDecodeException;
 use gipfl\Json\JsonString;
 use gipfl\Web\Widget\Hint;
+use gipfl\ZfDbStore\DbStorableInterface;
+use gipfl\ZfDbStore\ZfDbStore;
 use Icinga\Module\Eventtracker\Db\ConfigStore;
 use Icinga\Module\Eventtracker\Engine\Action\ActionRegistry;
 use Icinga\Module\Eventtracker\Engine\Bucket\BucketRegistry;
 use Icinga\Module\Eventtracker\Engine\Downtime\DowntimeRule;
 use Icinga\Module\Eventtracker\Modifier\ModifierChain;
-use Icinga\Module\Eventtracker\Modifier\ModifierUtils;
 use Icinga\Module\Eventtracker\Web\Form\ActionConfigForm;
 use Icinga\Module\Eventtracker\Web\Form\ApiTokenForm;
 use Icinga\Module\Eventtracker\Web\Form\BucketConfigForm;
@@ -124,6 +125,11 @@ class ConfigurationController extends Controller
         return $this->variants[$this->variant][$key];
     }
 
+    protected function variantHas($key): bool
+    {
+        return isset($this->variants[$this->variant][$key]);
+    }
+
     public function inputsAction()
     {
         $this->variant = 'inputs';
@@ -163,7 +169,7 @@ class ConfigurationController extends Controller
         $form = $this->getForm();
         $this->content()->add($form);
         if ($rules = $form->getElementValue('rules')) {
-            $this->showRules($rules);
+            $this->showRules($this->requireUuid(), $rules);
         }
     }
 
@@ -211,7 +217,20 @@ class ConfigurationController extends Controller
         }
     }
 
-    protected function showRules($rules)
+    public function hostlistsAction()
+    {
+        $this->variant = 'hostlists';
+        $this->showList();
+    }
+
+    public function hostlistAction()
+    {
+        $this->variant = 'hostlists';
+        $this->addObjectTab();
+        $this->content()->add($this->getForm());
+    }
+
+    protected function showRules(UuidInterface $uuid, $rules)
     {
         try {
             $modifiers = ModifierChain::fromSerialization(JsonString::decode($rules));
@@ -254,8 +273,12 @@ class ConfigurationController extends Controller
         $store = $this->getStore();
         /** @var string|UuidObjectForm $formClass IDE hint */
         $formClass = $this->variant('form_class');
-        $registryClass = $this->variant('registry');
-        $form = new $formClass(new $registryClass, $store);
+        if ($this->variantHas('registry')) {
+            $registryClass = $this->variant('registry');
+            $form = new $formClass($store, new $registryClass);
+        } else {
+            $form = new $formClass($store);
+        }
         $form->on($form::ON_SUCCESS, function (UuidObjectForm $form) {
             $this->redirectNow(Url::fromPath($this->variant('url'), [
                 'uuid' => $form->getUuid()->toString()
@@ -270,12 +293,19 @@ class ConfigurationController extends Controller
         $objectType = $this->variant('singular');
         if ($this->params->has('uuid')) {
             $object = $this->getObject();
-            if (isset($object->permissions)) {
-                $object->permissions = JsonString::decode($object->permissions);
+            if ($object instanceof DbStorableInterface) {
+                /** DowntimeForm only right now, need a form interface */
+                $form->setObject($object);
+                $label = $object->get('label');
+            } else {
+                if (isset($object->permissions)) {
+                    $object->permissions = JsonString::decode($object->permissions);
+                }
+                $this->flattenObjectSettings($object);
+                $form->populate((array) $object);
+                $label = $object->label;
             }
-            $this->flattenObjectSettings($object);
-            $form->populate((array) $object);
-            $this->addTitle("$objectType: %s", $object->label);
+            $this->addTitle("$objectType: %s", $label);
         } else {
             $this->addTitle($this->translate('Define a new %s'), $objectType);
         }
@@ -304,12 +334,12 @@ class ConfigurationController extends Controller
         $this->addSingleTab(sprintf($this->translate('%s Configuration'), $this->variant('singular')));
     }
 
-    protected function getTableName()
+    protected function getTableName(): string
     {
         return $this->variant('table');
     }
 
-    protected function getStore()
+    protected function getStore(): ConfigStore
     {
         if ($this->store === null) {
             $this->store = new ConfigStore($this->db());
@@ -318,35 +348,46 @@ class ConfigurationController extends Controller
         return $this->store;
     }
 
-    /**
-     * @param UuidInterface $uuid
-     * @param string $table
-     * @return object
-     */
-    protected function loadObject(UuidInterface $uuid, $table)
+    protected function loadObject(UuidInterface $uuid, string $table): object
     {
+        if ($this->variant('form_class') === DowntimeForm::class) {
+            $store = new ZfDbStore($this->db());
+            return $store->load($uuid->getBytes(), DowntimeRule::class);
+        }
         return $this->getStore()->fetchObject($table, $uuid);
     }
 
-    /**
-     * @return object|null
-     */
-    protected function getObject()
+    protected function getObject(): ?object
     {
-        if ($uuid = $this->params->get('uuid')) {
-            return $this->loadObject(Uuid::fromString($uuid), $this->getTableName());
+        if ($uuid = $this->getUuid()) {
+            return $this->loadObject($uuid, $this->getTableName());
         }
 
         return null;
+    }
+
+    protected function getUuid(): ?UuidInterface
+    {
+        $uuid = $this->params->get('uuid');
+        if ($uuid !== null) {
+            return Uuid::fromString($uuid);
+        }
+
+        return null;
+    }
+
+    protected function requireUuid(): UuidInterface
+    {
+        return Uuid::fromString($this->params->getRequired('uuid'));
     }
 
     /**
      * @return object
      * @throws \Icinga\Exception\MissingParameterException
      */
-    protected function requireObject()
+    protected function requireObject(): object
     {
-        return $this->loadObject(Uuid::fromString($this->params->getRequired('uuid')), $this->getTableName());
+        return $this->loadObject($this->requireUuid(), $this->getTableName());
     }
 
     protected function flattenObjectSettings($object)
