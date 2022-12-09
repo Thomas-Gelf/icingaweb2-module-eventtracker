@@ -80,6 +80,48 @@ vars = location, priority
 ; search_domain = example.com
 ```
 
+### Maintenance configuration (temporary)
+
+> **Note**
+> This is a temporary, experimental feature. It will soon be superseded and
+> replaced by a better implementation. Use at your own risk, it might be removed
+> without pre-announcement at any time.
+
+To set a list of Hosts in maintenance, you can provide a JSON-encoded host list
+file. Tell the Eventtracker about its existence:
+
+```ini
+[maintenance]
+host_list = "/etc/icingaweb2/modules/eventtracker/host_maintenance_list.json"
+; hostname_property = "hostname"
+```
+
+It must contain a list of objects, and could look as follows:
+
+```json
+[
+  {"hostname":  "sample1.example.com", "address":  "192.0.2.11"},
+  {"hostname":  "sample2.example.com", "address":  "192.0.2.12"}
+]
+```
+
+Optionally you can define which property to use as your hostname, this defaults
+to `hostname`. If configured, Eventtracker will complain about a missing file
+or invalid JSON encodings or content lines.
+
+The easiest way to create such a file is leveraging the Import Source functionality
+of the Icinga Director. Pick any Import Source by ID, and let a Cron job write it's
+content to disk:
+
+```
+*/5 * * * * /usr/bin/icingacli director importsource fetch --id YOUR_ID \
+ > /etc/icingaweb2/modules/eventtracker/host_maintenance_list.json
+```
+
+> **Note**
+> Adding entries to this list has no effect on already created issues, unless a
+> new related event arrives
+
 ### msend Configuration
 
 **DEPRECATED**: this still works, but the msend receiver has been moved to the
