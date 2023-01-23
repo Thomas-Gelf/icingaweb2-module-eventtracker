@@ -2,10 +2,7 @@
 
 namespace Icinga\Module\Eventtracker;
 
-use gipfl\Json\JsonString;
 use gipfl\ZfDb\Adapter\Adapter as Db;
-use Icinga\Application\Config;
-use Icinga\Application\Logger;
 use Icinga\Module\Eventtracker\Db\ConfigStore;
 use Icinga\Module\Eventtracker\Engine\Action;
 use Icinga\Module\Eventtracker\Engine\Action\ActionHelper;
@@ -30,18 +27,11 @@ class EventReceiver
     /** @var bool */
     protected $runActions;
 
-    /** @var ?string */
-    protected $hostBlacklistPath;
-
-    /** @var ?string */
-    protected $hostBlacklistProperty;
-
     public function __construct(Db $db, $runActions = true)
     {
         $this->db = $db;
         $this->counters = new Counters();
         $this->runActions = $runActions;
-        $this->loadHostMaintenanceListPath();
     }
 
     /**
@@ -53,12 +43,7 @@ class EventReceiver
     public function processEvent(Event $event)
     {
         $issue = Issue::loadIfEventExists($event, $this->db);
-        if ($hostname = $event->get('host_name')) {
-            $inMaintenance = $this->hostIsInMaintenance($hostname);
-        } else {
-            $inMaintenance = false;
-        }
-        if ($event->hasBeenCleared() || $inMaintenance) {
+        if ($event->hasBeenCleared()) {
             if ($issue) {
                 $this->counters->increment(self::CNT_RECOVERED);
                 $issue->recover($event, $this->db);
@@ -95,57 +80,6 @@ class EventReceiver
         }
 
         return $issue;
-    }
-
-    protected function hostIsInMaintenance($hostname): bool
-    {
-        return isset($this->getHostMaintenanceList()[$hostname]);
-    }
-
-    protected function getHostMaintenanceList(): array
-    {
-        $result = [];
-        if  ($this->hostBlacklistPath && file_exists($this->hostBlacklistPath)) {
-            try {
-                $content = @file_get_contents($this->hostBlacklistPath);
-                if ($content) {
-                    $list = JsonString::decode($content);
-                    $invalidRows = false;
-                    if (is_array($list)) {
-                        $property = $this->hostBlacklistProperty;
-                        foreach ($list as $row) {
-                            if (is_object($row)) {
-                                if (isset($row->$property)) {
-                                    $result[$row->$property] = $row->$property;
-                                } else {
-                                    $invalidRows = true;
-                                }
-                            } else {
-                                $invalidRows = true;
-                            }
-                        }
-                        if ($invalidRows) {
-                            Logger::error('Host maintenance list had invalid rows');
-                        }
-                    } else {
-                        Logger::error('Host maintenance list is not an array');
-                    }
-                }
-            } catch (\Exception $e) {
-                Logger::error('Could not read host maintenance file: ' . $e->getMessage());
-            }
-        }
-
-        return $result;
-    }
-
-    protected function loadHostMaintenanceListPath()
-    {
-        $config = Config::module('eventtracker');
-        if ($path = $config->get('maintenance', 'host_list')) {
-            $this->hostBlacklistPath = $path;
-            $this->hostBlacklistProperty = $config->get('maintenance', 'hostname_property', 'hostname');
-        }
     }
 
     public function getCounters()
