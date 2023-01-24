@@ -5,11 +5,9 @@ namespace Icinga\Module\Eventtracker\Web\Widget;
 use gipfl\IcingaWeb2\Link;
 use gipfl\IcingaWeb2\Url;
 use gipfl\Translation\TranslationHelper;
-use gipfl\Web\Widget\Hint;
 use gipfl\ZfDb\Adapter\Adapter as Db;
 use Icinga\Authentication\Auth;
 use Icinga\Date\DateFormatter;
-use Icinga\Module\Eventtracker\DbFactory;
 use Icinga\Module\Eventtracker\Input;
 use Icinga\Module\Eventtracker\File;
 use Icinga\Module\Eventtracker\Hook\EventActionsHook;
@@ -17,8 +15,8 @@ use Icinga\Module\Eventtracker\Issue;
 use Icinga\Module\Eventtracker\Sender;
 use Icinga\Module\Eventtracker\Web\Form\ChangePriorityForm;
 use Icinga\Module\Eventtracker\Web\Form\CloseIssueForm;
+use Icinga\Module\Eventtracker\Web\Form\FileUploadForm;
 use Icinga\Module\Eventtracker\Web\Form\GiveOwnerShipForm;
-use Icinga\Module\Eventtracker\Web\Form\LinkLikeForm;
 use Icinga\Module\Eventtracker\Web\Form\ReOpenIssueForm;
 use Icinga\Module\Eventtracker\Web\Form\TakeIssueForm;
 use Icinga\Module\Eventtracker\Web\HtmlPurifier;
@@ -28,7 +26,6 @@ use Icinga\Web\Response;
 use ipl\Html\BaseHtmlElement;
 use ipl\Html\Html;
 use ipl\Html\HtmlDocument;
-use ipl\Html\HtmlString;
 use ipl\Html\ValidHtml;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -55,6 +52,9 @@ class IssueHeader extends BaseHtmlElement
     /** @var Response */
     protected $response;
 
+    /** @var Url */
+    protected $requestedUrl;
+
     /** @var Db */
     protected $db;
 
@@ -63,11 +63,13 @@ class IssueHeader extends BaseHtmlElement
         Db $db,
         ServerRequestInterface $request,
         Response $response,
+        Url $requestedUrl,
         Auth $auth
     ) {
         $this->issue = $issue;
         $this->request = $request;
         $this->response = $response;
+        $this->requestedUrl = $requestedUrl;
         $this->isOperator = $auth->hasPermission('eventtracker/operator');
         $this->db = $db;
     }
@@ -286,34 +288,47 @@ class IssueHeader extends BaseHtmlElement
         return $result;
     }
 
-    protected function renderFiles(Issue $issue): ?ValidHtml
+    protected function renderFiles(Issue $issue): array
     {
         $files = File::loadAllByIssue($issue, $this->db);
-        if (! empty($files)) {
-            $links = [];
-
-            foreach ($files as $file) {
-                if (! empty($links)) {
-                    $links[] = new HtmlString("\n       ");
-                }
-
-                $links[] = Html::tag('a', [
-                    'href' => Url::fromPath('eventtracker/issue/file', [
-                        'uuid'              => $issue->getNiceUuid(),
-                        'checksum'          => bin2hex($file->get('checksum')),
-                        'filename_checksum' => sha1($file->get('filename'))
-                    ]),
-                    'target' => '_blank'
-                ], sprintf('%s (%s)', $file->get('filename'), Format::bytes($file->get('size'))));
-            }
-
-            return (new HtmlDocument())
-                ->add("\n")
-                ->add(Html::tag('strong', 'Files: '))
-                ->addHtml(...$links);
+        $main = [
+            "\n",
+            Html::tag('strong', 'Files:  '),
+        ];
+        if ($this->requestedUrl->getParam('upload')) {
+            $main[] = Link::create($this->translate('Hide upload form'), $this->requestedUrl->without('upload'), null, [
+                'class' => 'icon-left-big',
+            ]);
+            $main[] = "\n";
+            $form = new FileUploadForm($this->issue, $this->db);
+            $form->on($form::ON_SUCCESS, function () {
+                $this->response->redirectAndExit($this->requestedUrl->without('upload'));
+            });
+            $form->handleRequest($this->request);
+            $main[] = $form;
+        } else {
+            $main[] = Link::create($this->translate('Upload'), $this->requestedUrl->with('upload', true), null, [
+                'class' => 'icon-upload',
+            ]);
         }
 
-        return null;
+        foreach ($files as $file) {
+            $main[] = "\n        ";
+            $main[] = Link::create(
+                $file->get('filename'),
+                'eventtracker/issue/file',
+                [
+                    'uuid'              => $issue->getNiceUuid(),
+                    'checksum'          => bin2hex($file->get('checksum')),
+                    'filename_checksum' => sha1($file->get('filename'))
+                ], [
+                'target' => '_blank'
+                ]
+            );
+            $main[] = sprintf(' (%s)', Format::bytes($file->get('size')));
+        }
+
+        return $main;
     }
 
     protected function renderInputAndSender(Issue $issue): ?ValidHtml
@@ -324,9 +339,11 @@ class IssueHeader extends BaseHtmlElement
         if ($inputUuid !== null) {
             $input = Input::byId(Uuid::fromBytes($inputUuid), $this->db);
             if ($input !== null) {
-                $html->add("\n");
-                $html->addHtml(Html::tag('strong', 'Input:  '));
-                $html->add($input->get('label'));
+                $html->add([
+                    "\n",
+                    Html::tag('strong', 'Input:  '),
+                    $input->get('label'),
+                ]);
             }
         }
 
@@ -334,9 +351,11 @@ class IssueHeader extends BaseHtmlElement
         if ($senderId !== null) {
             $sender = Sender::byId($senderId, $this->db);
             if ($sender !== null) {
-                $html->add("\n");
-                $html->addHtml(Html::tag('strong', 'Sender: '));
-                $html->add($sender->get('sender_name'));
+                $html->add([
+                    "\n",
+                    Html::tag('strong', 'Sender: '),
+                    $sender->get('sender_name'),
+                ]);
             }
         }
 
