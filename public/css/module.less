@@ -885,3 +885,28 @@ position: relative;
 
 
 /** END of gipfl dashboard actions */
+
+pre form {
+  white-space: normal;
+}
+
+.eventtracker-file-drop-zone {
+  width: 40em;
+  height: 15em;
+  border: 0.3em dashed @icinga-blue;
+  -webkit-border-radius: 1em;
+  -moz-border-radius: 1em;
+  border-radius: 1em;
+  &.is-dragover {
+    background-color: @gray-light;
+  }
+  &::before {
+    font-family: 'ifont';
+    color: @icinga-blue;
+    content: '\e808';
+    top: 0.5em;
+    position: relative;
+    padding-left: 2.75em;
+    font-size: 6em;
+  }
+}

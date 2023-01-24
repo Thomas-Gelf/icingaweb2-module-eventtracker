@@ -207,7 +207,14 @@ class IssueController extends Controller
 
     protected function issueHeader(Issue $issue)
     {
-        return new IssueHeader($issue, $this->db(), $this->getServerRequest(), $this->getResponse(), $this->Auth());
+        return new IssueHeader(
+            $issue,
+            $this->db(),
+            $this->getServerRequest(),
+            $this->getResponse(),
+            $this->url(),
+            $this->Auth()
+        );
     }
 
     // TODO: IssueList?
