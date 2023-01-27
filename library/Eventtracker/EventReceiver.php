@@ -111,9 +111,9 @@ class EventReceiver
                 if ($content) {
                     $list = JsonString::decode($content);
                     $invalidRows = false;
-                    if (is_array($list)) {
+                    if (is_object($list) || is_array($list)) {
                         $property = $this->hostBlacklistProperty;
-                        foreach ($list as $row) {
+                        foreach ((array) $list as $row) {
                             if (is_object($row)) {
                                 if (isset($row->$property)) {
                                     $result[$row->$property] = $row->$property;
