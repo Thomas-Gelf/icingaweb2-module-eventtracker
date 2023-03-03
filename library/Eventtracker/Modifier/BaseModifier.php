@@ -2,6 +2,7 @@
 
 namespace Icinga\Module\Eventtracker\Modifier;
 
+use ipl\Html\ValidHtml;
 use function array_pop;
 use function explode;
 use function get_called_class;
@@ -36,13 +37,13 @@ abstract class BaseModifier implements Modifier
         return $this->settings;
     }
 
-    public function getInstanceDescription(): ?string
+    /**
+     * @param string $propertyName
+     * @return string|ValidHtml
+     */
+    public function describe(string $propertyName)
     {
-        if ($this->instanceDescriptionPattern === null) {
-            return null;
-        }
-
-        return PatternHelper::fillPlaceholders($this->instanceDescriptionPattern, $this->settings->jsonSerialize());
+        return ModifierUtils::getFullModifierDescription($propertyName, $this);
     }
 
     public static function getDescription()
