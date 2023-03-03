@@ -10,207 +10,197 @@ use gipfl\Web\Widget\Hint;
 use gipfl\ZfDbStore\DbStorableInterface;
 use gipfl\ZfDbStore\ZfDbStore;
 use Icinga\Module\Eventtracker\Db\ConfigStore;
-use Icinga\Module\Eventtracker\Engine\Action\ActionRegistry;
-use Icinga\Module\Eventtracker\Engine\Bucket\BucketRegistry;
 use Icinga\Module\Eventtracker\Engine\Downtime\DowntimeRule;
+use Icinga\Module\Eventtracker\Engine\Input\KafkaInput;
 use Icinga\Module\Eventtracker\Modifier\ModifierChain;
-use Icinga\Module\Eventtracker\Web\Form\ActionConfigForm;
-use Icinga\Module\Eventtracker\Web\Form\ApiTokenForm;
-use Icinga\Module\Eventtracker\Web\Form\BucketConfigForm;
-use Icinga\Module\Eventtracker\Web\Form\ChannelConfigForm;
+use Icinga\Module\Eventtracker\Modifier\Settings;
+use Icinga\Module\Eventtracker\Web\Dashboard\ConfigurationDashboard;
 use Icinga\Module\Eventtracker\Web\Form\DowntimeForm;
-use Icinga\Module\Eventtracker\Web\Form\HostListForm;
-use Icinga\Module\Eventtracker\Web\Form\InputConfigForm;
-use Icinga\Module\Eventtracker\Engine\Input\InputRegistry;
 use Icinga\Module\Eventtracker\Web\Form\UuidObjectForm;
-use Icinga\Module\Eventtracker\Web\Table\ApiTokensTable;
 use Icinga\Module\Eventtracker\Web\Table\BaseTable;
 use Icinga\Module\Eventtracker\Web\Table\ChannelRulesTable;
-use Icinga\Module\Eventtracker\Web\Table\ConfiguredBucketsTable;
-use Icinga\Module\Eventtracker\Web\Table\ConfiguredChannelsTable;
-use Icinga\Module\Eventtracker\Web\Table\ConfiguredHostListsTable;
-use Icinga\Module\Eventtracker\Web\Table\ConfiguredInputsTable;
-use Icinga\Module\Eventtracker\Web\Table\ConfiguredActionsTable;
-use Icinga\Module\Eventtracker\Web\Table\DowntimeRulesTable;
 use Icinga\Module\Eventtracker\Web\Table\DowntimeScheduleTable;
+use Icinga\Module\Eventtracker\Web\WebAction;
+use Icinga\Module\Eventtracker\Web\WebActions;
 use ipl\Html\Html;
 use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\UuidInterface;
 
 class ConfigurationController extends Controller
 {
-    protected $variants;
-
-    protected $variant;
-
     /** @var ConfigStore */
     protected $store;
 
+    /** @var WebActions */
+    protected $actions;
+
     public function init()
     {
-        $this->variants = [
-            'inputs' => [
-                'singular' => $this->translate('Input'),
-                'plural'   => $this->translate('Inputs'),
-                'table'    => 'input',
-                'list_url' => 'eventtracker/configuration/inputs',
-                'url'      => 'eventtracker/configuration/input',
-                'table_class' => ConfiguredInputsTable::class,
-                'form_class'  => InputConfigForm::class,
-                'registry'    => InputRegistry::class,
-            ],
-            'channels' => [
-                'singular' => $this->translate('Channel'),
-                'plural'   => $this->translate('Channels'),
-                'table'    => 'channel',
-                'list_url' => 'eventtracker/configuration/channels',
-                'url'      => 'eventtracker/configuration/channel',
-                'table_class' => ConfiguredChannelsTable::class,
-                'form_class'  => ChannelConfigForm::class,
-                'registry'    => InputRegistry::class,
-            ],
-            'apitokens' => [
-                'singular' => $this->translate('API Token'),
-                'plural'   => $this->translate('Api Tokens'),
-                'table'    => 'api_token',
-                'list_url' => 'eventtracker/configuration/apitokens',
-                'url'      => 'eventtracker/configuration/apitoken',
-                'table_class' => ApiTokensTable::class,
-                'form_class'  => ApiTokenForm::class,
-                'registry'    => InputRegistry::class,
-            ],
-            'actions' => [
-                'singular' => $this->translate('Action'),
-                'plural'   => $this->translate('Actions'),
-                'table'    => 'action',
-                'list_url' => 'eventtracker/configuration/actions',
-                'url'      => 'eventtracker/configuration/action',
-                'table_class' => ConfiguredActionsTable::class,
-                'form_class'  => ActionConfigForm::class,
-                'registry'    => ActionRegistry::class,
-            ],
-            'buckets' => [
-                'singular' => $this->translate('Bucket'),
-                'plural'   => $this->translate('Buckets'),
-                'table'    => 'bucket',
-                'list_url' => 'eventtracker/configuration/buckets',
-                'url'      => 'eventtracker/configuration/bucket',
-                'table_class' => ConfiguredBucketsTable::class,
-                'form_class'  => BucketConfigForm::class,
-                'registry'    => BucketRegistry::class,
-            ],
-            'downtimes' => [
-                'singular' => $this->translate('Downtime'),
-                'plural'   => $this->translate('Downtimes'),
-                'table'    => 'downtime_rule',
-                'list_url' => 'eventtracker/configuration/downtimes',
-                'url'      => 'eventtracker/configuration/downtime',
-                'table_class' => DowntimeRulesTable::class,
-                'form_class'  => DowntimeForm::class,
-            ],
-            'hostlists' => [
-                'singular' => $this->translate('Host list'),
-                'plural'   => $this->translate('Host lists'),
-                'table'    => 'host_list',
-                'list_url' => 'eventtracker/configuration/hostlists',
-                'url'      => 'eventtracker/configuration/hostlist',
-                'table_class' => ConfiguredHostListsTable::class,
-                'form_class'  => HostListForm::class,
-            ],
-        ];
+        $this->actions = new WebActions();
     }
 
-    protected function variant($key)
+    public function indexAction()
     {
-        return $this->variants[$this->variant][$key];
+        $this->setTitle($this->translate('Configuration'));
+        $this->addSingleTab($this->translate('Configuration'));
+        $this->content()->add(new ConfigurationDashboard($this->actions));
     }
 
-    protected function variantHas($key): bool
+    public function listenersAction()
     {
-        return isset($this->variants[$this->variant][$key]);
+        $this->showList($this->actions->get('listeners'));
     }
 
-    public function inputsAction()
+    public function listenerAction()
     {
-        $this->variant = 'inputs';
-        $this->showList();
-    }
-
-    public function inputAction()
-    {
-        $this->variant = 'inputs';
-        $this->addObjectTab();
-        $this->content()->add($this->getForm());
+        $action = $this->actions->get('listeners');
+        $this->addObjectTab($action);
+        if ($object = $this->getObject($action)) {
+            switch ($object->implementation) {
+                case 'kafka':
+                    $input = new KafkaInput(
+                        Settings::fromSerialization($object->settings),
+                        $this->getUuid(),
+                        $object->label
+                    );
+                    $this->content()->add(
+                        Hint::info([
+                            Html::tag('strong', $this->translate('Command preview') . ': '),
+                            Html::tag('pre', ['style' => 'background: none; line-height: 1.2em'], preg_replace(
+                                '/( \'?-)/',
+                                " \\\n   $1",
+                                $input->prepareCommandString()
+                            ))
+                        ])
+                    );
+            }
+        }
+        $this->content()->add($this->getForm($action));
     }
 
     public function apitokensAction()
     {
-        $this->variant = 'apitokens';
-        $this->showList();
+        $this->showList($this->actions->get('apitokens'));
     }
 
     public function apitokenAction()
     {
-        $this->variant = 'apitokens';
-        $this->addObjectTab();
-        $this->content()->add($this->getForm());
+        $action = $this->actions->get('apitokens');
+        $this->addObjectTab($action);
+        $this->content()->add($this->getForm($action));
     }
 
     public function channelsAction()
     {
-        $this->variant = 'channels';
-        $this->showList();
+        $this->showList($this->actions->get('channels'));
     }
 
     public function channelAction()
     {
-        $this->variant = 'channels';
-        $this->addObjectTab();
-        $form = $this->getForm();
-        $this->content()->add($form);
+        $action = $this->actions->get('channels');
+        if ($this->getUuid()) {
+            $this->channelTabs()->activate('channel');
+        } else {
+            $this->addObjectTab($action);
+        }
+        $this->content()->add($this->getForm($action));
+    }
+
+    public function channelrulesAction()
+    {
+        $action = $this->actions->get('channels');
+        $this->channelTabs()->activate('rules');
+        $this->actions()->add(Link::create($this->translate('Edit'), 'TODO', [
+            'what' => 'ever'
+        ], [
+            'class' => 'icon-edit'
+        ]));
+        $form = $this->getForm($action); // TODO: w/o form
         if ($rules = $form->getElementValue('rules')) {
             $this->showRules($this->requireUuid(), $rules);
         }
     }
 
+    public function channelruleAction()
+    {
+        $action = $this->actions->get('channels');
+        $modifierPosition = $this->params->get('modifier');
+        if (null === $modifierPosition) {
+            $label = $this->translate('Add new Rule');
+        } else {
+            $label = $this->translate('Rule');
+        }
+        $this->channelTabs()->add('rule', [
+            'label' => $label,
+            'url'   => 'eventtracker/configuration/channelrule',
+            'urlParams' => $this->url()->getParams()->toArray(false),
+        ])->activate('rule');
+        $form = $this->getForm($action); // TODO: w/o form
+    }
+
+    protected function channelTabs()
+    {
+        $params = [
+            'uuid' => $this->requireUuid()->toString()
+        ];
+        return $this->tabs()->add('channel', [
+            'label' => $this->translate('Channel Configuration'),
+            'url'   => 'eventtracker/configuration/channel',
+            'urlParams' => $params,
+        ])->add('rules', [
+            'label' => $this->translate('Rules'),
+            'url'   => 'eventtracker/configuration/channelrules',
+            'urlParams' => $params,
+        ]);
+    }
+
     public function actionsAction()
     {
-        $this->variant = 'actions';
-        $this->showList();
+        $this->showList($this->actions->get('actions'));
     }
 
     public function actionAction()
     {
-        $this->variant = 'actions';
-        $this->addObjectTab();
-        $this->content()->add($this->getForm());
+        $action = $this->actions->get('actions');
+        $this->addObjectTab($action);
+        $this->content()->add($this->getForm($action));
     }
 
     public function bucketsAction()
     {
-        $this->variant = 'buckets';
-        $this->showList();
+        $this->showList($this->actions->get('buckets'));
     }
 
     public function bucketAction()
     {
-        $this->variant = 'buckets';
-        $this->addObjectTab();
-        $this->content()->add($this->getForm());
+        $action = $this->actions->get('buckets');
+        $this->addObjectTab($action);
+        $this->content()->add($this->getForm($action));
+    }
+
+    public function mapsAction()
+    {
+        $this->showList($this->actions->get('maps'));
+    }
+
+    public function mapAction()
+    {
+        $action = $this->actions->get('maps');
+        $this->addObjectTab($action);
+        $this->content()->add($this->getForm($action));
     }
 
     public function downtimesAction()
     {
-        $this->variant = 'downtimes';
-        $this->showList();
+        $this->showList($this->actions->get('downtimes'));
     }
 
     public function downtimeAction()
     {
-        $this->variant = 'downtimes';
-        $this->addObjectTab();
+        $action = $this->actions->get('downtimes');
+        $this->addObjectTab($action);
         /** @var DowntimeForm $form */
-        $form = $this->getForm();
+        $form = $this->getForm($action);
         $this->content()->add($form);
         if ($form->hasObject()) {
             $this->content()->add(new DowntimeScheduleTable($this->db(), $form->getObject()));
@@ -219,15 +209,14 @@ class ConfigurationController extends Controller
 
     public function hostlistsAction()
     {
-        $this->variant = 'hostlists';
-        $this->showList();
+        $this->showList($this->actions->get('hostlists'));
     }
 
     public function hostlistAction()
     {
-        $this->variant = 'hostlists';
-        $this->addObjectTab();
-        $this->content()->add($this->getForm());
+        $action = $this->actions->get('hostlists');
+        $this->addObjectTab($action);
+        $this->content()->add($this->getForm($action));
     }
 
     protected function showRules(UuidInterface $uuid, $rules)
@@ -237,62 +226,69 @@ class ConfigurationController extends Controller
         } catch (JsonDecodeException $e) {
             return;
         }
-        $info = Html::tag('ul');
-        foreach ($modifiers->getModifiers() as list($propertyName, $modifier)) {
-            $info->add(Html::tag('li', ModifierUtils::describeModifier($propertyName, $modifier)));
-        }
+        $url = Url::fromPath('eventtracker/configuration/channelrule', [
+            'uuid' => $uuid->toString()
+        ]);
+        $info = new ChannelRulesTable($modifiers, $url, $this->getServerRequest());
         $this->content()->add([
             Html::tag('h3', $this->translate('Configured Rules')),
             $info
         ]);
     }
 
-    protected function showList()
+    protected function showList(WebAction $action)
     {
-        $this->addTitle(sprintf($this->translate('Configured %s'), $this->variant('plural')));
-        $this->tabForList($this->variant);
-        $this->actions()->add(Link::create($this->translate('Add'), $this->variant('url'), null, [
+        $this->addTitle(sprintf($this->translate('Configured %s'), $action->plural));
+        $this->tabForList($action);
+        $this->actions()->add(Link::create($this->translate('Add'), $action->url, null, [
             'data-base-target' => '_next',
             'class' => 'icon-plus',
         ]));
-        /** @var string|BaseTable $class IDE Hint*/
-        $class = $this->variant('table_class');
+        $this->content()->add([
+            Html::tag('div', [
+                'class' => 'gipfl-compact-dashboard',
+            ], new ConfigurationDashboard($this->actions)),
+            $content = Html::tag('div', [
+                'class' => 'gipfl-content-next-to-compact-dashboard',
+            ])
+        ]);
+        $class = $action->tableClass;
+        /** @var BaseTable $table */
         $table = new $class($this->db());
         if ($table->count() > 0) {
-            $this->content()->add($table);
+            $content->add($table);
         } else {
-            $this->content()->add(Hint::info(sprintf(
+            $content->add(Hint::info(sprintf(
                 $this->translate('Please configure your first %s'),
-                $this->variant('singular')
+                $action->singular
             )));
         }
     }
 
-    protected function createForm(): UuidObjectForm
+    protected function createForm(WebAction $action): UuidObjectForm
     {
         $store = $this->getStore();
         /** @var string|UuidObjectForm $formClass IDE hint */
-        $formClass = $this->variant('form_class');
-        if ($this->variantHas('registry')) {
-            $registryClass = $this->variant('registry');
+        $formClass = $action->formClass;
+        if ($registryClass = $action->registry) {
             $form = new $formClass($store, new $registryClass);
         } else {
             $form = new $formClass($store);
         }
-        $form->on($form::ON_SUCCESS, function (UuidObjectForm $form) {
-            $this->redirectNow(Url::fromPath($this->variant('url'), [
+        $form->on($form::ON_SUCCESS, function (UuidObjectForm $form) use ($action) {
+            $this->redirectNow(Url::fromPath($action->url, [
                 'uuid' => $form->getUuid()->toString()
             ]));
         });
         return $form;
     }
 
-    protected function getForm(): UuidObjectForm
+    protected function getForm(WebAction $action): UuidObjectForm
     {
-        $form = $this->createForm();
-        $objectType = $this->variant('singular');
-        if ($this->params->has('uuid')) {
-            $object = $this->getObject();
+        $form = $this->createForm($action);
+        $objectType = $action->singular;
+        if ($this->getUuid()) {
+            $object = $this->getObject($action);
             if ($object instanceof DbStorableInterface) {
                 /** DowntimeForm only right now, need a form interface */
                 $form->setObject($object);
@@ -311,32 +307,29 @@ class ConfigurationController extends Controller
         }
         $form->handleRequest($this->getServerRequest());
         if ($form->hasBeenDeleted()) {
-            $this->redirectNow($this->variant('list_url'));
+            $this->redirectNow($action->listUrl);
         }
 
         return $form;
     }
 
-    protected function tabForList($name)
+    protected function tabForList(WebAction $action)
     {
         $tabs = $this->tabs();
-        foreach ($this->variants as $key => $variant) {
-            $tabs->add($key, [
-                'label' => $variant['plural'],
-                'url'   => $variant['list_url']
-            ]);
-        }
-        $tabs->activate($name);
+        $tabs->add('index', [
+            'label' => $this->translate('Configuration'),
+            'url'   => 'eventtracker/configuration',
+        ]);
+        $tabs->add($action->name, [
+            'label' => $action->plural,
+            'url'   => $action->listUrl
+        ]);
+        $tabs->activate($action->name);
     }
 
-    protected function addObjectTab()
+    protected function addObjectTab(WebAction $action)
     {
-        $this->addSingleTab(sprintf($this->translate('%s Configuration'), $this->variant('singular')));
-    }
-
-    protected function getTableName(): string
-    {
-        return $this->variant('table');
+        $this->addSingleTab(sprintf($this->translate('%s Configuration'), $action->singular));
     }
 
     protected function getStore(): ConfigStore
@@ -348,19 +341,19 @@ class ConfigurationController extends Controller
         return $this->store;
     }
 
-    protected function loadObject(UuidInterface $uuid, string $table): object
+    protected function loadObject(UuidInterface $uuid, WebAction $action): object
     {
-        if ($this->variant('form_class') === DowntimeForm::class) {
+        if ($action->formClass === DowntimeForm::class) {
             $store = new ZfDbStore($this->db());
             return $store->load($uuid->getBytes(), DowntimeRule::class);
         }
-        return $this->getStore()->fetchObject($table, $uuid);
+        return $this->getStore()->fetchObject($action->table, $uuid);
     }
 
-    protected function getObject(): ?object
+    protected function getObject(WebAction $action): ?object
     {
         if ($uuid = $this->getUuid()) {
-            return $this->loadObject($uuid, $this->getTableName());
+            return $this->loadObject($uuid, $action);
         }
 
         return null;
@@ -379,15 +372,6 @@ class ConfigurationController extends Controller
     protected function requireUuid(): UuidInterface
     {
         return Uuid::fromString($this->params->getRequired('uuid'));
-    }
-
-    /**
-     * @return object
-     * @throws \Icinga\Exception\MissingParameterException
-     */
-    protected function requireObject(): object
-    {
-        return $this->loadObject($this->requireUuid(), $this->getTableName());
     }
 
     protected function flattenObjectSettings($object)
