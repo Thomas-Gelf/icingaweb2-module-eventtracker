@@ -2,20 +2,21 @@
 
 namespace Icinga\Module\Eventtracker\Clicommands;
 
-use gipfl\Cli\Tty;
 use gipfl\Log\Filter\LogLevelFilter;
 use gipfl\Log\IcingaWeb\IcingaLogger;
 use gipfl\Log\Logger;
 use gipfl\Log\Writer\JournaldLogger;
-use gipfl\Log\Writer\JsonRpcWriter;
+use gipfl\Log\Writer\JsonRpcConnectionWriter;
 use gipfl\Log\Writer\SystemdStdoutWriter;
 use gipfl\Log\Writer\WritableStreamWriter;
-use gipfl\Protocol\JsonRpc\Connection;
+use gipfl\Protocol\JsonRpc\Handler\NamespacedPacketHandler;
+use gipfl\Protocol\JsonRpc\JsonRpcConnection;
 use gipfl\Protocol\NetString\StreamWrapper;
 use gipfl\SystemD\systemd;
 use Icinga\Module\Eventtracker\Daemon\Application;
 use React\EventLoop\Factory as Loop;
 use React\EventLoop\LoopInterface;
+use React\Promise\ExtendedPromiseInterface;
 use React\Stream\ReadableResourceStream;
 use React\Stream\WritableResourceStream;
 
@@ -28,7 +29,7 @@ trait CommandWithLoop
 
     protected $logger;
 
-    /** @var Connection|null */
+    /** @var JsonRpcConnection|null */
     protected $rpc;
 
     public function init()
@@ -56,8 +57,6 @@ trait CommandWithLoop
             $this->loopStarted = true;
             $this->loop()->run();
         }
-
-        return $this;
     }
 
     protected function stopMainLoop()
@@ -66,24 +65,26 @@ trait CommandWithLoop
             $this->loopStarted = false;
             $this->loop()->stop();
         }
-
-        return $this;
     }
 
     protected function enableRpc()
     {
-        if (Tty::isSupported()) {
-            $stdin = (new Tty($this->loop()))->setEcho(false)->stdin();
-        } else {
-            $stdin = new ReadableResourceStream(STDIN, $this->loop());
-        }
-        $netString = new StreamWrapper(
-            $stdin,
-            new WritableResourceStream(STDOUT, $this->loop())
-        );
-        $this->rpc = new Connection();
-        $this->rpc->handle($netString);
-        $this->logger->addWriter(new JsonRpcWriter($this->rpc));
+        $handler = new NamespacedPacketHandler();
+        // in case we provide Methods:
+        // $handler->registerNamespace('eventtracker', new DbRunner($this->logger, $this->loop()));
+        $this->rpc = $this->prepareJsonRpc($this->loop(), $handler);
+        $this->logger->addWriter(new JsonRpcConnectionWriter($this->rpc));
+    }
+
+    /**
+     * Prepares a JSON-RPC Connection on STDIN/STDOUT
+     */
+    protected function prepareJsonRpc(LoopInterface $loop, $handler): JsonRpcConnection
+    {
+        return new JsonRpcConnection(new StreamWrapper(
+            new ReadableResourceStream(STDIN, $loop),
+            new WritableResourceStream(STDOUT, $loop)
+        ), $handler);
     }
 
     protected function initializeLogger()
@@ -120,7 +121,7 @@ trait CommandWithLoop
         }
     }
 
-    protected function isRpc()
+    protected function isRpc(): bool
     {
         return (bool) $this->params->get('rpc');
     }
@@ -136,6 +137,45 @@ trait CommandWithLoop
         foreach ($settings as $setting) {
             putenv("$setting=");
         }
+    }
+
+    protected function runWithLoop($callable)
+    {
+        $this->loop->futureTick(function () use ($callable) {
+            try {
+                $result = $callable();
+                if ($result instanceof ExtendedPromiseInterface) {
+                    $result->then(function () {
+                        $this->loop->stop();
+                    }, function ($error) {
+                        if ($error instanceof \Exception) {
+                            $this->failNice($error->getMessage());
+                        } else {
+                            $this->failNice($error);
+                        }
+                    });
+                } else {
+                    $this->loop->stop();
+                }
+            } catch (\Exception $e) {
+                $this->failNice($e->getMessage());
+            }
+        });
+        $this->loop->run();
+    }
+
+    public function failNice($msg)
+    {
+        if ($this->isRpc()) {
+            $this->logger->error($msg);
+        } else {
+            \printf("%s: %s\n", $this->screen->colorize('ERROR', 'red'), $msg);
+        }
+
+        $this->loop->futureTick(function () {
+            $this->loop->stop();
+            exit(1);
+        });
     }
 
     public function fail($msg)

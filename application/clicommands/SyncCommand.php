@@ -2,37 +2,19 @@
 
 namespace Icinga\Module\Eventtracker\Clicommands;
 
-use gipfl\Protocol\JsonRpc\Connection;
-use gipfl\Protocol\NetString\StreamWrapper;
 use Icinga\Module\Eventtracker\Daemon\IcingaCiSync;
 use Icinga\Module\Eventtracker\Daemon\IcingaStateSync;
 use Icinga\Module\Eventtracker\Daemon\IdoDb;
-use Icinga\Module\Eventtracker\Daemon\JsonRpcLogWriter as JsonRpcLogWriterAlias;
-use Icinga\Module\Eventtracker\Daemon\Logger;
 use Icinga\Module\Eventtracker\DbFactory;
 use Icinga\Module\Eventtracker\Issue;
 use Icinga\Module\Eventtracker\Issues;
 use Icinga\Module\Eventtracker\Scom\ScomSync;
-use React\EventLoop\Factory as Loop;
-use React\EventLoop\LoopInterface;
 use React\Promise\ExtendedPromiseInterface;
-use React\Stream\ReadableResourceStream;
-use React\Stream\WritableResourceStream;
 use function React\Promise\resolve;
 
 class SyncCommand extends Command
 {
-    /** @var LoopInterface */
-    protected $loop;
-
-    public function init()
-    {
-        $this->app->getModuleManager()->loadEnabledModules();
-        $loop = $this->loop = Loop::create();
-        if ($this->params->get('rpc')) {
-            $this->enableRpc($loop);
-        }
-    }
+    use CommandWithLoop;
 
     /**
      * Daemon/JobRunner is running this action
@@ -90,7 +72,7 @@ class SyncCommand extends Command
                 'Either --db-resource, --json or a config setting is required'
             );
         } else {
-            Logger::info('No SCOM sync has been configured');
+            $this->logger->info('No SCOM sync has been configured');
         }
     }
 
@@ -98,7 +80,7 @@ class SyncCommand extends Command
      * @return \React\Promise\FulfilledPromise
      * @throws \Icinga\Exception\ConfigurationError
      */
-    public function runIdo()
+    public function runIdo(): ExtendedPromiseInterface
     {
         $ido = IdoDb::fromMonitoringModule();
         $sync = new IcingaCiSync(DbFactory::db(), $ido);
@@ -118,7 +100,7 @@ class SyncCommand extends Command
      * @return \React\Promise\FulfilledPromise
      * @throws \Icinga\Exception\ConfigurationError
      */
-    public function runIdoState()
+    public function runIdoState(): ExtendedPromiseInterface
     {
         $ido = IdoDb::fromMonitoringModule();
         $sync = new IcingaStateSync(DbFactory::db(), $ido);
@@ -127,7 +109,7 @@ class SyncCommand extends Command
         return resolve();
     }
 
-    public function runExpirations()
+    public function runExpirations(): ExtendedPromiseInterface
     {
         $db = DbFactory::db();
         $issues = new Issues($db);
@@ -137,7 +119,7 @@ class SyncCommand extends Command
         }
         $count = count($expired);
         if ($count > 0) {
-            Logger::info(sprintf('Expired %d outdated issues', $count));
+            $this->logger->info(sprintf('Expired %d outdated issues', $count));
         }
 
         return resolve();
@@ -146,7 +128,7 @@ class SyncCommand extends Command
     protected function readJsonFile($filename)
     {
         if (substr($filename, 0, 1) !== '/') {
-            $basedir = dirname(dirname(__DIR__));
+            $basedir = dirname(__DIR__, 2);
             $filename = "$basedir/$filename";
         }
 
@@ -156,61 +138,5 @@ class SyncCommand extends Command
         }
 
         return $content;
-    }
-
-    public function failNice($msg)
-    {
-        if ($this->isRpc()) {
-            Logger::error($msg);
-        } else {
-            \printf("%s: %s\n", $this->screen->colorize('ERROR', 'red'), $msg);
-        }
-
-        $this->loop->futureTick(function () {
-            $this->loop->stop();
-            exit(1);
-        });
-    }
-
-    protected function isRpc()
-    {
-        return (bool) $this->params->get('rpc');
-    }
-
-    protected function runWithLoop($callable)
-    {
-        $this->loop->futureTick(function () use ($callable) {
-            try {
-                $result = $callable();
-                if ($result instanceof ExtendedPromiseInterface) {
-                    $result->then(function () {
-                        $this->loop->stop();
-                    }, function ($error) {
-                        if ($error instanceof \Exception) {
-                            $this->failNice($error->getMessage());
-                        } else {
-                            $this->failNice($error);
-                        }
-                    });
-                } else {
-                    $this->loop->stop();
-                }
-            } catch (\Exception $e) {
-                $this->failNice($e->getMessage());
-            }
-        });
-        $this->loop->run();
-    }
-
-    protected function enableRpc(LoopInterface $loop)
-    {
-        $netString = new StreamWrapper(
-            new ReadableResourceStream(STDIN, $loop),
-            new WritableResourceStream(STDOUT, $loop)
-        );
-        $jsonRpc = new Connection();
-        $jsonRpc->handle($netString);
-
-        Logger::replaceRunningInstance(new JsonRpcLogWriterAlias($jsonRpc));
     }
 }
