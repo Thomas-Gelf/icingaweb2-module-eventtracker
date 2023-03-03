@@ -2,15 +2,15 @@
 
 namespace Icinga\Module\Eventtracker\Daemon;
 
-use gipfl\IcingaCliDaemon\IcingaCliRpc;
 use gipfl\Process\ProcessKiller;
 use gipfl\Process\ProcessList;
+use gipfl\Protocol\JsonRpc\JsonRpcConnection;
 use gipfl\ZfDb\Adapter\Adapter as Db;
-use Icinga\Application\Logger;
+use Psr\Log\LoggerInterface;
 use React\ChildProcess\Process;
 use React\EventLoop\LoopInterface;
+use React\Promise\ExtendedPromiseInterface;
 use React\Promise\Promise;
-use function React\Promise\all;
 use function React\Promise\resolve;
 
 class JobRunner implements DbBasedComponent
@@ -38,10 +38,14 @@ class JobRunner implements DbBasedComponent
     /** @var ProcessList */
     protected $running;
 
-    public function __construct(LoopInterface $loop)
+    /** @var LoggerInterface */
+    protected $logger;
+
+    public function __construct(LoopInterface $loop, LoggerInterface $logger)
     {
         $this->loop = $loop;
-        $this->running = new ProcessList($loop);
+        $this->running = new ProcessList();
+        $this->logger = $logger;
     }
 
     public function forwardLog(LogProxy $logProxy)
@@ -53,7 +57,7 @@ class JobRunner implements DbBasedComponent
 
     /**
      * @param Db $db
-     * @return \React\Promise\ExtendedPromiseInterface
+     * @return ExtendedPromiseInterface
      */
     public function initDb(Db $db)
     {
@@ -62,7 +66,7 @@ class JobRunner implements DbBasedComponent
             try {
                 $this->runNextPendingTask();
             } catch (\Exception $e) {
-                Logger::error($e->getMessage());
+                $this->logger->error($e->getMessage());
             }
         };
         $schedule = function () {
@@ -82,7 +86,7 @@ class JobRunner implements DbBasedComponent
             $this->loop->futureTick($check);
         }
         if ($this->timer !== null) {
-            Logger::info('Cancelling former timer');
+            $this->logger->info('Cancelling former timer');
             $this->loop->cancelTimer($this->timer);
         }
         $this->timer = $this->loop->addPeriodicTimer($this->checkInterval, $check);
@@ -91,28 +95,21 @@ class JobRunner implements DbBasedComponent
         return resolve();
     }
 
-    /**
-     * @return \React\Promise\ExtendedPromiseInterface
-     */
-    public function stopDb()
+    public function stopDb(): ExtendedPromiseInterface
     {
         $this->scheduledTasks = [];
         if ($this->timer !== null) {
             $this->loop->cancelTimer($this->timer);
             $this->timer = null;
         }
-        $kill = [];
-        foreach ($this->running as $processes) {
-            $kill[] = ProcessKiller::terminateProcesses($processes, $this->loop);
-        }
-        $allFinished = all($kill);
+        $terminateProcesses = ProcessKiller::terminateProcesses($this->running, $this->loop);
         foreach ($this->runningTasks as $id => $promise) {
             $promise->cancel();
         }
         $this->runningTasks = [];
         $this->db = null;
 
-        return $allFinished;
+        return $terminateProcesses;
     }
 
     protected function runNextPendingTask()
@@ -141,7 +138,7 @@ class JobRunner implements DbBasedComponent
         try {
             $this->runSync($name);
         } catch (\Exception $e) {
-            Logger::error("Trying to schedule '$name' failed: " . $e->getMessage());
+            $this->logger->error("Trying to schedule '$name' failed: " . $e->getMessage());
         }
 
         return false;
@@ -149,7 +146,7 @@ class JobRunner implements DbBasedComponent
 
     protected function runSync($what)
     {
-        Logger::debug("Sync ($what) starting");
+        $this->logger->debug("Sync ($what) starting");
         $arguments = [
             'eventtracker',
             'sync',
@@ -165,18 +162,20 @@ class JobRunner implements DbBasedComponent
 
         // Happens on protocol (Netstring) errors or similar:
         $cli->on('error', function (\Exception $e) {
-            Logger::error('UNEXPECTED: ' . rtrim($e->getMessage()));
+            $this->logger->error('UNEXPECTED: ' . rtrim($e->getMessage()));
         });
         if ($this->logProxy) {
-            $logger = clone($this->logProxy);
-            $logger->setPrefix("Sync ($what): ");
-            $cli->rpc()->setHandler($logger, 'logger');
+            $cli->rpc()->then(function (JsonRpcConnection $rpc) use ($what) {
+                $logger = clone($this->logProxy);
+                $logger->setPrefix("Sync ($what): ");
+                $rpc->setHandler($logger, 'logger');
+            });
         }
         unset($this->scheduledTasks[$what]);
         $this->runningTasks[$what] = $cli->run($this->loop)->then(function () use ($what) {
-            Logger::debug("Job ($what) finished");
+            $this->logger->debug("Job ($what) finished");
         }, function (\Exception $e) use ($what) {
-            Logger::error("Job ($what) failed: " . $e->getMessage());
+            $this->logger->error("Job ($what) failed: " . $e->getMessage());
         })->always(function () use ($what) {
             unset($this->runningTasks[$what]);
             $this->loop->futureTick(function () {
