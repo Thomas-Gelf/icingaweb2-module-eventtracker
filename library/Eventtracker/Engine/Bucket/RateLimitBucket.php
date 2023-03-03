@@ -26,7 +26,6 @@ class RateLimitBucket extends SimpleTaskConstructor implements Task
 
     public function processIssue(Issue $issue): ?Issue
     {
-
     }
 
     public static function getFormExtension(): FormExtension
