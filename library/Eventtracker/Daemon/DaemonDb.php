@@ -24,6 +24,12 @@ class DaemonDb
 {
     use EventEmitterTrait;
 
+    public const ON_CONFIGURATION_LOADED = 'configuration loaded';
+    public const ON_CONNECTED = 'connected';
+    public const ON_CONNECTING = 'connecting';
+    public const ON_LOCKED_BY_OTHER_INSTANCE = 'locked by other instance';
+    public const ON_NO_CONFIGURATION = 'no configuration';
+    public const ON_NO_SCHEMA = 'no schema';
     public const ON_SCHEMA_CHANGE = 'schemaChange';
     const TABLE_NAME = 'daemon_info';
 
@@ -114,12 +120,12 @@ class DaemonDb
             } else {
                 Logger::error('DB configuration is no longer valid');
             }
-            $this->emitStatus('no configuration');
+            $this->emitStatus(self::ON_NO_CONFIGURATION);
             $this->dbConfig = $config;
 
             return resolve();
         } else {
-            $this->emitStatus('configuration loaded');
+            $this->emitStatus(self::ON_CONFIGURATION_LOADED);
             $this->dbConfig = $config;
 
             return $this->establishConnection($config);
@@ -143,7 +149,7 @@ class DaemonDb
             $this->pendingReconnection->reset();
             $this->pendingReconnection = null;
         }
-        $this->emitStatus('connecting');
+        $this->emitStatus(self::ON_CONNECTING);
 
         return $this->pendingReconnection = RetryUnless::succeeding($callback)
             ->setInterval(0.2)
@@ -168,12 +174,12 @@ class DaemonDb
         assert($db instanceof Mysql); // TODO: IDE hint only. Drop in case we're using PostgreSQL
         $migrations = $this->getMigrations($db);
         if (! $migrations->hasSchema()) {
-            $this->emitStatus('no schema', 'error');
+            $this->emitStatus(self::ON_NO_SCHEMA, 'error');
             throw new RuntimeException('DB has no schema');
         }
         $this->wipeOrphanedInstances($db);
         if ($this->hasAnyOtherActiveInstance($db)) {
-            $this->emitStatus('locked by other instance', 'error');
+            $this->emitStatus(self::ON_LOCKED_BY_OTHER_INSTANCE, 'error');
             throw new RuntimeException('DB is locked by a running daemon instance');
         }
         $this->startupSchemaVersion = $migrations->getLastMigrationNumber();
@@ -211,17 +217,17 @@ class DaemonDb
         }
     }
 
-    protected function schemaIsOutdated()
+    protected function schemaIsOutdated(): bool
     {
         return $this->getStartupSchemaVersion() < $this->getDbSchemaVersion();
     }
 
-    protected function getStartupSchemaVersion()
+    protected function getStartupSchemaVersion(): int
     {
         return $this->startupSchemaVersion;
     }
 
-    protected function getDbSchemaVersion()
+    protected function getDbSchemaVersion(): int
     {
         if ($this->db === null) {
             throw new RuntimeException(
@@ -234,24 +240,24 @@ class DaemonDb
 
     protected function onConnected()
     {
-        $this->emitStatus('connected');
+        $this->emitStatus(self::ON_CONNECTED);
         Logger::info('Connected to the database');
         foreach ($this->registeredComponents as $component) {
             $component->initDb($this->db);
         }
     }
 
-    /**
-     * @return \React\Promise\PromiseInterface
-     */
-    protected function reconnect()
+    protected function reconnect(): ExtendedPromiseInterface
     {
-        return $this->disconnect()->then(function () {
+        $promise = $this->disconnect()->then(function () {
             return $this->connect();
         }, function (Exception $e) {
             Logger::error('Disconnect failed. This should never happen: ' . $e->getMessage());
             exit(1);
         });
+
+        assert($promise instanceof ExtendedPromiseInterface);
+        return $promise;
     }
 
     /**
@@ -268,7 +274,7 @@ class DaemonDb
         return resolve();
     }
 
-    protected function stopRegisteredComponents()
+    protected function stopRegisteredComponents(): ExtendedPromiseInterface
     {
         $pending = new Deferred();
         $pendingComponents = new SplObjectStorage();
@@ -287,15 +293,12 @@ class DaemonDb
         return $pending->promise();
     }
 
-    /**
-     * @return \React\Promise\ExtendedPromiseInterface
-     */
-    public function disconnect()
+    public function disconnect(): ExtendedPromiseInterface
     {
         if (! $this->db) {
             return resolve();
         }
-        if ($this->pendingDisconnect) {
+        if ($this->pendingDisconnect instanceof ExtendedPromiseInterface) {
             return $this->pendingDisconnect;
         }
 
@@ -310,20 +313,21 @@ class DaemonDb
             Logger::error('Failed to disconnect: ' . $e->getMessage());
         }
 
-        return $this->pendingDisconnect->then(function () {
+        $pending = $this->pendingDisconnect->then(function () {
             $this->db = null;
             $this->pendingDisconnect = null;
         });
+        assert($pending instanceof ExtendedPromiseInterface);
+
+        return $pending;
     }
 
     protected function emitStatus($message, $level = 'info')
     {
         $this->emit('state', [$message, $level]);
-
-        return $this;
     }
 
-    protected function hasAnyOtherActiveInstance(ZfDb $db)
+    protected function hasAnyOtherActiveInstance(ZfDb $db): bool
     {
         return (int) $db->fetchOne(
             $db->select()
