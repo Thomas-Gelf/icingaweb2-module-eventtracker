@@ -2,11 +2,12 @@
 
 namespace Icinga\Module\Eventtracker;
 
+use gipfl\Json\JsonSerialization;
 use Icinga\Module\Eventtracker\Contract\File;
 use InvalidArgumentException;
 use RuntimeException;
 
-class FrozenMemoryFile implements File
+class FrozenMemoryFile implements File, JsonSerialization
 {
     /** @var string */
     protected $checksum;
@@ -112,5 +113,18 @@ class FrozenMemoryFile implements File
     public function getSize(): int
     {
         return $this->size;
+    }
+
+    public static function fromSerialization($any): File
+    {
+        return static::fromBase64($any->name, $any->content_base64);
+    }
+
+    public function jsonSerialize(): object
+    {
+        return (object) [
+            'name' => $this->getName(),
+            'content_base64' => base64_encode($this->data),
+        ];
     }
 }
