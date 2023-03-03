@@ -211,7 +211,7 @@ class KafkaInput extends SimpleTaskConstructor implements Input
         }
     }
 
-    protected function prepareCommandString()
+    public function prepareCommandString(): string
     {
         // TODO: We might want to write our settings to a temporary properties file.
         $params = [
@@ -255,9 +255,21 @@ class KafkaInput extends SimpleTaskConstructor implements Input
 
         $command = escapeshellarg($this->command);
         foreach ($params as $param) {
-            $command .= ' ' . escapeshellarg($param);
+            $command .= ' ' . $this->escapeArgument($param);
         }
 
         return $command;
+    }
+
+    protected function escapeArgument($argument): string
+    {
+        if (preg_match('/^-[A-Za-z]$/', $argument)) {
+            return $argument;
+        }
+        if (preg_match('/^--[A-Za-z]$/', $argument)) {
+            return $argument;
+        }
+
+        return escapeshellarg($argument);
     }
 }
