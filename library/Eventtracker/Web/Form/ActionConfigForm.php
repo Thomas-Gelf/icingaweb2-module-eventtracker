@@ -36,7 +36,8 @@ class ActionConfigForm extends UuidObjectForm
         ]);
         $this->addElement('text', 'filter', [
             'label'       => $this->translate('Filter'),
-            'description' => Html::sprintf($this->translate(<<<'EOT'
+            'description' => Html::sprintf(
+                $this->translate(<<<'EOT'
 Filter to restrict the execution of the action to certain topics.
 A filter consists of filter expressions in the format %s.
 %s can be any issue property,
@@ -44,8 +45,8 @@ and you can use the asterisk %s as a wildcard match placeholder in %s.
 Issue attributes can be accessed via %s and custom variables via %s.
 Expressions can be combined via %s (and) and %s (or),
 and you can also use parentheses to group expressions.'
-EOT,
-            ),
+EOT
+                ),
                 Html::tag('b', 'key=value'),
                 Html::tag('b', 'key'),
                 Html::tag('b', '*'),
