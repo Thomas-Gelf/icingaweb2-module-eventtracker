@@ -9,7 +9,7 @@ use gipfl\Translation\TranslationHelper;
 use ipl\Html\Html;
 use Ramsey\Uuid\Uuid;
 
-class DowntimeRulesTable extends BaseTable
+class DowntimeRulesTable extends WebActionTable
 {
     use TranslationHelper;
 
@@ -25,13 +25,13 @@ class DowntimeRulesTable extends BaseTable
         // $this->timeFormatter->setTimezone(new \DateTimeZone('Europe/Berlin'));
         $this->dateFormatter = new LocalDateFormat();
         $this->addAvailableColumns([
-            $this->createColumn('label', $this->translate('Downtime'), [
+            $this->createColumn('label', $this->action->singular, [
                 'uuid'        => 'dr.uuid',
                 'label'       => 'dr.label',
                 'message'     => 'dr.message',
-                'is_active'       => 'dc.is_active',
+                'is_active'         => 'dc.is_active',
                 'ts_expected_start' => 'dc.ts_expected_start',
-                'ts_expected_end' => 'dc.ts_expected_end',
+                'ts_expected_end'   => 'dc.ts_expected_end',
             ])
             ->setRenderer(function ($row) {
                 $label = Html::tag('strong', $row->label);
@@ -50,7 +50,7 @@ class DowntimeRulesTable extends BaseTable
                     );
                 }
                 return [
-                    Link::create($label, 'eventtracker/configuration/downtime', [
+                    Link::create($label, $this->action->url, [
                         'uuid' => Uuid::fromBytes($row->uuid)->toString()
                     ]),
                     Html::tag('br'),
