@@ -67,18 +67,11 @@ class BackgroundDaemon
         }
     }
 
-    public function setDbResourceName($name)
-    {
-        $this->dbResourceName = $name;
-
-        return $this;
-    }
-
     protected function initialize()
     {
         $this->registerSignalHandlers($this->loop);
         $this->processState = new DaemonProcessState(Application::PROCESS_NAME);
-        $this->jobRunner = new JobRunner($this->loop);
+        $this->jobRunner = new JobRunner($this->loop, $this->logger);
         $this->systemd = $this->eventuallyInitializeSystemd();
         $this->processState->setSystemd($this->systemd);
         if ($this->systemd) {
