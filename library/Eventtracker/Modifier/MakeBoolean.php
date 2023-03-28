@@ -6,7 +6,7 @@ use InvalidArgumentException;
 
 class MakeBoolean extends BaseModifier
 {
-    protected static $validStrings = array(
+    protected static $validStrings = [
         '0'     => false,
         'false' => false,
         'n'     => false,
@@ -15,7 +15,7 @@ class MakeBoolean extends BaseModifier
         'true'  => true,
         'y'     => true,
         'yes'   => true,
-    );
+    ];
 
     protected static $name = 'Create a Boolean';
 
