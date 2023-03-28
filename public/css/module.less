@@ -706,3 +706,149 @@ pre.plain-object {
   overflow: auto;
   white-space: pre-wrap;
 }
+
+/** Dashboard Actions */
+ul.gipfl-dashboard-actions {
+  margin: 0;
+  padding: 0;
+  min-width: 38em;
+  max-width: 64em;
+
+  li {
+    list-style-type: none;
+
+    text-align: left;
+    display: inline-block;
+    padding: 0;
+    clear: both;
+    width: 18em;
+    min-width: 16em;
+    vertical-align: top;
+
+    a {
+      i {
+        font-size: 3em;
+        display: block;
+        float: left;
+        line-height: 1em;
+        margin-right: 0.3em;
+      }
+
+      &.state-critical i {
+        color: @color-critical;
+      }
+
+      &.state-warning i {
+        color: @color-warning;
+      }
+
+      &.state-ok i {
+        color: @color-ok;
+      }
+
+      &.state-unknown i {
+        color: @color-unknown;
+      }
+
+      &.state-pending i {
+        color: @color-pending;
+      }
+
+      border-left: 0.5em solid transparent;
+      padding: 1em;
+      color: @text-color;
+      font-weight: bold;
+      display: block;
+      text-decoration: none;
+      min-height: 12em;
+
+      overflow: hidden;
+
+      &.active {
+        color: inherit;
+        border-color: @icinga-blue;
+        background-color: @tr-active-color;
+      }
+
+      &:hover {
+        background-color: @tr-hover-color;
+        text-decoration: none;
+      }
+
+      &:active, &:focus {
+        color: inherit;
+        background-color: @tr-hover-color;
+        outline: none;
+      }
+    }
+
+    p {
+      font-weight: normal;
+      margin-bottom: 0.5em;
+      padding-left: 4.5em;
+      color: @text-color-light;
+    }
+  }
+}
+
+#layout.compact-layout.twocols ul.gipfl-dashboard-actions,
+#layout.minimal-layout ul.gipfl-dashboard-actions,
+.gipfl-compact-dashboard ul.gipfl-dashboard-actions {
+  max-width: unset;
+  min-width: unset;
+  li {
+    width: 100%;
+    a {
+      height: auto;
+      min-height: unset;
+    }
+    > a > i {
+      font-size: 3em;
+    }
+
+    > a > p {
+      padding-left: 4.5em;
+    }
+    margin-bottom: 0.5em;
+  }
+}
+.gipfl-compact-dashboard {
+  width: 20em;
+  // display: inline-block;
+  max-height: 100%;
+  overflow: auto;
+  float: left;
+  h1 {
+    font-size: 1em;
+  }
+}
+.gipfl-compact-dashboard ul.gipfl-dashboard-actions li {
+  vertical-align: top;
+position: relative;
+  a {
+    padding: 0.5em 0;
+    i {
+      font-size: 2em;
+      margin: 0;
+      padding: 0;
+      /*
+      position: absolute;
+      float: none;
+      right: 0;
+      top: 0.5em;
+
+       */
+    }
+    p {
+      margin-bottom: 0.2em;
+      padding-left: 2.5em;
+    }
+  }
+}
+.gipfl-content-next-to-compact-dashboard {
+  margin-left: 20.5em;
+  vertical-align: top;
+}
+
+
+/** END of gipfl dashboard actions */
