@@ -3,21 +3,18 @@
 namespace Icinga\Module\Eventtracker\Daemon;
 
 use gipfl\ZfDb\Adapter\Adapter as Db;
+use Psr\Log\LoggerInterface;
 use function React\Promise\resolve;
 
 class LogProxy implements DbBasedComponent
 {
     protected $db;
 
-    protected $server;
-
-    protected $instanceUuid;
-
     protected $prefix = '';
 
-    public function __construct($instanceUuid)
+    public function __construct(LoggerInterface $logger)
     {
-        $this->instanceUuid = $instanceUuid;
+        $this->logger = $logger;
     }
 
     public function setPrefix($prefix)
@@ -48,9 +45,14 @@ class LogProxy implements DbBasedComponent
         return resolve();
     }
 
-    public function log($severity, $message)
+    /**
+     * @param string $level
+     * @param string $message
+     * @param array $context
+     */
+    public function logNotification(string $level, string $message, array $context = [])
     {
-        Logger::$severity($this->prefix . $message);
+        $this->logger->log($level, $this->prefix . $message, $context);
         /*
         // Not yet
         try {

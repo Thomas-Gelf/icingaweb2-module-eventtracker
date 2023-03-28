@@ -81,7 +81,7 @@ class BackgroundDaemon
         $this->processDetails = $this
             ->initializeProcessDetails($this->systemd)
             ->registerProcessList($this->jobRunner->getProcessList());
-        $this->logProxy = new LogProxy($this->processDetails->getInstanceUuid());
+        $this->logProxy = new LogProxy($this->logger);
         $this->jobRunner->forwardLog($this->logProxy);
         $this->channelRunner = new InputAndChannelRunner($this->loop, $this->logger);
         $this->daemonDb = $this->initializeDb(
