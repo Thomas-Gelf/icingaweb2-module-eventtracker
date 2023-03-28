@@ -4,6 +4,7 @@ namespace Icinga\Module\Eventtracker\Daemon;
 
 use gipfl\Process\ProcessKiller;
 use gipfl\Process\ProcessList;
+use gipfl\Protocol\JsonRpc\Handler\NamespacedPacketHandler;
 use gipfl\Protocol\JsonRpc\JsonRpcConnection;
 use gipfl\ZfDb\Adapter\Adapter as Db;
 use Psr\Log\LoggerInterface;
@@ -168,7 +169,9 @@ class JobRunner implements DbBasedComponent
             $cli->rpc()->then(function (JsonRpcConnection $rpc) use ($what) {
                 $logger = clone($this->logProxy);
                 $logger->setPrefix("Sync ($what): ");
-                $rpc->setHandler($logger, 'logger');
+                $handler = new NamespacedPacketHandler();
+                $handler->registerNamespace('logger', $logger);
+                $rpc->setHandler($handler);
             });
         }
         unset($this->scheduledTasks[$what]);
