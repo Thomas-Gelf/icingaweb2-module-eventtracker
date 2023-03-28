@@ -15,14 +15,8 @@ use Icinga\Module\Eventtracker\Web\Form\DowntimeForm;
 use Icinga\Module\Eventtracker\Web\Form\HostListForm;
 use Icinga\Module\Eventtracker\Web\Form\InputConfigForm;
 use Icinga\Module\Eventtracker\Web\Form\MapConfigForm;
-use Icinga\Module\Eventtracker\Web\Table\ApiTokensTable;
-use Icinga\Module\Eventtracker\Web\Table\ConfiguredActionsTable;
-use Icinga\Module\Eventtracker\Web\Table\ConfiguredBucketsTable;
-use Icinga\Module\Eventtracker\Web\Table\ConfiguredChannelsTable;
-use Icinga\Module\Eventtracker\Web\Table\ConfiguredHostListsTable;
-use Icinga\Module\Eventtracker\Web\Table\ConfiguredInputsTable;
-use Icinga\Module\Eventtracker\Web\Table\ConfiguredMapsTable;
 use Icinga\Module\Eventtracker\Web\Table\DowntimeRulesTable;
+use Icinga\Module\Eventtracker\Web\Table\WebActionTable;
 
 class WebActions
 {
@@ -83,7 +77,7 @@ class WebActions
                 'listUrl' => 'eventtracker/configuration/listeners',
                 'url'     => 'eventtracker/configuration/listener',
                 'icon'    => 'angle-double-down',
-                'tableClass' => ConfiguredInputsTable::class,
+                'tableClass' => WebActionTable::class,
                 'formClass'  => InputConfigForm::class,
                 'registry'   => InputRegistry::class,
             ]),
@@ -98,7 +92,7 @@ class WebActions
                 'listUrl' => 'eventtracker/configuration/syncs',
                 'url'     => 'eventtracker/configuration/sync',
                 'icon'    => 'reschedule',
-                'tableClass' => ConfiguredInputsTable::class,
+                'tableClass' => WebActionTable::class,
                 'formClass'  => InputConfigForm::class,
                 'registry'   => InputRegistry::class,
             ]),
@@ -114,7 +108,7 @@ class WebActions
                 'listUrl' => 'eventtracker/configuration/apitokens',
                 'url'     => 'eventtracker/configuration/apitoken',
                 'icon'    => 'lock-open-alt',
-                'tableClass' => ApiTokensTable::class,
+                'tableClass' => WebActionTable::class,
                 'formClass'  => ApiTokenForm::class,
                 'registry'   => InputRegistry::class,
             ]),
@@ -130,7 +124,7 @@ class WebActions
                 'listUrl' => 'eventtracker/configuration/channels',
                 'url'     => 'eventtracker/configuration/channel',
                 'icon'    => 'beaker',
-                'tableClass' => ConfiguredChannelsTable::class,
+                'tableClass' => WebActionTable::class,
                 'formClass'  => ChannelConfigForm::class,
                 'registry'   => InputRegistry::class,
             ]),
@@ -146,7 +140,7 @@ class WebActions
                 'listUrl' => 'eventtracker/configuration/actions',
                 'url'     => 'eventtracker/configuration/action',
                 'icon'    => 'bell',
-                'tableClass' => ConfiguredActionsTable::class,
+                'tableClass' => WebActionTable::class,
                 'formClass'  => ActionConfigForm::class,
                 'registry'   => ActionRegistry::class,
             ]),
@@ -176,7 +170,7 @@ class WebActions
                 'listUrl' => 'eventtracker/configuration/buckets',
                 'url'     => 'eventtracker/configuration/bucket',
                 'icon'    => 'filter',
-                'tableClass' => ConfiguredBucketsTable::class,
+                'tableClass' => WebActionTable::class,
                 'formClass'  => BucketConfigForm::class,
                 'registry'   => BucketRegistry::class,
             ]),
@@ -191,7 +185,7 @@ class WebActions
                 'listUrl' => 'eventtracker/configuration/maps',
                 'url'     => 'eventtracker/configuration/map',
                 'icon'    => 'flapping',
-                'tableClass' => ConfiguredMapsTable::class,
+                'tableClass' => WebActionTable::class,
                 'formClass'  => MapConfigForm::class,
             ]),
             'hostlists' => WebAction::create([
@@ -206,7 +200,7 @@ class WebActions
                 'listUrl' => 'eventtracker/configuration/hostlists',
                 'url'     => 'eventtracker/configuration/hostlist',
                 'icon'    => 'th-list',
-                'tableClass' => ConfiguredHostListsTable::class,
+                'tableClass' => WebActionTable::class,
                 'formClass'  => HostListForm::class,
             ]),
         ];
