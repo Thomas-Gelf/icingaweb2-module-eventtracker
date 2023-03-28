@@ -2,44 +2,49 @@
 
 namespace Icinga\Module\Eventtracker;
 
+use gipfl\Json\JsonSerialization;
 use gipfl\Json\JsonString;
 use gipfl\ZfDb\Adapter\Adapter as Db;
 use gipfl\ZfDb\Expr;
 use Icinga\Application\Hook;
 use Icinga\Authentication\Auth;
 use Icinga\Exception\NotFoundError;
+use Icinga\Module\Eventtracker\Engine\Downtime\UuidObjectHelper;
 use Icinga\Module\Eventtracker\Hook\IssueHook;
 use Ramsey\Uuid\Uuid;
 
-class Issue
+class Issue implements JsonSerialization
 {
-    use PropertyHelpers;
+    use UuidObjectHelper {
+        UuidObjectHelper::set as uuidObjectHelperSet;
+        UuidObjectHelper::get as uuidObjectHelperGet;
+    }
 
     protected static $tableName = 'issue';
 
     /** @var FrozenMemoryFile[] */
     protected $files = [];
 
-    protected $properties = [
-        'issue_uuid'            => null,
+    protected $defaultProperties = [
+        'issue_uuid' => null,
         'sender_event_checksum' => null,
-        'status'                => null,
-        'severity'              => null,
-        'priority'              => null,
-        'host_name'             => null,
-        'object_name'           => null,
-        'object_class'          => null,
-        'input_uuid'            => null,
-        'sender_id'             => null,
-        'sender_event_id'       => null,
-        'message'               => null,
-        'attributes'            => null,
-        'owner'                 => null,
-        'ticket_ref'            => null,
-        'cnt_events'            => null,
-        'ts_first_event'        => null,
-        'ts_last_modified'      => null,
-        'ts_expiration'         => null,
+        'status' => null,
+        'severity' => null,
+        'priority' => null,
+        'host_name' => null,
+        'object_name' => null,
+        'object_class' => null,
+        'input_uuid' => null,
+        'sender_id' => null,
+        'sender_event_id' => null,
+        'message' => null,
+        'attributes' => null,
+        'owner' => null,
+        'ticket_ref' => null,
+        'cnt_events' => null,
+        'ts_first_event' => null,
+        'ts_last_modified' => null,
+        'ts_expiration' => null,
     ];
 
     protected $objectClass;
@@ -49,17 +54,15 @@ class Issue
     /**
      * @param $uuid
      * @param Db $db
-     * @return string
+     * @return bool
      */
-    public static function exists($uuid, Db $db)
+    public static function exists($uuid, Db $db): bool
     {
-        $result = $db->fetchOne(
+        return (int) $db->fetchOne(
             $db->select()
                 ->from(self::$tableName, 'COUNT(*)')
                 ->where('issue_uuid = ?', $uuid)
-        );
-
-        return $result;
+        ) > 0;
     }
 
     /**
@@ -83,12 +86,7 @@ class Issue
         }
     }
 
-    /**
-     * @param $uuid
-     * @param Db $db
-     * @return Issue|null
-     */
-    public static function loadIfExists($uuid, Db $db)
+    public static function loadIfExists(string $uuid, Db $db): ?Issue
     {
         $result = $db->fetchRow(
             $db->select()
@@ -103,12 +101,7 @@ class Issue
         }
     }
 
-    /**
-     * @param $uuid
-     * @param Db $db
-     * @return Issue|null
-     */
-    public static function loadFromHistory($uuid, Db $db)
+    public static function loadFromHistory(string $uuid, Db $db): ?Issue
     {
         $result = $db->fetchRow(
             $db->select()
@@ -125,11 +118,7 @@ class Issue
         $result->status = 'closed';
 
         if ($result) {
-            $issue = new static();
-            $issue->setProperties($result);
-            $issue->set('status', 'closed');
-
-            return $issue;
+            return static::create((array)$result);
         } else {
             return null;
         }
@@ -171,20 +160,28 @@ class Issue
         }
     }
 
+    protected function getNonDbProperties(): array
+    {
+        if ($this->hasBeenCreatedNow()) {
+            return ['has_been_created_now' => 'y'];
+        }
+
+        return [];
+    }
+
     protected static function createStored($result)
     {
-        $issue = new static();
-        $issue->setProperties($result);
+        $issue = static::create((array)$result);
         $issue->setStored();
 
         return $issue;
     }
 
-    public static function create(Event $event): Issue
+    public static function createFromEvent(Event $event): Issue
     {
-        $issue = new Issue();
-        $issue->createdNow = true;
+        $issue = Issue::create();
         $issue->setPropertiesFromEvent($event);
+        $issue->createdNow = true;
 
         return $issue;
     }
@@ -194,6 +191,8 @@ class Issue
         $properties = $event->getProperties();
         $timeout = $properties['event_timeout'];
         $attributes = $properties['attributes'];
+        $eventUuid = $properties['uuid'];
+        unset($properties['uuid']);
 
         // We need a better handling for those:
         if ($properties['acknowledge']) {
@@ -208,7 +207,7 @@ class Issue
             $attributes = [];
         }
         unset($properties['event_timeout'], $properties['attributes']);
-        $attributes = array_filter((array) $attributes, function ($key) {
+        $attributes = array_filter((array)$attributes, function ($key) {
             if ($key === 'severity' || $key === 'msg') {
                 return false;
             }
@@ -223,7 +222,7 @@ class Issue
         // Priority can be customized, source will not be allowed to change it
         // We might however check whether we want to allow this for issues with
         // "unmodified" priority
-        if (! $this->isNew()) {
+        if (!$this->isNew()) {
             unset($properties['priority']);
         }
         if ($timeout !== null) {
@@ -233,6 +232,40 @@ class Issue
         $this->setProperties($properties);
 
         $this->files = $event->getFiles();
+    }
+
+    public static function fromSerialization($any): self
+    {
+        if (isset($any->has_been_created_now)) {
+            $hasBeenCreatedNow = $any->has_been_created_now;
+            unset($any->has_been_created_now);
+        } else {
+            $hasBeenCreatedNow = null;
+        }
+        $self = static::create((array) $any);
+        if ($hasBeenCreatedNow !== null) {
+            $self->createdNow = $hasBeenCreatedNow;
+        }
+
+        return $self;
+    }
+
+    public function get($property, $default = null)
+    {
+        if ($property === 'has_been_created_now') {
+            return $this->createdNow;
+        }
+
+        return $this->uuidObjectHelperGet($property, $default);
+    }
+
+    public function set($property, $value)
+    {
+        if ($property === 'has_been_created_now' && $value === true) {
+            $this->createdNow = true;
+            return;
+        }
+        $this->reallySet($property, $this->normalizeValue($property, $value));
     }
 
     public function hasBeenCreatedNow()
@@ -337,6 +370,12 @@ class Issue
 
         // acknowledgement removed, downtime finished
         return null;
+    }
+
+    public function getStoredProperty($property)
+    {
+        $props = $this->getStoredProperties();
+        return $props[$property];
     }
 
     public function getAttributes()
@@ -461,19 +500,22 @@ class Issue
      */
     protected function updateDb(Db $db): bool
     {
-        if (! $this->hasChanged()) {
+        if (! $this->isModified()) {
             return false;
         }
 
-        $modifications = $this->getModifications();
-        $this->setProperties([
-            'cnt_events'       => $this->get('cnt_events') + 1, // might be wrong, but safes a DB roundtrip
-            'ts_last_modified' => Time::unixMilli(),
-        ]);
+        $modifications = $this->getModifiedProperties();
+
+        $properties = $this->getProperties();
+        $eventRelatedProperties = $modifications;
+        unset($eventRelatedProperties['owner']);
+        unset($eventRelatedProperties['status']);
+        unset($eventRelatedProperties['ticket_ref']);
+        if (true && count($eventRelatedProperties) > 0) {
+            $properties['cnt_events'] = new Expr('cnt_events + 1');
+            $this->set('cnt_events', $this->get('cnt_events') + 1); // might be wrong, but safes a DB roundtrip
+        }
         $where = $db->quoteInto('issue_uuid = ?', $this->getUuid());
-        $properties = [
-            'cnt_events' => new Expr('cnt_events + 1'),
-        ] + $this->getProperties();
 
         // Compat:
         if (array_key_exists('sender_event_id', $properties)) {
@@ -497,7 +539,7 @@ class Issue
         return true;
     }
 
-    public function close(Db $db, Auth $auth = null)
+    public function close(Db $db, Auth $auth = null): bool
     {
         if ($auth === null) {
             $auth = Auth::getInstance();
@@ -511,7 +553,7 @@ class Issue
         );
     }
 
-    public static function eventuallyRecover(Event $event, Db $db)
+    public static function eventuallyRecover(Event $event, Db $db): bool
     {
         $issue = Issue::loadIfEventExists($event, $db);
         if ($issue) {
@@ -521,22 +563,22 @@ class Issue
         return false;
     }
 
-    public function recover(Event $event, Db $db)
+    public function recover(Event $event, Db $db): bool
     {
         return static::closeIssue($this, $db, IssueHistory::REASON_RECOVERY);
     }
 
-    public static function recoverUuid($uuid, Db $db)
+    public static function recoverUuid($uuid, Db $db): bool
     {
         return static::closeIssue(Issue::load($uuid, $db), $db, IssueHistory::REASON_RECOVERY);
     }
 
-    public static function expireUuid($uuid, Db $db)
+    public static function expireUuid($uuid, Db $db): bool
     {
         return static::closeIssue(Issue::load($uuid, $db), $db, IssueHistory::REASON_EXPIRATION);
     }
 
-    public static function closeIssue(Issue $issue, Db $db, $reason, $closedBy = null)
+    public static function closeIssue(Issue $issue, Db $db, $reason, $closedBy = null): bool
     {
         // TODO: Update? Log warning? Merge actions?
         //       -> This happens only when closing the issue formerly failed badly

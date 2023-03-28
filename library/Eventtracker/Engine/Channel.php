@@ -124,7 +124,7 @@ class Channel implements LoggerAwareInterface
         // print_r($object);
         // $object->sender_event_id = Uuid::uuid4()->toString();
 
-        $event = new Event();
+        $event = Event::create();
         if (isset($object->input_uuid)) {
             $object->input_uuid = Uuid::fromString($object->input_uuid)->getBytes();
         }
@@ -145,7 +145,7 @@ class Channel implements LoggerAwareInterface
                 $this->emit(static::ON_ISSUE, [$issue]);
             }
         } else {
-            $this->logger->debug("No Issue");
+            // $this->logger->debug("No Issue");
         }
     }
 

@@ -2,17 +2,26 @@
 
 namespace Icinga\Module\Eventtracker\Daemon;
 
+use Evenement\EventEmitterInterface;
+use Evenement\EventEmitterTrait;
 use Exception;
 use gipfl\Cli\Process;
 use gipfl\IcingaCliDaemon\DbResourceConfigWatch;
 use gipfl\SystemD\NotifySystemD;
+use Icinga\Module\Eventtracker\Configuration;
+use Icinga\Module\Eventtracker\Daemon\RpcNamespace\RpcNamespaceProcess;
 use Psr\Log\LoggerInterface;
 use React\EventLoop\Factory as Loop;
 use React\EventLoop\LoopInterface;
 use Ramsey\Uuid\Uuid;
+use React\Stream\Util as StreamUtil;
+use function React\Promise\all;
+use function React\Promise\reject;
 
-class BackgroundDaemon
+class BackgroundDaemon implements EventEmitterInterface
 {
+    use EventEmitterTrait;
+
     /** @var LoopInterface */
     private $loop;
 
@@ -39,6 +48,9 @@ class BackgroundDaemon
 
     /** @var LogProxy */
     protected $logProxy;
+
+    /** @var RemoteApi */
+    protected $remoteApi;
 
     /** @var bool */
     protected $reloading = false;
@@ -94,6 +106,7 @@ class BackgroundDaemon
             ->register($this->logProxy)
             ->register($this->channelRunner)
             ->run($this->loop);
+        $this->prepareApi($this->loop, $this->logger);
         $this->setState('running');
     }
 
@@ -146,6 +159,13 @@ class BackgroundDaemon
             // TODO: level is sent but not used
             $processState->setComponentState('db', $state);
         });
+        $db->on('schemaOutdated', function () {
+            $this->reloading = true;
+            $this->setState('reloading the main process');
+            $this->daemonDb->disconnect()->then(function () {
+                Process::restart();
+            });
+        });
         $db->on(DaemonDb::ON_SCHEMA_CHANGE, function ($startupSchema, $dbSchema) {
             $this->logger->info(sprintf(
                 "DB schema version changed. Started with %d, DB has %d. Restarting.",
@@ -162,6 +182,14 @@ class BackgroundDaemon
         );
 
         return $db;
+    }
+
+    protected function prepareApi(LoopInterface $loop, LoggerInterface $logger)
+    {
+        $socketPath = Configuration::getSocketPath();
+        $this->remoteApi = new RemoteApi($loop, $logger);
+        StreamUtil::forwardEvents($this->remoteApi, $this, [RpcNamespaceProcess::ON_RESTART]);
+        $this->remoteApi->run($socketPath, $loop);
     }
 
     protected function registerSignalHandlers(LoopInterface $loop)
@@ -183,7 +211,7 @@ class BackgroundDaemon
         $this->shutdown();
     }
 
-    protected function reload()
+    public function reload()
     {
         if ($this->reloading) {
             $this->logger->error('Ignoring reload request, reload is already in progress');
@@ -191,24 +219,47 @@ class BackgroundDaemon
         }
         $this->reloading = true;
         $this->setState('reloading the main process');
-        $this->daemonDb->disconnect()->then(function () {
-            Process::restart();
+        $this->prepareShutdown()->then(function () {
+            $this->loop->addTimer(0.1, function () {
+                $this->loop->stop();
+                Process::restart();
+            });
         });
     }
 
     protected function shutdown()
     {
+        $this->prepareShutdown()->then(function () {
+            $this->logger->info('Shutdown completed');
+            $this->loop->addTimer(0.1, function () {
+                $this->loop->stop();
+            });
+        }, function (Exception $e) {
+            $this->logger->error('Problem on shutdown: ' . $e->getMessage());
+            $this->loop->addTimer(0.1, function () {
+                $this->loop->stop();
+            });
+        });
+    }
+
+    protected function prepareShutdown()
+    {
         if ($this->shuttingDown) {
             $this->logger->error('Ignoring shutdown request, shutdown is already in progress');
-            return;
+            return reject();
         }
         $this->logger->info('Shutting down');
         $this->shuttingDown = true;
         $this->setState('shutting down');
-        $this->daemonDb->disconnect()->then(function () {
-            $this->logger->info('DB has been disconnected, shutdown finished');
-            $this->loop->stop();
-        });
+        return all([
+            $this->daemonDb->disconnect()->then(function () {
+                $this->logger->info('DB has been disconnected');
+            }),
+            $this->remoteApi->shutdown()->then(function () {
+                $this->logger->info('Remote API has been closed');
+                $this->remoteApi = null;
+            }),
+        ]);
     }
 
     protected function setState($state)

@@ -2,6 +2,8 @@
 
 namespace Icinga\Module\Eventtracker;
 
+use gipfl\Json\JsonSerialization;
+use Icinga\Module\Eventtracker\Engine\Downtime\UuidObjectHelper;
 use InvalidArgumentException;
 use gipfl\Json\JsonString;
 use Ramsey\Uuid\Uuid;
@@ -9,10 +11,11 @@ use function in_array;
 
 use function ipl\Stdlib\get_php_type;
 
-class Event
+class Event implements JsonSerialization
 {
-    use PropertyHelpers {
+    use UuidObjectHelper {
         set as setProperty;
+        create as reallyCreate;
     }
 
     /** @var string */
@@ -21,7 +24,8 @@ class Event
     /** @var FrozenMemoryFile[] */
     protected $files = [];
 
-    protected $properties = [
+    protected $defaultProperties = [
+        'uuid'            => null,
         'host_name'       => null,
         'object_class'    => null,
         'object_name'     => null,
@@ -36,6 +40,18 @@ class Event
         'acknowledge'     => null,
         'clear'           => null,
     ];
+
+    protected function __construct()
+    {
+    }
+
+    public static function create($properties = []): Event
+    {
+        if (! isset($properties['uuid'])) {
+            $properties['uuid'] = Uuid::uuid4()->getBytes();
+        }
+        return static::reallyCreate($properties);
+    }
 
     public function getChecksum(): string
     {
@@ -103,10 +119,10 @@ class Event
     {
         if ($key === static::FILES_PROPERTY) {
             $this->appendFiles($value);
-            return $this;
+            return;
         }
 
-        return $this->setProperty($key, $value);
+        $this->setProperty($key, $value);
     }
 
     protected function appendFiles($files)

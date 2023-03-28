@@ -21,8 +21,7 @@ class ScomEventFactory
 
     public function fromPlainObject($obj)
     {
-        $event = new Event();
-        $event->setProperties([
+        $event = Event::create([
             'host_name'       => $obj->entity_name,
             'object_name'     => \substr($obj->alert_name, 0, 128),
             'object_class'    => $this->classInventory->requireClass(\substr($obj->entity_base_type, 0, 128)),
