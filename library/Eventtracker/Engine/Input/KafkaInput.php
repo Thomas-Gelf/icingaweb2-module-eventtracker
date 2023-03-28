@@ -219,7 +219,9 @@ class KafkaInput extends SimpleTaskConstructor implements Input
             // '-t', $this->topic,
             // '-o', $offset, // beginning, end, stored, numeric, negative num
             // '-f', 'Topic %t[%p], offset: %o, key: %k, Timestamp: %T \n',
-
+            // unbuffered stdout, removing this leads to issues which are terrible to
+            // debug: https://github.com/edenhill/kcat/issues/3
+            '-u',
             '-G', $this->groupId, $this->topic,
             '-q', // Quiet, as we do not need to parse position with groups
             '-b', $this->servers,
