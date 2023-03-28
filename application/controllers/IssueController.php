@@ -169,7 +169,7 @@ class IssueController extends Controller
             $this->addTitle(sprintf(
                 '%s (%s)',
                 $issue->get('object_name'),
-                $issue->get('host_name')
+                $hostname
             ));
         } else {
             $this->addTitle($issue->get('object_name'));
