@@ -7,9 +7,9 @@ use gipfl\IcingaWeb2\Url;
 use gipfl\Translation\TranslationHelper;
 use gipfl\Web\Widget\Hint;
 use gipfl\ZfDb\Adapter\Adapter as Db;
+use Icinga\Application\Hook;
 use Icinga\Authentication\Auth;
 use Icinga\Date\DateFormatter;
-use Icinga\Module\Eventtracker\DbFactory;
 use Icinga\Module\Eventtracker\Input;
 use Icinga\Module\Eventtracker\File;
 use Icinga\Module\Eventtracker\Hook\EventActionsHook;
@@ -18,12 +18,10 @@ use Icinga\Module\Eventtracker\Sender;
 use Icinga\Module\Eventtracker\Web\Form\ChangePriorityForm;
 use Icinga\Module\Eventtracker\Web\Form\CloseIssueForm;
 use Icinga\Module\Eventtracker\Web\Form\GiveOwnerShipForm;
-use Icinga\Module\Eventtracker\Web\Form\LinkLikeForm;
 use Icinga\Module\Eventtracker\Web\Form\ReOpenIssueForm;
 use Icinga\Module\Eventtracker\Web\Form\TakeIssueForm;
 use Icinga\Module\Eventtracker\Web\HtmlPurifier;
 use Icinga\Util\Format;
-use Icinga\Web\Hook;
 use Icinga\Web\Response;
 use ipl\Html\BaseHtmlElement;
 use ipl\Html\Html;
@@ -310,7 +308,7 @@ class IssueHeader extends BaseHtmlElement
             return (new HtmlDocument())
                 ->add("\n")
                 ->add(Html::tag('strong', 'Files: '))
-                ->addHtml(...$links);
+                ->add($links);
         }
 
         return null;
@@ -325,7 +323,7 @@ class IssueHeader extends BaseHtmlElement
             $input = Input::byId(Uuid::fromBytes($inputUuid), $this->db);
             if ($input !== null) {
                 $html->add("\n");
-                $html->addHtml(Html::tag('strong', 'Input:  '));
+                $html->add(Html::tag('strong', 'Input:  '));
                 $html->add($input->get('label'));
             }
         }
@@ -335,7 +333,7 @@ class IssueHeader extends BaseHtmlElement
             $sender = Sender::byId($senderId, $this->db);
             if ($sender !== null) {
                 $html->add("\n");
-                $html->addHtml(Html::tag('strong', 'Sender: '));
+                $html->add(Html::tag('strong', 'Sender: '));
                 $html->add($sender->get('sender_name'));
             }
         }
@@ -425,7 +423,6 @@ class IssueHeader extends BaseHtmlElement
             return $string;
         }
     }
-
 
     // TODO: Unused.
     protected function addHookedActions(Issue $issue, BaseHtmlElement $target = null)
