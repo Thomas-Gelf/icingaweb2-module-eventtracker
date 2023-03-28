@@ -55,6 +55,7 @@ class ConfigurationController extends Controller
     {
         $action = $this->actions->get('listeners');
         $this->addObjectTab($action);
+        $this->content()->add($this->getForm($action));
         if ($object = $this->getObject($action)) {
             switch ($object->implementation) {
                 case 'kafka':
@@ -63,7 +64,7 @@ class ConfigurationController extends Controller
                         $this->getUuid(),
                         $object->label
                     );
-                    $this->content()->add(
+                    $this->content()->add([
                         Hint::info([
                             Html::tag('strong', $this->translate('Command preview') . ': '),
                             Html::tag('pre', ['style' => 'background: none; line-height: 1.2em'], preg_replace(
@@ -71,11 +72,15 @@ class ConfigurationController extends Controller
                                 " \\\n   $1",
                                 $input->prepareCommandString()
                             ))
-                        ])
-                    );
+                        ]),
+                        Hint::warning($this->translate(
+                            'Be careful when debugging: manually running this command AND the EventTracker Daemon would'
+                            . ' result in both getting only parts of your Kafka events, as Kafka delivers them exactly'
+                            . ' once'
+                        ))
+                    ]);
             }
         }
-        $this->content()->add($this->getForm($action));
     }
 
     public function apitokensAction()
