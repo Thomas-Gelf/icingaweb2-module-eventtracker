@@ -262,7 +262,7 @@ class ConfigurationController extends Controller
         ]);
         $class = $action->tableClass;
         /** @var BaseTable $table */
-        $table = new $class($this->db());
+        $table = new $class($this->db(), $action);
         if ($table->count() > 0) {
             $content->add($table);
         } else {
