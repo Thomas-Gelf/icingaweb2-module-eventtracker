@@ -697,6 +697,20 @@ div.action-bar > ul > li:hover {
 }
 /** END of dropdown in action bar **/
 
+td.collapsible-table-row {
+  a.control-collapsible > i::before {
+    content: '\e81d';
+  }
+  &.collapsed {
+    a.control-collapsible > i::before {
+      content: '\e820';
+    }
+    div {
+      display: none;
+    }
+  }
+}
+
 pre.plain-object {
   margin: 0;
   padding: 1em;
