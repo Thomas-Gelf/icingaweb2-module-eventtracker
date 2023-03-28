@@ -2,6 +2,9 @@
 
 namespace Icinga\Module\Eventtracker\Modifier;
 
+use ipl\Html\Html;
+use ipl\Html\ValidHtml;
+
 class ConvertUtcTimeWithMsToTimestamp extends BaseModifier
 {
     protected static $name = 'Convert UTC time with ms to timestamp';
@@ -21,5 +24,13 @@ class ConvertUtcTimeWithMsToTimestamp extends BaseModifier
         date_default_timezone_set($tz);
 
         return $result;
+    }
+
+    public function describe(string $propertyName): ValidHtml
+    {
+        return Html::sprintf(
+            'Convert UTC time (with ms) in %s to a timestamp',
+            Html::tag('strong', $propertyName)
+        );
     }
 }

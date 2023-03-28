@@ -2,6 +2,9 @@
 
 namespace Icinga\Module\Eventtracker\Modifier;
 
+use ipl\Html\Html;
+use ipl\Html\ValidHtml;
+
 class SetValue extends BaseModifier
 {
     protected static $name = 'Set a specific value';
@@ -9,5 +12,14 @@ class SetValue extends BaseModifier
     public function transform($object, string $propertyName)
     {
         return $this->getSettings()->getRequired('value');
+    }
+
+    public function describe(string $propertyName): ValidHtml
+    {
+        return Html::sprintf(
+            'Set %s = %s',
+            Html::tag('strong', $propertyName),
+            Html::tag('strong', $this->settings->getRequired('value'))
+        );
     }
 }
