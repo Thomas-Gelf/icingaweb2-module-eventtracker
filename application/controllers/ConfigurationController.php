@@ -240,10 +240,13 @@ class ConfigurationController extends Controller
     {
         $this->addTitle(sprintf($this->translate('Configured %s'), $action->plural));
         $this->tabForList($action);
-        $this->actions()->add(Link::create($this->translate('Add'), $action->url, null, [
+        $this->actions()->add([Link::create($this->translate('Back'), 'eventtracker/configuration', null, [
+            'data-base-target' => '_main',
+            'class' => 'icon-left-big',
+        ]), Link::create($this->translate('Add'), $action->url, null, [
             'data-base-target' => '_next',
             'class' => 'icon-plus',
-        ]));
+        ])]);
         $this->content()->add([
             Html::tag('div', [
                 'class' => 'gipfl-compact-dashboard',
