@@ -38,7 +38,10 @@ abstract class BaseSummaryTable extends BaseTable
         $this->addAvailableColumns([
             $this->createColumn($this->getMainColumnAlias(), $this->getMainColumnTitle(), $this->getMainColumn())
                 ->setRenderer(function ($row) use ($column) {
-                    return $this->linkToClass($row, $row->$column);
+                    return Link::create(
+                        self::zeroSplitLongStrings($this->noLabelIfNone($row->$column)),
+                        $this->urlForRow($row)
+                    );
                 }),
             $this->createColumn('cnt', ' ', [
                 'cnt' => 'COUNT(*)',
@@ -53,12 +56,10 @@ abstract class BaseSummaryTable extends BaseTable
         ]);
     }
 
-    protected function linkToClass($row, $label)
+    protected function urlForRow($row): Url
     {
         $column = $this->getMainColumnAlias();
-        $label = self::zeroSplitLongStrings($this->noLabelIfNone($label));
-
-        return Link::create($label, 'eventtracker/issues', [
+        return Url::fromPath('eventtracker/issues', [
             $column => $row->$column
         ]);
     }
