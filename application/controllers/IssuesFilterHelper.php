@@ -9,6 +9,8 @@ use ipl\Html\Table;
 
 trait IssuesFilterHelper
 {
+    protected $appliedFilters = [];
+
     protected function applyFilters(Table $table)
     {
         $table->search($this->params->get('q'));
@@ -53,6 +55,16 @@ trait IssuesFilterHelper
         }
     }
 
+    protected function getAppliedFilters()
+    {
+        return $this->appliedFilters;
+    }
+
+    protected function hasAppliedFilters(): bool
+    {
+        return !empty($this->appliedFilters);
+    }
+
     protected function columnFilter(Table $table, BaseHtmlElement $parent, $column, $type, $title)
     {
         $li = Html::tag('li');
@@ -61,6 +73,7 @@ trait IssuesFilterHelper
         $compact = $this->showCompact();
         if ($this->params->has($column)) {
             $value = $this->params->get($column);
+            $this->appliedFilters[$column] = $value;
 
             // TODO: move this elsewhere, here we shouldn't need to care about DB structure:
             if ($column === 'sender_name') {

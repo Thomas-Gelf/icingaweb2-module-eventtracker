@@ -47,7 +47,11 @@ class IssuesController extends Controller
             }
             $this->addSingleTab('Issues');
             $this->setTitle('Event Tracker');
-            $this->controls()->addTitle('Current Issues', $summary);
+            if ($this->hasAppliedFilters()) {
+                $this->controls()->addTitle('Filtered Issues', $summary);
+            } else {
+                $this->controls()->addTitle('Current Issues', $summary);
+            }
             $this->actions()->add($filters);
             $this->actions()->add($this->createViewToggle());
             $table->getQuery()->limit(1000);
