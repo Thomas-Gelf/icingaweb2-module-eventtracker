@@ -8,12 +8,12 @@ class OwnerSummaryTable extends BaseSummaryTable
         'owner',
     ];
 
-    protected function getMainColumn()
+    protected function getMainColumn(): string
     {
         return 'owner';
     }
 
-    protected function getMainColumnTitle()
+    protected function getMainColumnTitle(): string
     {
         return $this->translate('Owner');
     }

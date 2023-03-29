@@ -8,12 +8,12 @@ class HostNameSummaryTable extends BaseSummaryTable
         'host_name',
     ];
 
-    protected function getMainColumn()
+    protected function getMainColumn(): string
     {
         return 'host_name';
     }
 
-    protected function getMainColumnTitle()
+    protected function getMainColumnTitle(): string
     {
         return $this->translate('Hostname');
     }
