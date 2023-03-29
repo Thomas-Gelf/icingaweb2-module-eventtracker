@@ -13,6 +13,15 @@ trait UuidObjectHelper
         DbStorable::setStoredProperty as reallySetStoredProperty;
     }
 
+    public function hasModifiedProperty($key): bool
+    {
+        if ($this->isNew()) {
+            return true;
+        }
+
+        return $this->storedProperties[$key] !== $this->properties[$key];
+    }
+
     protected function isIntegerProperty($property): bool
     {
         if (preg_match('/^ts_/', $property)) {
