@@ -6,6 +6,7 @@ use Icinga\Module\Eventtracker\DbFactory;
 use Icinga\Module\Eventtracker\Status;
 use Icinga\Module\Eventtracker\Web\Table\BaseSummaryTable;
 use Icinga\Module\Eventtracker\Web\Table\HostNameSummaryTable;
+use Icinga\Module\Eventtracker\Web\Table\InputSummaryTable;
 use Icinga\Module\Eventtracker\Web\Table\ObjectClassSummaryTable;
 use Icinga\Module\Eventtracker\Web\Table\ObjectNameSummaryTable;
 use Icinga\Module\Eventtracker\Web\Table\OwnerSummaryTable;
@@ -47,6 +48,14 @@ class SummaryController extends Controller
         $this->tabs(new SummaryTabs())->activate('owners');
     }
 
+    public function inputsAction()
+    {
+        $this->addTitleWithType($this->translate('Input'));
+        $this->setAutorefreshInterval(10);
+        (new InputSummaryTable($this->db()))->renderTo($this);
+        $this->tabs(new SummaryTabs())->activate('inputs');
+    }
+
     public function sendersAction()
     {
         $this->addTitleWithType($this->translate('Sender'));
@@ -72,7 +81,8 @@ class SummaryController extends Controller
             $this->translate('Object Name')  => new ObjectNameSummaryTable($db),
             $this->translate('Hostname')     => new HostNameSummaryTable($db),
             $this->translate('Owner')        => new OwnerSummaryTable($db),
-            $this->translate('Sender')       => new SenderSummaryTable($db),
+            $this->translate('Input')        => new InputSummaryTable($db),
+            $this->translate('Sender (Old)') => new SenderSummaryTable($db),
         ];
         /** @var BaseSummaryTable $table */
         foreach ($tables as $title => $table) {
