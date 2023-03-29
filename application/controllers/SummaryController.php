@@ -11,6 +11,7 @@ use Icinga\Module\Eventtracker\Web\Table\ObjectNameSummaryTable;
 use Icinga\Module\Eventtracker\Web\Table\OwnerSummaryTable;
 use Icinga\Module\Eventtracker\Web\Table\SenderSummaryTable;
 use Icinga\Module\Eventtracker\Web\Widget\SummaryTabs;
+use ipl\Html\Html;
 
 class SummaryController extends Controller
 {
@@ -63,6 +64,9 @@ class SummaryController extends Controller
 
         $db = $this->db();
         $this->setAutorefreshInterval(10);
+        $main = Html::tag('div', [
+            'class' => 'summary-tables'
+        ]);
         $tables = [
             $this->translate('Object Class') => new ObjectClassSummaryTable($db),
             $this->translate('Object Name')  => new ObjectNameSummaryTable($db),
@@ -76,9 +80,11 @@ class SummaryController extends Controller
             if ($this->showCompact()) {
                 $table->setAttribute('data-base-target', '_next');
             }
+            $table->setAttribute('data-base-target', '_next');
             $table->getQuery()->limit(10)->where('i.status = ?', Status::OPEN);
-            $this->content()->add($table);
+            $main->add(Html::tag('div', $table));
         }
+        $this->content()->add($main);
     }
 
     protected function addTitleWithType($type)

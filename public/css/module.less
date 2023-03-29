@@ -740,6 +740,27 @@ form .gipfl-widget-hint {
   margin-top: 1em;
 }
 
+/** Summary Tables */
+div.summary-tables {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  > div {
+    flex: 0 1 calc(33% - 1em);
+  }
+}
+#layout.twocols, #layout.poor-layout {
+  div.summary-tables > div {
+    flex: 0 1 calc(50% - 1em);
+  }
+}
+#layout.compact-layout.twocols, #layout.minimal-layout {
+  div.summary-tables > div {
+    flex: 0 1 100%;
+  }
+}
+/** End of Summary Tables */
+
 /** Dashboard Actions */
 ul.gipfl-dashboard-actions {
   margin: 0;
