@@ -106,10 +106,6 @@ trait UuidObjectHelper
 
     public function jsonSerialize(): object
     {
-        if ($this instanceof Issue) {
-            var_dump($this->createdNow);
-            var_dump($this->getNonDbProperties());
-        }
         return $this->serializeProperties($this->getProperties() + $this->getNonDbProperties());
     }
 
