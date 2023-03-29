@@ -20,6 +20,8 @@ class IssuesTable extends BaseTable
 
     protected $joinedSenders = false;
 
+    protected $joinedInputs = false;
+
     protected $compact = false;
 
     protected $searchColumns = [
@@ -129,6 +131,7 @@ class IssuesTable extends BaseTable
             ])->setRenderer(function ($row) {
                 return $this->formatMessageColumn($row);
             }),
+            $this->createColumn('input_label', $this->translate('Input'), 'inp.label'),
             $this->createColumn('sender_name', $this->translate('Sender'), 's.sender_name'),
             $this->createColumn('owner', $this->translate('Owner'), 'i.owner'),
             $this->createColumn('ticket_ref', $this->translate('Ticket'), 'i.ticket_ref'),
@@ -272,6 +275,10 @@ class IssuesTable extends BaseTable
             $query->join(['s' => 'sender'], 's.id = i.sender_id', []);
             $this->joinedSenders = true;
         }
+        if (array_key_exists('input_label', $columns)) {
+            $query->joinLeft(['inp' => 'input'], 'inp.uuid = i.input_uuid', []);
+            $this->joinedInputs = true;
+        }
 
         return $query->columns($this->getRequiredDbColumns());
     }
@@ -281,6 +288,16 @@ class IssuesTable extends BaseTable
         if ($this->joinedSenders === false) {
             $this->getQuery()->join(['s' => 'sender'], 's.id = i.sender_id', []);
             $this->joinedSenders = true;
+        }
+
+        return $this;
+    }
+
+    public function joinInputs()
+    {
+        if ($this->joinedInputs === false) {
+            $this->getQuery()->joinLeft(['inp' => 'input'], 'inp.uuid = i.input_uuid', []);
+            $this->joinedInputs = true;
         }
 
         return $this;

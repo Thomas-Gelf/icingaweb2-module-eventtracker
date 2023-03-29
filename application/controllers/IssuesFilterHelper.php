@@ -23,6 +23,7 @@ trait IssuesFilterHelper
         $this->columnFilter($table, $sub, 'object_class', 'classes', $this->translate('Classes: %s'));
         $this->columnFilter($table, $sub, 'object_name', 'objects', $this->translate('Objects: %s'));
         $this->columnFilter($table, $sub, 'owner', 'owners', $this->translate('Owners: %s'));
+        $this->columnFilter($table, $sub, 'input_label', 'inputs', $this->translate('Input: %s'));
         $this->columnFilter($table, $sub, 'sender_name', 'senders', $this->translate('Sender: %s'));
         if (! $this->showCompact()) {
             $this->actions()->add($main);
@@ -79,6 +80,10 @@ trait IssuesFilterHelper
             if ($column === 'sender_name') {
                 $table->joinSenders();
                 $column = "s.$column";
+            }
+            if ($column === 'inputLabel') {
+                $table->joinInputs();
+                $column = "inp.$column";
             }
             if (strlen($value)) {
                 $table->getQuery()->where("$column = ?", $value);
