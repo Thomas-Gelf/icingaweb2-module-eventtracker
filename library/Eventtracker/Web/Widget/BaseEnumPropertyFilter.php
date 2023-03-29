@@ -68,7 +68,7 @@ class BaseEnumPropertyFilter extends BaseHtmlElement
         $titleToggleOff = $this->translate('Hide "%s"');
         foreach ($options as $key) {
             $count = (int) $this->summary->{"cnt_$key"};
-            if ((int) $count === 0 && $this->skipMissing) {
+            if ($count === 0 && $this->skipMissing) {
                 continue;
             }
             $countHandled = (int) $this->summary->{"cnt_${key}_handled"};
