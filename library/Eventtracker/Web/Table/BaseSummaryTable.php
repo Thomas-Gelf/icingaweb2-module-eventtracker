@@ -34,11 +34,6 @@ abstract class BaseSummaryTable extends BaseTable
     protected function initialize()
     {
         $column = $this->getMainColumnAlias();
-        $this->enableMultiSelect(
-            'eventtracker/issues',
-            'eventtracker/issues',
-            [$column]
-        );
 
         $this->addAvailableColumns([
             $this->createColumn($this->getMainColumnAlias(), $this->getMainColumnTitle(), $this->getMainColumn())
