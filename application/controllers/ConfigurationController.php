@@ -23,6 +23,7 @@ use Icinga\Module\Eventtracker\Web\Table\DowntimeScheduleTable;
 use Icinga\Module\Eventtracker\Web\WebAction;
 use Icinga\Module\Eventtracker\Web\WebActions;
 use ipl\Html\Html;
+use ipl\Html\Table;
 use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\UuidInterface;
 
@@ -81,6 +82,24 @@ class ConfigurationController extends Controller
                     ]);
             }
         }
+    }
+
+    public function syncsAction()
+    {
+        $action = $this->actions->get('syncs');
+        $this->tabForList($action);
+        $this->addTitle($action->plural);
+        $this->actions()->add($this->linkBack());
+        $dummyTable = new Table();
+        $dummyTable->addAttributes([
+            'class' => ['common-table', 'table-row-selectable']
+        ]);
+        $dummyTable->getHeader()->add(Table::row([$action->plural], null, 'th'));
+        $this->addCompactDashboard($dummyTable->add(
+            Table::row([$this->translate(
+                'This feature is not yet available, SCOM and IDO are still being synchronized the legacy way'
+            )]),
+        ));
     }
 
     public function apitokensAction()
@@ -245,32 +264,47 @@ class ConfigurationController extends Controller
     {
         $this->addTitle(sprintf($this->translate('Configured %s'), $action->plural));
         $this->tabForList($action);
-        $this->actions()->add([Link::create($this->translate('Back'), 'eventtracker/configuration', null, [
-            'data-base-target' => '_main',
-            'class' => 'icon-left-big',
-        ]), Link::create($this->translate('Add'), $action->url, null, [
-            'data-base-target' => '_next',
-            'class' => 'icon-plus',
-        ])]);
-        $this->content()->add([
-            Html::tag('div', [
-                'class' => 'gipfl-compact-dashboard',
-            ], new ConfigurationDashboard($this->actions)),
-            $content = Html::tag('div', [
-                'class' => 'gipfl-content-next-to-compact-dashboard',
-            ])
-        ]);
+        $this->actions()->add([$this->linkBack(), $this->linkAdd($action)]);
+
         $class = $action->tableClass;
         /** @var BaseTable $table */
         $table = new $class($this->db(), $action);
         if ($table->count() > 0) {
-            $content->add($table);
+            $this->addCompactDashboard($table);
         } else {
-            $content->add(Hint::info(sprintf(
+            $this->addCompactDashboard(Hint::info(sprintf(
                 $this->translate('Please configure your first %s'),
                 $action->singular
             )));
         }
+    }
+
+    protected function linkBack(): Link
+    {
+        return Link::create($this->translate('Back'), 'eventtracker/configuration', null, [
+            'data-base-target' => '_main',
+            'class' => 'icon-left-big',
+        ]);
+    }
+
+    protected function linkAdd(WebAction $action): Link
+    {
+        return Link::create($this->translate('Add'), $action->url, null, [
+            'data-base-target' => '_next',
+            'class' => 'icon-plus',
+        ]);
+    }
+
+    protected function addCompactDashboard($content)
+    {
+        $this->content()->add([
+            Html::tag('div', [
+                'class' => 'gipfl-compact-dashboard',
+            ], new ConfigurationDashboard($this->actions)),
+            Html::tag('div', [
+                'class' => 'gipfl-content-next-to-compact-dashboard',
+            ], $content)
+        ]);
     }
 
     protected function createForm(WebAction $action): UuidObjectForm
