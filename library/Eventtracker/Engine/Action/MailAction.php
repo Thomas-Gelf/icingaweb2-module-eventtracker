@@ -16,7 +16,7 @@ use React\EventLoop\LoopInterface;
 use React\Promise\PromiseInterface;
 use Throwable;
 use Zend_Mail;
-use Zend_Mail_Transport_Sendmail;
+use Zend_Mail_Transport_Smtp as SmtpTransport;
 use function React\Promise\reject;
 use function React\Promise\resolve;
 
@@ -97,7 +97,7 @@ class MailAction extends SimpleTaskConstructor implements Action
         $mail->setSubject(ConfigHelper::fillPlaceholders($this->subject, $issue));
         $mail->setBodyText(ConfigHelper::fillPlaceholders($this->body, $issue));
 
-        $mail->send(new Zend_Mail_Transport_Sendmail('-f ' . escapeshellarg($this->from)));
+        $mail->send(new SmtpTransport());
         $this->logger->debug('A mail has been sent to ' . $this->to);
     }
 }
