@@ -57,12 +57,12 @@ class RpcNamespaceEvent implements EventEmitterInterface
 
     protected function initializeActions()
     {
-        $this->actions = [];
         $actions = (new ConfigStore($this->db))->loadActions(['enabled' => 'y']);
         /** @var Action $action */
         foreach ($actions as $action) {
             $action->run($this->loop);
         }
+        $this->actions = $actions;
     }
 
     public function getCounters(): Counters
@@ -134,7 +134,7 @@ class RpcNamespaceEvent implements EventEmitterInterface
         }
 
         if ($issue->hasBeenCreatedNow()) {
-            $actions = ActionHelper::processIssue($this->actions, $issue, $this->db);
+            $actions = ActionHelper::processIssue($this->actions, $issue, $this->db, $this->logger);
             timeout($actions, 15, $this->loop);
         }
 
