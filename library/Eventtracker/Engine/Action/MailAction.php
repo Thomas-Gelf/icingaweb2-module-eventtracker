@@ -82,6 +82,18 @@ class MailAction extends SimpleTaskConstructor implements Action
         return resolve("Mail has been sent to {$this->to}");
     }
 
+    /**
+     * This is very basic, we trust our admins
+     */
+    protected static function splitNameAndMail($mail): array
+    {
+        if (preg_match('/^(.+)<([^>]+)>$/', $mail, $match)) {
+            return [trim($match[1]), $match[2]];
+        } else {
+            return [$mail, $mail]; // Zend_Mail skips the name if '', null or === $email
+        }
+    }
+
     protected function mail(Issue $issue): void
     {
         if ($this->paused) {
@@ -90,9 +102,12 @@ class MailAction extends SimpleTaskConstructor implements Action
             return;
         }
 
+        [$fromName, $fromMail] = self::splitNameAndMail($this->from);
+        [$toName, $toMail] = self::splitNameAndMail($this->to);
+
         $mail = (new Zend_Mail('UTF-8'))
-            ->setFrom($this->from)
-            ->addTo($this->to);
+            ->setFrom($fromMail, $fromName)
+            ->addTo($toMail, $toName);
 
         $mail->setSubject(ConfigHelper::fillPlaceholders($this->subject, $issue));
         $mail->setBodyText(ConfigHelper::fillPlaceholders($this->body, $issue));
