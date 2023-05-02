@@ -7,11 +7,11 @@ use gipfl\Translation\TranslationHelper;
 use gipfl\Web\Form;
 use Icinga\Module\Eventtracker\File;
 use Icinga\Module\Eventtracker\FrozenMemoryFile;
-use Icinga\Module\Eventtracker\Issue;
 use Icinga\Module\Eventtracker\IssueFile;
 use Icinga\Web\Notification;
 use ipl\Html\Html;
 use Psr\Http\Message\ServerRequestInterface;
+use Ramsey\Uuid\UuidInterface;
 use RuntimeException;
 
 // stolen from ru*bn/storage
@@ -19,15 +19,16 @@ class FileUploadForm extends Form
 {
     use TranslationHelper;
 
-    /**
-     * @var Issue
-     */
-    protected $issue;
+    /** @var UuidInterface[] */
+    protected $issueUuids;
     private $db;
 
-    public function __construct(Issue $issue, $db)
+    /**
+     * @param UuidInterface[] $issueUuids
+     */
+    public function __construct(array $issueUuids, $db)
     {
-        $this->issue = $issue;
+        $this->issueUuids = $issueUuids;
         $this->db = $db;
         $this->getAttributes()->set('enctype', 'multipart/form-data');
         $this->on(Form::ON_REQUEST, [$this, 'onRequest']);
@@ -71,7 +72,9 @@ class FileUploadForm extends Form
                     continue;
                 }
 
-                IssueFile::persist($this->issue, $file, $db);
+                foreach ($this->issueUuids as $uuid) {
+                    IssueFile::persist($uuid, $file, $db);
+                }
                 unlink($uploadedFile->tmp_name);
             } else {
                 // add Error?

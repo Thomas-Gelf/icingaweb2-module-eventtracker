@@ -10,6 +10,8 @@ use Icinga\Data\Filter\FilterAnd;
 use Icinga\Data\Filter\FilterExpression;
 use Icinga\Data\Filter\FilterOr;
 use InvalidArgumentException;
+use Ramsey\Uuid\UuidInterface;
+use Ramsey\Uuid\Uuid as RamseyUuid;
 
 class SetOfIssues implements Countable
 {
@@ -67,6 +69,20 @@ class SetOfIssues implements Countable
 
         foreach ($this->issues as $issue) {
             $uuids[] = $issue->getUuid();
+        }
+
+        return $uuids;
+    }
+
+    /**
+     * @return UuidInterface[]
+     */
+    public function getUuidObjects(): array
+    {
+        $uuids = [];
+
+        foreach ($this->issues as $issue) {
+            $uuids[] = RamseyUuid::fromBytes($issue->get('issue_uuid'));
         }
 
         return $uuids;

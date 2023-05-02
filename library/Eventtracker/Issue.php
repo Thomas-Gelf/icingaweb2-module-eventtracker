@@ -457,9 +457,10 @@ class Issue implements JsonSerialization
      */
     protected function insertIntoDb(Db $db)
     {
+        $uuid = Uuid::uuid4();
         $now = Time::unixMilli();
         $this->setProperties([
-            'issue_uuid'       => Uuid::uuid4()->getBytes(),
+            'issue_uuid'       => $uuid->getBytes(),
             'cnt_events'       => 1,
             'status'           => 'open',
             'ts_first_event'   => $now,
@@ -484,7 +485,7 @@ class Issue implements JsonSerialization
                 continue;
             }
 
-            IssueFile::persist($this, $file, $db);
+            IssueFile::persist($uuid, $file, $db);
 
             $files[$key] = true;
         }

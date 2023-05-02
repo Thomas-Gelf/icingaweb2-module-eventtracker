@@ -315,7 +315,7 @@ class IssueHeader extends BaseHtmlElement
                     'class' => 'icon-left-big',
                 ]);
                 $main[] = "\n";
-                $form = new FileUploadForm($this->issue, $this->db);
+                $form = new FileUploadForm([Uuid::fromBytes($this->issue->get('issue_uuid'))], $this->db);
                 $form->on($form::ON_SUCCESS, function () {
                     $this->response->redirectAndExit($this->requestedUrl->without('upload'));
                 });

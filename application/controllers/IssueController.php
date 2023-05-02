@@ -2,6 +2,7 @@
 
 namespace Icinga\Module\Eventtracker\Controllers;
 
+use gipfl\IcingaWeb2\Link;
 use gipfl\IcingaWeb2\Url;
 use gipfl\Web\Widget\Hint;
 use Icinga\Application\Hook;
@@ -15,6 +16,7 @@ use Icinga\Module\Eventtracker\Issue;
 use Icinga\Module\Eventtracker\IssueHistory;
 use Icinga\Module\Eventtracker\SetOfIssues;
 use Icinga\Module\Eventtracker\Web\Form\CloseIssueForm;
+use Icinga\Module\Eventtracker\Web\Form\FileUploadForm;
 use Icinga\Module\Eventtracker\Web\Form\TakeIssueForm;
 use Icinga\Module\Eventtracker\Web\Widget\IdoDetails;
 use Icinga\Module\Eventtracker\Web\Widget\IssueActivities;
@@ -46,6 +48,7 @@ class IssueController extends Controller
         $db = $this->db();
         $uuid = $this->params->get('uuid');
         if ($uuid === null) {
+            $upload = $this->url()->shift('upload');
             $issues = SetOfIssues::fromUrl($this->url(), $db);
             $count = \count($issues);
             $this->addTitle($this->translate('%d issues'), $count);
@@ -69,6 +72,22 @@ class IssueController extends Controller
                 $this->actions()->add((new TakeIssueForm($issues, $db))->on('success', function () {
                     $this->getResponse()->redirectAndExit($this->url());
                 })->handleRequest($this->getServerRequest()));
+            }
+
+            if ($upload) {
+                $this->actions()->add(Link::create($this->translate('Hide upload form'), $this->url()->without('upload'), null, [
+                    'class' => 'icon-left-big',
+                ]));
+                $form = new FileUploadForm($issues->getUuidObjects(), $db);
+                $form->on($form::ON_SUCCESS, function () {
+                    $this->redirectNow($this->url()->without('upload'));
+                });
+                $form->handleRequest($this->getServerRequest());
+                $this->content()->prepend($form);
+            } else {
+                $this->actions()->add(Link::create($this->translate('Upload'), $this->url()->with('upload', true), null, [
+                    'class' => 'icon-upload',
+                ]));
             }
 
             /** @var EventActionsHook $impl */
