@@ -76,7 +76,14 @@ class IssueController extends Controller
                 $this->actions()->add($impl->getIssuesActions($issues));
             }
             foreach ($issues->getIssues() as $issue) {
-                $this->content()->add($this->issueHeader($issue));
+                $this->content()->add((new IssueHeader(
+                    $issue,
+                    $this->db(),
+                    $this->getServerRequest(),
+                    $this->getResponse(),
+                    $this->url(),
+                    $this->Auth()
+                ))->disableActions());
             }
         } else {
             $binaryUuid = Uuid::fromString($uuid)->getBytes();
@@ -176,7 +183,14 @@ class IssueController extends Controller
         }
         // $this->addHookedActions($issue);
         $this->content()->add([
-            $this->issueHeader($issue),
+            new IssueHeader(
+                $issue,
+                $this->db(),
+                $this->getServerRequest(),
+                $this->getResponse(),
+                $this->url(),
+                $this->Auth()
+            ),
             new IdoDetails($issue, $db),
             new IssueDetails($issue),
             new IssueActivities($issue, $db),
@@ -203,18 +217,6 @@ class IssueController extends Controller
             $this->translate('%d issues have been closed'),
             $this->params->getRequired('cnt')
         )));
-    }
-
-    protected function issueHeader(Issue $issue)
-    {
-        return new IssueHeader(
-            $issue,
-            $this->db(),
-            $this->getServerRequest(),
-            $this->getResponse(),
-            $this->url(),
-            $this->Auth()
-        );
     }
 
     // TODO: IssueList?

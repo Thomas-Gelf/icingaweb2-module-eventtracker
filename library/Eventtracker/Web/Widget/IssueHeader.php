@@ -58,6 +58,8 @@ class IssueHeader extends BaseHtmlElement
     /** @var Db */
     protected $db;
 
+    protected $showActions = true;
+
     public function __construct(
         Issue $issue,
         Db $db,
@@ -102,6 +104,12 @@ class IssueHeader extends BaseHtmlElement
                 ])
             ]),
         ]);
+    }
+
+    public function disableActions(): IssueHeader
+    {
+        $this->showActions = false;
+        return $this;
     }
 
     protected function showMainDetails(Issue $issue)
@@ -243,8 +251,10 @@ class IssueHeader extends BaseHtmlElement
     {
         if ($issue->get('status') === 'closed') {
             $actions = [];
-        } else {
+        } elseif ($this->showActions) {
             $actions = $this->getHookedActions($issue);
+        } else {
+            $actions = [];
         }
         if (empty($actions)) {
             if ($ref = $issue->get('ticket_ref')) {
@@ -288,28 +298,34 @@ class IssueHeader extends BaseHtmlElement
         return $result;
     }
 
-    protected function renderFiles(Issue $issue): array
+    protected function renderFiles(Issue $issue): ?array
     {
         $files = File::loadAllByIssue($issue, $this->db);
-        $main = [
-            "\n",
-            Html::tag('strong', 'Files:  '),
-        ];
-        if ($this->requestedUrl->getParam('upload')) {
-            $main[] = Link::create($this->translate('Hide upload form'), $this->requestedUrl->without('upload'), null, [
-                'class' => 'icon-left-big',
-            ]);
-            $main[] = "\n";
-            $form = new FileUploadForm($this->issue, $this->db);
-            $form->on($form::ON_SUCCESS, function () {
-                $this->response->redirectAndExit($this->requestedUrl->without('upload'));
-            });
-            $form->handleRequest($this->request);
-            $main[] = $form;
+        if ($this->showActions || ! empty($files)) {
+            $main = [
+                "\n",
+                Html::tag('strong', 'Files:  '),
+            ];
         } else {
-            $main[] = Link::create($this->translate('Upload'), $this->requestedUrl->with('upload', true), null, [
-                'class' => 'icon-upload',
-            ]);
+            return null;
+        }
+        if ($this->showActions) {
+            if ($this->requestedUrl->getParam('upload')) {
+                $main[] = Link::create($this->translate('Hide upload form'), $this->requestedUrl->without('upload'), null, [
+                    'class' => 'icon-left-big',
+                ]);
+                $main[] = "\n";
+                $form = new FileUploadForm($this->issue, $this->db);
+                $form->on($form::ON_SUCCESS, function () {
+                    $this->response->redirectAndExit($this->requestedUrl->without('upload'));
+                });
+                $form->handleRequest($this->request);
+                $main[] = $form;
+            } else {
+                $main[] = Link::create($this->translate('Upload'), $this->requestedUrl->with('upload', true), null, [
+                    'class' => 'icon-upload',
+                ]);
+            }
         }
 
         foreach ($files as $file) {
@@ -369,7 +385,7 @@ class IssueHeader extends BaseHtmlElement
 
     protected function createOpenCloseForm(Issue $issue, $db)
     {
-        if (! $this->isOperator) {
+        if (! $this->isOperator || ! $this->showActions) {
             return null;
         }
 
@@ -390,7 +406,7 @@ class IssueHeader extends BaseHtmlElement
 
     protected function createGiveOwnerShipForm(Issue $issue, $db)
     {
-        if (! $this->isOperator || $issue->isClosed()) {
+        if (! $this->isOperator || ! $this->showActions || $issue->isClosed()) {
             return null;
         }
 
@@ -405,7 +421,7 @@ class IssueHeader extends BaseHtmlElement
 
     protected function createTakeOwnerShipForm(Issue $issue, $db)
     {
-        if (! $this->isOperator || $issue->isClosed()) {
+        if (! $this->isOperator || ! $this->showActions || $issue->isClosed()) {
             return null;
         }
 
