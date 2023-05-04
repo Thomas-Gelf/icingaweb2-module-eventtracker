@@ -69,15 +69,29 @@ class UuidObjectForm extends Form
             'label' => $this->translate('Delete'),
             'formnovalidate' => true,
         ]);
-        $this->addElement($button);
+        $submit = $this->getElement('submit');
+        assert($submit instanceof SubmitElement);
+        $decorator = $submit->getWrapper();
+        assert($decorator instanceof Form\Decorator\DdDtDecorator);
+        $dd = $decorator->dd();
+        $dd->add($button);
+        $this->registerElement($button);
         $label = $this->getObjectLabel();
         $labelReally = sprintf($this->translate('YES, I really want to delete %s'), $label);
         if ($button->hasBeenPressed()) {
+            $dd->remove($button);
             $this->remove($button);
-            $this->addElement('submit', 'really_delete', [
+            $cancel = $this->createElement('submit', 'cancel', [
+                'label' => $this->translate('Cancel'),
+                'formnovalidate' => true,
+            ]);
+            $really = $this->createElement('submit', 'really_delete', [
                 'label' => $labelReally,
                 'formnovalidate' => true,
             ]);
+            $this->registerElement($cancel);
+            $this->registerElement($really);
+            $dd->add([$cancel, $really]);
         }
         if ($this->getSentValue('really_delete') === $labelReally) {
             $this->store->deleteObject($this->table, $this->uuid);
