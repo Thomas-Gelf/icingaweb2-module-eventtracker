@@ -8,7 +8,7 @@ if ($this->getConfig()->get('ui', 'disabled', 'no') === 'yes') {
 }
 
 $section = $this->menuSection(N_('Event Tracker'))
-    ->setIcon('attention-circled')
+    ->setIcon('warning-empty')
     ->setUrl('eventtracker/dashboard')
     ->setPriority(17);
 $section->add(N_('Issues'))->setUrl('eventtracker/issues')->setPriority(10);
