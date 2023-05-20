@@ -57,7 +57,7 @@ class RpcNamespaceEvent implements EventEmitterInterface
 
     protected function initializeActions()
     {
-        $actions = (new ConfigStore($this->db))->loadActions(['enabled' => 'y']);
+        $actions = (new ConfigStore($this->db, $this->logger))->loadActions(['enabled' => 'y']);
         /** @var Action $action */
         foreach ($actions as $action) {
             $action->run($this->loop);
