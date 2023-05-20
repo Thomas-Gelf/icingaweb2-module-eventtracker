@@ -84,7 +84,12 @@ class ConfigStore
         foreach ($this->fetchObjects('action', $filter) as $row) {
             $row->uuid = Uuid::fromBytes($row->uuid);
             /** @var Action $action */
-            $action = $this->initializeTaskFromDbRow($row, new ActionRegistry(), Action::class);
+            try {
+                $action = $this->initializeTaskFromDbRow($row, new ActionRegistry(), Action::class);
+            } catch (\Exception $e) {
+                $this->logger->error('Failed to initialize ' . $row->label . ': ' . $e->getMessage());
+                continue;
+            }
             $actions[$row->uuid->toString()] = $action
                 ->setActionDescription($row->description)
                 ->setEnabled($row->enabled === 'y')
