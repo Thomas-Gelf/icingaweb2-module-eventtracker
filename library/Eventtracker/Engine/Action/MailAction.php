@@ -42,6 +42,9 @@ class MailAction extends SimpleTaskConstructor implements Action
     /** @var string */
     protected $body;
 
+    /** @var bool */
+    protected $stripTags = false;
+
     protected $paused = true;
 
     public function applySettings(Settings $settings)
@@ -50,6 +53,7 @@ class MailAction extends SimpleTaskConstructor implements Action
         $this->to = $settings->getRequired('to');
         $this->subject = $settings->get('subject');
         $this->body = $settings->get('body');
+        $this->stripTags = $settings->get('strip_tags', 'n') === 'y';
 
         $this->setSettings($settings);
     }
