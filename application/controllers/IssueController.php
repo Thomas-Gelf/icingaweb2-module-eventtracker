@@ -163,7 +163,11 @@ class IssueController extends Controller
         $db = $this->db();
         $issue = Issue::loadIfExists($binaryUuid, $db);
         if ($issue === null) {
-            throw new HttpNotFoundException($this->translate('Issue not found'));
+            if (IssueHistory::exists($binaryUuid, $db)) {
+                $issue = Issue::loadFromHistory($binaryUuid, $db);
+            } else {
+                throw new HttpNotFoundException($this->translate('Issue not found'));
+            }
         }
 
         if ($hostname = $issue->get('host_name')) {
