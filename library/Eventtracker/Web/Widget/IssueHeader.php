@@ -114,7 +114,8 @@ class IssueHeader extends BaseHtmlElement
 
     protected function showMainDetails(Issue $issue)
     {
-        return [
+        $status = $issue->get('status');
+        $main = [
             Html::tag('strong', 'Host:   '),
             $issue->get('host_name') ? Link::create(
                 $issue->get('host_name'),
@@ -140,7 +141,7 @@ class IssueHeader extends BaseHtmlElement
             ),
             "\n",
             Html::tag('strong', 'Status: '),
-            $issue->get('status'),
+            $status,
             $this->createOpenCloseForm($issue, $this->db),
             "\n",
             /*
@@ -148,14 +149,26 @@ class IssueHeader extends BaseHtmlElement
             $this->renderPriority($issue),
             "\n",
             */
-            Html::tag('strong', 'Owner:  '),
-            $this->renderOwner($issue),
-            "\n",
+        ];
+
+        if ($status !== 'closed') {
+            array_push(
+                $main,
+                Html::tag('strong', 'Owner:  '),
+                $this->renderOwner($issue),
+                "\n"
+            );
+        }
+
+        array_push(
+            $main,
             Html::tag('strong', 'Ticket: '),
             $this->renderTicket($issue),
             $this->renderInputAndSender($issue),
             $this->renderFiles($issue)
-        ];
+        );
+
+        return $main;
     }
 
     protected function renderTimings(Issue $issue)
@@ -243,7 +256,7 @@ class IssueHeader extends BaseHtmlElement
     protected function url()
     {
         return Url::fromPath('eventtracker/issue', [
-            'uuid' => $this->issue->getHexUuid()
+            'uuid' => $this->issue->getNiceUuid()
         ]);
     }
 
@@ -259,6 +272,8 @@ class IssueHeader extends BaseHtmlElement
         if (empty($actions)) {
             if ($ref = $issue->get('ticket_ref')) {
                 return $ref;
+            } else {
+                return '-';
             }
         }
 
@@ -301,7 +316,8 @@ class IssueHeader extends BaseHtmlElement
     protected function renderFiles(Issue $issue): ?array
     {
         $files = File::loadAllByIssue($issue, $this->db);
-        if ($this->showActions || ! empty($files)) {
+        $showUpload = $this->showActions && $issue->get('status') !== 'closed';
+        if ($showUpload || ! empty($files)) {
             $main = [
                 "\n",
                 Html::tag('strong', 'Files:  '),
@@ -309,7 +325,7 @@ class IssueHeader extends BaseHtmlElement
         } else {
             return null;
         }
-        if ($this->showActions) {
+        if ($showUpload) {
             if ($this->requestedUrl->getParam('upload')) {
                 $main[] = Link::create($this->translate('Hide upload form'), $this->requestedUrl->without('upload'), null, [
                     'class' => 'icon-left-big',
