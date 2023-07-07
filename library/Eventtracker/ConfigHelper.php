@@ -10,9 +10,7 @@ class ConfigHelper
     public static function getList($value)
     {
         if ($value !== null && \strlen($value) > 0) {
-            $parts = \preg_split('/\s*,\s*/', $value, -1, \PREG_SPLIT_NO_EMPTY);
-
-            return $parts;
+            return \preg_split('/\s*,\s*/', $value, -1, \PREG_SPLIT_NO_EMPTY);
         } else {
             return [];
         }
