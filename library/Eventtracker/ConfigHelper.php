@@ -22,12 +22,12 @@ class ConfigHelper
         return ConfigHelperCi::fillPlaceHoldersForIssue($string, $issue, $db);
     }
 
-    protected static function missingProperty($property)
+    public static function missingProperty($property)
     {
         return '{' . $property . '}';
     }
 
-    protected static function getIssueProperty(Issue $issue, $property)
+    public static function getIssueProperty(Issue $issue, $property)
     {
         if ($property === 'uuid') {
             return $issue->getNiceUuid();
@@ -86,23 +86,30 @@ class ConfigHelper
         return \preg_replace_callback('/({[^}]+})/', $replace, $string);
     }
 
-    protected static function applyPropertyModifier(&$value, $modifier)
+    public static function applyPropertyModifier(&$value, $modifier)
     {
         // Hint: $modifier could be null
         switch ($modifier) {
             case 'lower':
                 $value = \strtolower($value);
                 break;
+            case 'stripTags':
+                $value = \strip_tags($value);
+                break;
         }
     }
 
-    protected static function extractPropertyModifier($property)
+    public static function extractPropertyModifier($property)
     {
         $modifier = null;
         // TODO: make property modifiers dynamic
         if (\preg_match('/:lower$/', $property)) {
             $property = \preg_replace('/:lower$/', '', $property);
             $modifier = 'lower';
+        }
+        if (\preg_match('/:stripTags$/', $property)) {
+            $property = \preg_replace('/:stripTags$/', '', $property);
+            $modifier = 'stripTags';
         }
 
         return [$property, $modifier];
