@@ -29,6 +29,20 @@ class IssueHistory
         return $result;
     }
 
+    public static function getReasonIfClosed($uuid, Db $db): ?\stdClass
+    {
+        $result = $db->fetchRow(
+            $db->select()
+                ->from(self::$tableName, ['close_reason', 'closed_by'])
+                ->where('issue_uuid = ?', $uuid)
+        );
+        if (empty($result)) {
+            return null;
+        }
+
+        return $result;
+    }
+
     public static function persist(Issue $issue, Db $db, $reason, $closedBy = null)
     {
         $blacklist = ['status'];

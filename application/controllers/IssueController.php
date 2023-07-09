@@ -108,15 +108,34 @@ class IssueController extends Controller
             $binaryUuid = Uuid::fromString($uuid)->getBytes();
             if ($issue = Issue::loadIfExists($binaryUuid, $db)) {
                 $this->showIssue($issue);
-            } elseif (IssueHistory::exists($binaryUuid, $db)) {
+            } elseif ($reason = IssueHistory::getReasonIfClosed($binaryUuid, $db)) {
                 $this->addTitle($this->translate('Issue has been closed'));
-                $this->content()->add(Hint::info($this->translate('This issue has been closed.')));
+                $this->content()->add(Hint::info($this->getCloseDetails($reason)));
                 $issue = Issue::loadFromHistory($binaryUuid, $db);
                 $this->showIssue($issue);
             } else {
                 $this->addTitle($this->translate('Not found'));
                 $this->content()->add(Hint::error($this->translate('There is no such issue')));
             }
+        }
+    }
+
+    protected function getCloseDetails($row): string
+    {
+        switch ($row->close_reason) {
+            case IssueHistory::REASON_MANUAL:
+                if ($row->closed_by === null) {
+                    return $this->translate('This issue has been closed manually');
+                }
+                return sprintf($this->translate('This issue has been closed by %s'), $row->closed_by);
+            case IssueHistory::REASON_RECOVERY:
+                return $this->translate('This issue has recovered');
+            case IssueHistory::REASON_EXPIRATION:
+                return $this->translate('This issue has expired');
+            case null:
+                return $this->translate('This issue has been closed, reason unknown');
+            default:
+                return sprintf($this->translate('This issue has been closed, invalid reason: %s'), $row->close_reason);
         }
     }
 
