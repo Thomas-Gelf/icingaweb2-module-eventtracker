@@ -30,8 +30,8 @@ echo "d ${SOCKET_PATH} 0755 ${DAEMON_USER} ${DAEMON_GROUP} -" > "${TMPFILES_CONF
 cp -f "${TARGET_DIR}/contrib/systemd/icinga-eventtracker.service" /etc/systemd/system/
 systemd-tmpfiles --create "${TMPFILES_CONFIG}"
 
-icingacli module enable vspheredb
+icingacli module enable eventtracker
 systemctl daemon-reload
-systemctl enable icinga-vspheredb.service
-systemctl restart icinga-vspheredb.service
+systemctl enable icinga-eventtracker.service
+systemctl restart icinga-eventtracker.service
 ```
