@@ -20,7 +20,9 @@ class Issue implements JsonSerialization
         UuidObjectHelper::get as uuidObjectHelperGet;
     }
 
-    protected static $tableName = 'issue';
+    const TABLE_NAME = 'issue';
+
+    protected static $tableName = self::TABLE_NAME;
 
     /** @var FrozenMemoryFile[] */
     protected $files = [];
