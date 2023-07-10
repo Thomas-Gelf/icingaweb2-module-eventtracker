@@ -40,3 +40,32 @@ we also support closing issues by ticket ID:
     POST https://icinga.example.com/icingaweb2/eventtracker/issue/close?ticket=43027
     Authorization: Bearer e756ca41-875f-4f92-991c-706dc07af192
     Accept: application/json
+
+#### Sample Responses
+
+##### Success (200 Ok)
+
+```json
+{
+  "success": true,
+  "closedIssues": ["0f9ab9e0-600a-4e05-8e13-e48b20b1d37e"]
+}
+```
+
+##### No related issue found (201 Unmodified)
+
+```json
+{
+  "success": true,
+  "error": "Found no issue for the given ticket/issue"
+}
+```
+
+##### Other/internal error
+
+```json
+{
+  "success": false,
+  "error": "Unable to connect to socket:///run/icinga-eventtracker/eventtracker.sock"
+}
+```
