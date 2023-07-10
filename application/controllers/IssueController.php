@@ -4,6 +4,7 @@ namespace Icinga\Module\Eventtracker\Controllers;
 
 use gipfl\IcingaWeb2\Link;
 use gipfl\IcingaWeb2\Url;
+use gipfl\Json\JsonString;
 use gipfl\Web\Widget\Hint;
 use Icinga\Application\Hook;
 use Icinga\Exception\Http\HttpNotFoundException;
@@ -25,11 +26,26 @@ use Icinga\Module\Eventtracker\Web\Widget\IssueHeader;
 use ipl\Html\Html;
 use Ramsey\Uuid\Uuid;
 
+use Ramsey\Uuid\UuidInterface;
+
+use function Clue\React\Block\awaitAll;
+
 class IssueController extends Controller
 {
+    use AsyncControllerHelper;
+    use RestApiMethods;
+
+    protected $requiresAuthentication = false;
+    protected $tokenPermissions = [];
+
     public function init()
     {
         parent::init();
+        if ($this->getRequest()->isApiRequest()) {
+            return;
+        } else {
+            $this->assertPermission('module/eventtracker');
+        }
 
         $this->tabs()
             ->add('issue', [
@@ -44,6 +60,7 @@ class IssueController extends Controller
 
     public function indexAction()
     {
+        $this->notForApi();
         $this->tabs()->activate('issue');
         $db = $this->db();
         $uuid = $this->params->get('uuid');
@@ -141,6 +158,7 @@ class IssueController extends Controller
 
     public function fileAction()
     {
+        $this->notForApi();
         $uuid = Uuid::fromString($this->params->getRequired('uuid'));
         $checksum = $this->params->getRequired('checksum');
         $filenameChecksum = $this->params->getRequired('filename_checksum');
@@ -177,6 +195,7 @@ class IssueController extends Controller
 
     public function rawAction()
     {
+        $this->notForApi();
         $this->tabs()->activate('raw');
         $binaryUuid = Uuid::fromString($this->params->getRequired('uuid'))->getBytes();
         $db = $this->db();
@@ -251,6 +270,73 @@ class IssueController extends Controller
         // TODO: implement.
     }
 
+    /**
+     * @throws NotFoundError
+     */
+    public function closeAction()
+    {
+        if (! $this->getRequest()->isApiRequest() || ! $this->getRequest()->isPost()) {
+            throw new NotFoundError('Not found');
+        }
+        try {
+            if (! $this->checkBearerToken('issue/close')) {
+                return;
+            }
+        } catch (\Throwable $e) {
+            echo $e->getMessage();
+            exit;
+        }
+        try {
+            $uuids = $this->findApiRequestIssues();
+            $closedBy = $this->params->getRequired('closedBy');
+            $client = $this->remoteClient();
+            $requests = [];
+            foreach ($uuids as $uuid) {
+                $requests[$uuid] = $client->request('issue.close', [
+                    $uuid,
+                    $closedBy
+                ]);
+            }
+            $result = [];
+            foreach (awaitAll($requests, $this->loop()) as $uuid => $success) {
+                if ($success) {
+                    $result[] = $uuid;
+                }
+            }
+        } catch (\Exception $e) {
+            $this->sendJsonError($e);
+            return;
+        }
+        if (empty($result)) {
+            $this->sendJsonResponse((object) [
+                'success' => false,
+                'error'   => 'Found no issue for the given ticket/issue'
+            ], 201);
+        } else {
+            $this->sendJsonResponse((object) [
+                'success'      => true,
+                'closedIssues' => $result
+            ]);
+        }
+    }
+
+    protected function findApiRequestIssues(): array
+    {
+        $db = $this->db();
+        if ($ticket = $this->params->get('ticket')) {
+            $uuids = $db->fetchCol($db->select()->from('issue', 'issue_uuid')->where('ticket_ref = ?', $ticket));
+            foreach ($uuids as $idx => $uuid) {
+                $uuids[$idx] = Uuid::fromBytes($uuid)->toString();
+            }
+        } elseif ($uuid = $this->params->get('uuid')) {
+            $uuids = [Uuid::fromString($uuid)->toString()];
+        } else {
+            throw new \InvalidArgumentException('Got neither "ticket" nor "uuid"');
+        }
+
+        return $uuids;
+    }
+
     protected function closedAction()
     {
         $this->addSingleTab($this->translate('Issue'));
@@ -261,6 +347,49 @@ class IssueController extends Controller
         )));
     }
 
+    protected function checkBearerToken(string $permission): bool
+    {
+        $token = null;
+        foreach ($this->getServerRequest()->getHeader('Authorization') as $line) {
+            if (preg_match('/^Bearer\s+([A-z0-9-]+)$/', $line, $match)) {
+                $token = $match[1];
+            }
+        }
+        if ($token === null) {
+            $this->sendJsonError('Bearer token is required', 401);
+            return false;
+        }
+        try {
+            $uuid = Uuid::fromString($token);
+        } catch (\Exception $e) {
+            $this->sendJsonError($e->getMessage());
+            return false;
+        }
+        $tokenPermissions = $this->getTokenPermissions($uuid);
+        if ($tokenPermissions === null) {
+            $this->sendJsonError(sprintf('Token %s is not valid', $token), 401);
+        }
+        if (in_array($permission, $tokenPermissions)) {
+            return true;
+        }
+
+        $this->sendJsonError(sprintf('Bearer token has no %s permission', $permission), 401);
+        return false;
+    }
+
+    protected function getTokenPermissions(UuidInterface $token): ?array
+    {
+        $db = $this->db();
+        $permissions = $db->fetchOne(
+            $db->select()->from('api_token', 'permissions')->where('uuid = ?', $token->getBytes())
+        );
+        if (empty($permissions)) {
+            return null;
+        }
+
+        return JsonString::decode($permissions);
+    }
+
     // TODO: IssueList?
     protected function addHookedMultiActions($issues)
     {
@@ -269,6 +398,13 @@ class IssueController extends Controller
         /** @var EventActionsHook $impl */
         foreach (Hook::all('eventtracker/EventActions') as $impl) {
             $actions->add($impl->getIssueActions($issue));
+        }
+    }
+
+    protected function notForApi()
+    {
+        if ($this->getRequest()->isApiRequest()) {
+            throw new NotFoundError('Not found');
         }
     }
 }
