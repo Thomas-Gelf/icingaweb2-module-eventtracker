@@ -118,7 +118,7 @@ trait UuidObjectHelper
     {
         foreach ($properties as $property => &$value) {
             if ($this instanceof Issue) {
-                var_dump("$property = $value");
+                // var_dump("$property = $value");
             }
             if ($value !== null) {
                 if ($this->isUuidProperty($property)) {
