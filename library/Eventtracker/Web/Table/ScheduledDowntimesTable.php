@@ -68,9 +68,9 @@ class ScheduledDowntimesTable extends BaseTable
                 'ts_expected_start' => 'dc.ts_expected_start',
                 'ts_expected_end'   => 'dc.ts_expected_end',
             ])->setRenderer(function ($row) {
-                return date('H:i', (int) $row->ts_expected_start)
+                return date('H:i', (int) ($row->ts_expected_start / 1000))
                     . '-'
-                    . date('H:i', (int) $row->ts_expected_end)
+                    . date('H:i', (int) ($row->ts_expected_end / 1000))
                     . ': '
                     . $row->label;
                 return Time::agoFormatted($row->received);
