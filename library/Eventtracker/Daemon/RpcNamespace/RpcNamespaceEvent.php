@@ -71,6 +71,7 @@ class RpcNamespaceEvent implements EventEmitterInterface
     }
 
     /**
+     * @api
      * @param Event|\stdClass $event
      */
     public function receiveRequest($event): PromiseInterface
