@@ -3,9 +3,12 @@
 namespace Icinga\Module\Eventtracker\Engine;
 
 use Evenement\EventEmitterTrait;
+use gipfl\Json\JsonString;
+use gipfl\ZfDb\Adapter\Adapter;
 use Icinga\Module\Eventtracker\DbFactory;
 use Icinga\Module\Eventtracker\Event;
 use Icinga\Module\Eventtracker\EventReceiver;
+use Icinga\Module\Eventtracker\Issue;
 use Icinga\Module\Eventtracker\Modifier\ModifierChain;
 use Icinga\Module\Eventtracker\Modifier\Settings;
 use Psr\Log\LoggerAwareInterface;
@@ -14,6 +17,7 @@ use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\UuidInterface;
+use React\EventLoop\LoopInterface;
 use stdClass;
 
 class Channel implements LoggerAwareInterface
@@ -45,8 +49,16 @@ class Channel implements LoggerAwareInterface
     /** @var bool */
     protected $daemonized = false;
 
-    public function __construct(Settings $settings, UuidInterface $uuid, $name, LoggerInterface $logger = null)
-    {
+    /** @var ?LoopInterface */
+    protected $loop = null;
+
+    public function __construct(
+        Settings $settings,
+        UuidInterface $uuid,
+        $name,
+        LoggerInterface $logger = null,
+        LoopInterface $loop = null
+    ) {
         $this->uuid = $uuid;
         $this->name = $name;
         if ($logger === null) {
@@ -54,6 +66,7 @@ class Channel implements LoggerAwareInterface
         } else {
             $this->logger = $logger;
         }
+        $this->loop = $loop;
         $this->applySettings($settings);
     }
 
@@ -111,7 +124,11 @@ class Channel implements LoggerAwareInterface
         $this->logger->info("Wiring " . $input->getName() . ' to ' . $this->name);
         $inputUuid = $input->getUuid();
         $input->on(InputRunner::ON_EVENT, function (stdClass $event) use ($inputUuid, $ignoreUnknown) {
-            $this->process($inputUuid, $event, $ignoreUnknown);
+            try {
+                $this->process($inputUuid, $event, $ignoreUnknown);
+            } catch (\Throwable $e) {
+                $this->logger->error($e->getMessage());
+            }
         });
     }
 
@@ -125,8 +142,11 @@ class Channel implements LoggerAwareInterface
         // $object->sender_event_id = Uuid::uuid4()->toString();
 
         $event = Event::create();
+        if ($this->loop !== null) {
+            $this->storeRawEvent($inputUuid, $db, $object, $event->get('uuid'));
+        }
         if (isset($object->input_uuid)) {
-            $object->input_uuid = Uuid::fromString($object->input_uuid)->getBytes();
+            $object->input_uuid = Uuid::fromString($object->input_uuid)->getBytes(); // Why?
         }
         if ($ignoreUnknown) {
             $knownProperties = $event->getProperties();
@@ -138,7 +158,11 @@ class Channel implements LoggerAwareInterface
         } else {
             $event->setProperties((array) $object);
         }
-        $issue = $receiver->processEvent($event);
+        if ($this->loop === null) {
+            $issue = $receiver->processEvent($event);
+        } else {
+            $issue = $this->storeProcessedEvent($db, $event);
+        }
         if ($issue) {
             $this->logger->info("Issue " . $issue->getNiceUuid());
             if ($issue->hasBeenCreatedNow()) {
@@ -147,6 +171,53 @@ class Channel implements LoggerAwareInterface
         } else {
             // $this->logger->debug("No Issue");
         }
+    }
+
+    protected function storeRawEvent(UuidInterface $inputUuid, Adapter $db, stdClass $event, string $binaryUuid)
+    {
+        $db->insert('raw_event', [
+            'input_uuid'        => $inputUuid->getBytes(),
+            'event_uuid'        => $binaryUuid, // TODO: place on event
+            'ts_received'       => (int) microtime(true) * 1000,
+            // 'failed', 'ignored', 'issue_created', 'issue_refreshed', 'issue_acknowledged', 'issue_closed'
+            'processing_result' => 'received', // impossible to tell?!
+            'error_message'     => null,
+            'raw_input'         => JsonString::encode($event),
+            'input_format'      => 'json',
+        ]);
+    }
+
+    protected function storeProcessedEvent(Adapter $db, Event $event): ?Issue
+    {
+        $issue = Issue::loadIfEventExists($event, $db);
+        if ($event->hasBeenCleared()) {
+            if ($issue) {
+                // $this->counters->increment(self::CNT_RECOVERED);
+                $issue->recover($event, $db);
+            } else {
+                // $this->counters->increment(self::CNT_IGNORED);
+                return null;
+            }
+        } elseif ($event->isProblem()) {
+            if ($issue) {
+                // $this->counters->increment(self::CNT_REFRESHED);
+                $issue->setPropertiesFromEvent($event);
+            } else {
+                $issue = Issue::createFromEvent($event);
+                // $this->counters->increment(self::CNT_NEW);
+            }
+            $issue->storeToDb($db);
+        } elseif ($issue) {
+            // $this->counters->increment(self::CNT_RECOVERED);
+            $issue->recover($event, $db);
+
+            return null;
+        } else {
+            // $this->counters->increment(self::CNT_IGNORED);
+            return null;
+        }
+
+        return $issue;
     }
 
     protected function getEnforcedModifiers(UuidInterface $inputUuid): ModifierChain

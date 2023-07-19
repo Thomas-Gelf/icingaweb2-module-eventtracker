@@ -15,6 +15,7 @@ use Icinga\Module\Eventtracker\Modifier\Settings;
 use Psr\Log\LoggerInterface;
 use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\UuidInterface;
+use React\EventLoop\LoopInterface;
 use RuntimeException;
 
 class ConfigStore
@@ -60,10 +61,11 @@ class ConfigStore
     }
 
     /**
+     * Hint: Daemon only!!
      * @return Channel[]
      * @throws \gipfl\Json\JsonDecodeException
      */
-    public function loadChannels()
+    public function loadChannels(LoopInterface $loop): array
     {
         $channels = [];
         foreach ($this->fetchObjects('channel') as $row) {

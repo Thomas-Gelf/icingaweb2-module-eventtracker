@@ -6,6 +6,9 @@ use Icinga\Module\Eventtracker\Daemon\RemoteClient;
 use React\EventLoop\Factory;
 use function Clue\React\Block\await as block_await;
 
+/**
+ * Hint: this code is NOT to be used in the main (async) daemon
+ */
 class EventReceiver
 {
     /** @var ?RemoteClient */

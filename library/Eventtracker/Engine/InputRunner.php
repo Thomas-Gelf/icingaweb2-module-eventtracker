@@ -55,7 +55,7 @@ class InputRunner implements LoggerAwareInterface
     {
         $this->loop = $loop;
         $this->inputs = $this->store->loadInputs();
-        $this->channels = $this->store->loadChannels();
+        $this->channels = $this->store->loadChannels($loop);
         $this->actions = $this->store->loadActions(['enabled' => 'y']);
         $this->linkInputsToChannels();
         $this->startInputs();
@@ -103,7 +103,7 @@ class InputRunner implements LoggerAwareInterface
         }
     }
 
-    protected function startPeriodConfigReload()
+    protected function startPeriodConfigReload(): TimerInterface
     {
         return $this->loop->addPeriodicTimer(static::RELOAD_CONFIG_TIMER, function (): void {
             // Load actions without filter for enabled yes,
@@ -168,7 +168,8 @@ class InputRunner implements LoggerAwareInterface
             ActionHelper::processIssue(
                 $this->actions,
                 $issue,
-                $this->store->getDb()
+                $this->store->getDb(),
+                $this->logger
             )->otherwise(function (Throwable $reason) {
                 $this->logger->error($reason);
             });
