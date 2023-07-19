@@ -74,7 +74,7 @@ class ConfigStore
                 'rules'          => JsonString::decode($row->rules),
                 'implementation' => $row->input_implementation,
                 'inputs'         => $row->input_uuids,
-            ]), $uuid, $row->label, $this->logger);
+            ]), $uuid, $row->label, $this->logger, $loop);
         }
 
         return $channels;
