@@ -99,6 +99,7 @@ class RpcNamespaceEvent implements EventEmitterInterface
      * @param UuidInterface $uuid
      * @param stdClass $event
      * @return PromiseInterface
+     * @api
      */
     public function sendToInputRequest(string $uuid, stdClass $event): PromiseInterface
     {
@@ -108,7 +109,7 @@ class RpcNamespaceEvent implements EventEmitterInterface
         $deferred = new Deferred();
         $channel = $this->runner->getInputRunner()->getOptionalInputChannel($inputUuid);
         if ($channel) {
-            $channel->process($inputUuid, $event);
+            $channel->process($inputUuid, $event, true);
             $deferred->resolve(true);
         } else {
             $deferred->resolve(false);

@@ -198,11 +198,15 @@ class Channel implements LoggerAwareInterface
         } else {
             $event->setProperties((array) $object);
         }
-        if ($bucket = $this->getOptionalBucketForEvent($event)) {
-            $event = $bucket->processEvent($event);
-            if ($event === null) {
-                return;
+        try {
+            if ($bucket = $this->getOptionalBucketForEvent($object)) {
+                $event = $bucket->processEvent($event);
+                if ($event === null) {
+                    return;
+                }
             }
+        } catch (\Throwable $e) {
+            $this->logger->error($e->getMessage());
         }
         if ($this->loop === null) {
             $issue = $receiver->processEvent($event);
@@ -219,13 +223,18 @@ class Channel implements LoggerAwareInterface
         }
     }
 
-    protected function getOptionalBucketForEvent(Event $event): ?BucketInterface
+    protected function getOptionalBucketForEvent(stdClass $event): ?BucketInterface
     {
         if ($this->bucket) {
             return $this->bucket;
         }
 
-        if ($this->bucketName && $name = ConfigHelper::fillPlaceholders($this->bucketName, $event)) {
+        if ($this->bucketName) {
+            try {
+                $name = ConfigHelper::fillPlaceholders($this->bucketName, $event);
+            } catch (\Throwable $e) {
+                $this->logger->error('Failed to extract ' . $this->bucketName . ': ' . $e->getMessage());
+            }
             return $this->buckets[$name] ?? null;
         }
 

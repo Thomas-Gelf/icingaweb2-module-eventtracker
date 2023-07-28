@@ -40,7 +40,7 @@ class RateLimitFormExtension implements FormExtension
         $form->addElement('text', 'message', [
             'label'       => $this->translate('Message Pattern'),
             'value'       => '${message}',
-            'description' => $this->translate('Example: ${event_count} failed sudo login attempts: ${message}'),
+            'description' => $this->translate('Example: {event_count} failed sudo login attempts: {message}'),
             'required'    => true,
         ]);
     }

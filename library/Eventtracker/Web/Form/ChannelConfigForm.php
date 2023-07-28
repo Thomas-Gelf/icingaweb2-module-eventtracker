@@ -47,7 +47,7 @@ class ChannelConfigForm extends UuidObjectForm
                 'label' => $this->translate('Bucket name'),
                 'description' => $this->translate(
                     'Alternatively, you might want to pick a bucket name from event properties,'
-                    . ' e.g. ${attributes.bucket.name}'
+                    . ' e.g. {bucket}. Nested properties (like {attributes.bucket}) are not yet supported'
                 ),
             ]);
         }
