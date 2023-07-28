@@ -45,7 +45,7 @@ class RateLimitingBucketSlot implements EventEmitterInterface
         // Hint: equal, not greater than - this is correct.
         //       the bucket stays active for the whole window, and emits only one event
         if ($this->count === $this->thresholdCount) {
-            $event->set('message', ConfigHelper::fillPlaceholders($this->message, $event->get('message')));
+            $event->set('message', ConfigHelper::fillPlaceholders($this->message, $event));
             return $event;
         }
 
