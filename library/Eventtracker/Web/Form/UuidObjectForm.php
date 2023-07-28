@@ -43,6 +43,12 @@ class UuidObjectForm extends Form
             $this->uuid = Uuid::fromBytes($values['uuid']);
             unset($values['uuid']);
         }
+        foreach ($values as $key => &$value) {
+            if ($value !== null && substr($key, -5) === '_uuid' && strlen($value) === 16) {
+                $value = Uuid::fromBytes($value)->toString();
+            }
+        }
+
         return parent::populate($values);
     }
 
