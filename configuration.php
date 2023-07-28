@@ -15,7 +15,7 @@ $section->add(N_('Issues'))->setUrl('eventtracker/issues')->setPriority(10);
 $section->add(N_('Handled Issues'))
     ->setUrl(
         'eventtracker/issues?status=acknowledged,in_downtime'
-        . '&columns=severity%,host_name,message,owner,ticket_ref'
+        . '&columns=severity,host_name,message,owner,ticket_ref'
     )
     ->setPriority(20);
 $section->add(N_('Summaries'))->setUrl('eventtracker/summary/top10')->setPriority(30);
