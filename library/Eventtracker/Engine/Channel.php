@@ -5,7 +5,10 @@ namespace Icinga\Module\Eventtracker\Engine;
 use Evenement\EventEmitterTrait;
 use gipfl\Json\JsonString;
 use gipfl\ZfDb\Adapter\Adapter;
+use Icinga\Module\Eventtracker\ConfigHelper;
 use Icinga\Module\Eventtracker\DbFactory;
+use Icinga\Module\Eventtracker\Engine\Bucket\BucketInterface;
+use Icinga\Module\Eventtracker\Engine\Downtime\UuidObjectHelper;
 use Icinga\Module\Eventtracker\Event;
 use Icinga\Module\Eventtracker\EventReceiver;
 use Icinga\Module\Eventtracker\Issue;
@@ -24,7 +27,18 @@ class Channel implements LoggerAwareInterface
 {
     use EventEmitterTrait;
     use LoggerAwareTrait;
+    use UuidObjectHelper;
     use SettingsProperty;
+
+    protected $defaultProperties = [
+        'uuid'                 => null,
+        'label'                => null,
+        'rules'                => null,
+        'input_implementation' => null,
+        'input_uuids'          => null,
+        'bucket_uuid'          => null,
+        'bucket_name'          => null,
+    ];
 
     public const ON_ISSUE = 'issue';
 
@@ -52,12 +66,22 @@ class Channel implements LoggerAwareInterface
     /** @var ?LoopInterface */
     protected $loop = null;
 
+    /** @var array<string, BucketInterface> indexed by name */
+    protected $buckets = [];
+
+    /** @var ?BucketInterface */
+    protected $bucket = null;
+
+    /** @var ?string */
+    protected $bucketName = null;
+
     public function __construct(
         Settings $settings,
         UuidInterface $uuid,
         $name,
-        LoggerInterface $logger = null,
-        LoopInterface $loop = null
+        array $buckets,
+        ?LoggerInterface $logger = null,
+        ?LoopInterface $loop = null
     ) {
         $this->uuid = $uuid;
         $this->name = $name;
@@ -67,6 +91,7 @@ class Channel implements LoggerAwareInterface
             $this->logger = $logger;
         }
         $this->loop = $loop;
+        $this->buckets = $buckets;
         $this->applySettings($settings);
     }
 
@@ -98,6 +123,14 @@ class Channel implements LoggerAwareInterface
             }
         }
         $this->implementationFilter = $settings->get('implementation');
+        $this->bucket = null;
+        if ($hexUuid = $settings->get('bucket')) {
+            foreach ($this->buckets as $bucket) {
+                if ($hexUuid === $bucket->getUuid()->toString()) {
+                    $this->bucket = $bucket;
+                }
+            }
+        }
     }
 
     public function wantsInput(Input $input)
@@ -143,7 +176,8 @@ class Channel implements LoggerAwareInterface
 
         $event = Event::create();
         if ($this->loop !== null) {
-            $this->storeRawEvent($inputUuid, $db, $object, $event->get('uuid'));
+            // Temporarily disabled. Also: this is after modifiers, too late
+            // $this->storeRawEvent($inputUuid, $db, $object, $event->get('uuid'));
         }
         if (isset($object->input_uuid)) {
             $object->input_uuid = Uuid::fromString($object->input_uuid)->getBytes(); // Why?
@@ -158,6 +192,9 @@ class Channel implements LoggerAwareInterface
         } else {
             $event->setProperties((array) $object);
         }
+        if ($bucket = $this->getOptionalBucketForEvent($event)) {
+            $event = $bucket->processEvent($event);
+        }
         if ($this->loop === null) {
             $issue = $receiver->processEvent($event);
         } else {
@@ -171,6 +208,19 @@ class Channel implements LoggerAwareInterface
         } else {
             // $this->logger->debug("No Issue");
         }
+    }
+
+    protected function getOptionalBucketForEvent(Event $event): ?BucketInterface
+    {
+        if ($this->bucket) {
+            return $this->bucket;
+        }
+
+        if ($this->bucketName && $name = ConfigHelper::fillPlaceholders($this->bucketName, $event)) {
+            return $this->buckets[$name] ?? null;
+        }
+
+        return null;
     }
 
     protected function storeRawEvent(UuidInterface $inputUuid, Adapter $db, stdClass $event, string $binaryUuid)
