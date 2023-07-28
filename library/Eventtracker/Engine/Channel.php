@@ -79,7 +79,9 @@ class Channel implements LoggerAwareInterface
         Settings $settings,
         UuidInterface $uuid,
         $name,
-        array $buckets,
+        ?UuidInterface $bucketUuid,
+        ?string $bucketName,
+        array $buckets = [],
         ?LoggerInterface $logger = null,
         ?LoopInterface $loop = null
     ) {
@@ -91,7 +93,19 @@ class Channel implements LoggerAwareInterface
             $this->logger = $logger;
         }
         $this->loop = $loop;
-        $this->buckets = $buckets;
+        $this->buckets = [];
+        foreach ($buckets as $bucket) {
+            $this->buckets[$bucket->getName()] = $bucket;
+        }
+        if ($bucketUuid) {
+            $binaryBucketUuid = $bucketUuid->getBytes();
+            foreach ($this->buckets as $bucket) {
+                if ($binaryBucketUuid === $bucket->getUuid()->getBytes()) {
+                    $this->bucket = $bucket;
+                }
+            }
+        }
+        $this->bucketName = $bucketName;
         $this->applySettings($settings);
     }
 
@@ -123,14 +137,6 @@ class Channel implements LoggerAwareInterface
             }
         }
         $this->implementationFilter = $settings->get('implementation');
-        $this->bucket = null;
-        if ($hexUuid = $settings->get('bucket')) {
-            foreach ($this->buckets as $bucket) {
-                if ($hexUuid === $bucket->getUuid()->toString()) {
-                    $this->bucket = $bucket;
-                }
-            }
-        }
     }
 
     public function wantsInput(Input $input)
@@ -194,6 +200,9 @@ class Channel implements LoggerAwareInterface
         }
         if ($bucket = $this->getOptionalBucketForEvent($event)) {
             $event = $bucket->processEvent($event);
+            if ($event === null) {
+                return;
+            }
         }
         if ($this->loop === null) {
             $issue = $receiver->processEvent($event);

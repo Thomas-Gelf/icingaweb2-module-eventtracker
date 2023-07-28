@@ -81,11 +81,12 @@ class ConfigStore
         $channels = [];
         foreach ($this->fetchObjects('channel') as $row) {
             $uuid = Uuid::fromBytes($row->uuid);
+            $bucketUuid = $row->bucket_uuid ? Uuid::fromBytes($row->bucket_uuid) : null;
             $channels[$uuid->toString()] = new Channel(Settings::fromSerialization([
                 'rules'          => JsonString::decode($row->rules),
                 'implementation' => $row->input_implementation,
                 'inputs'         => $row->input_uuids,
-            ]), $uuid, $row->label, $buckets, $this->logger, $loop);
+            ]), $uuid, $row->label, $bucketUuid, $row->bucket_name, $buckets, $this->logger, $loop);
         }
 
         return $channels;
@@ -94,16 +95,19 @@ class ConfigStore
     /**
      * @return BucketInterface[]
      */
-    public function loadBuckets(): array
+    public function loadBuckets(LoopInterface $loop): array
     {
         $buckets = [];
         foreach ($this->fetchObjects('bucket') as $row) {
             $row->uuid = Uuid::fromBytes($row->uuid);
-            $buckets[$row->uuid->toString()] = $this->initializeTaskFromDbRow(
+            $bucket = $this->initializeTaskFromDbRow(
                 $row,
                 new BucketRegistry(),
                 BucketInterface::class
             );
+            assert($bucket instanceof BucketInterface);
+            $bucket->setLoop($loop);
+            $buckets[$row->uuid->toString()] = $bucket;
         }
 
         return $buckets;
