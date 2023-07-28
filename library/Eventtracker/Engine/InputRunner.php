@@ -59,7 +59,7 @@ class InputRunner implements LoggerAwareInterface
         $this->loop = $loop;
         try {
             $this->inputs = $this->store->loadInputs();
-            $buckets = $this->store->loadBuckets();
+            $buckets = $this->store->loadBuckets($this->loop);
             $this->channels = $this->store->loadChannels($loop, $buckets);
             $this->actions = $this->store->loadActions(['enabled' => 'y']);
             $this->linkInputsToChannels();
