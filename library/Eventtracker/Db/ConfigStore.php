@@ -2,16 +2,20 @@
 
 namespace Icinga\Module\Eventtracker\Db;
 
+use gipfl\Json\JsonDecodeException;
 use gipfl\Json\JsonString;
 use gipfl\ZfDb\Adapter\Adapter;
 use Icinga\Module\Eventtracker\Engine\Action;
 use Icinga\Module\Eventtracker\Engine\Action\ActionRegistry;
+use Icinga\Module\Eventtracker\Engine\Bucket\BucketInterface;
+use Icinga\Module\Eventtracker\Engine\Bucket\BucketRegistry;
 use Icinga\Module\Eventtracker\Engine\Channel;
 use Icinga\Module\Eventtracker\Engine\Input;
 use Icinga\Module\Eventtracker\Engine\Input\InputRegistry;
 use Icinga\Module\Eventtracker\Engine\Registry;
 use Icinga\Module\Eventtracker\Engine\Task;
 use Icinga\Module\Eventtracker\Modifier\Settings;
+use Psr\Log\LoggerAwareInterface;
 use Psr\Log\LoggerInterface;
 use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\UuidInterface;
@@ -46,15 +50,21 @@ class ConfigStore
 
     protected function initializeTaskFromDbRow($row, Registry $registry, $contract): Task
     {
+        /** @var class-string|Task $implementation */
         $implementation = $registry->getClassName($row->implementation);
         $interfaces = class_implements($implementation);
         if (isset($interfaces[$contract])) {
-            return new $implementation(
+            $instance = new $implementation(
                 Settings::fromSerialization($row->settings),
                 $row->uuid,
                 $row->label,
                 $this->logger
             );
+            if ($instance instanceof LoggerAwareInterface) {
+                $instance->setLogger($this->logger);
+            }
+
+            return $instance;
         } else {
             throw new RuntimeException("Task ignored, $implementation is no valid implementation for $contract");
         }
@@ -62,10 +72,11 @@ class ConfigStore
 
     /**
      * Hint: Daemon only!!
+     * @param BucketInterface[] $buckets
      * @return Channel[]
-     * @throws \gipfl\Json\JsonDecodeException
+     * @throws JsonDecodeException
      */
-    public function loadChannels(LoopInterface $loop): array
+    public function loadChannels(LoopInterface $loop, array $buckets): array
     {
         $channels = [];
         foreach ($this->fetchObjects('channel') as $row) {
@@ -74,10 +85,28 @@ class ConfigStore
                 'rules'          => JsonString::decode($row->rules),
                 'implementation' => $row->input_implementation,
                 'inputs'         => $row->input_uuids,
-            ]), $uuid, $row->label, $this->logger, $loop);
+            ]), $uuid, $row->label, $buckets, $this->logger, $loop);
         }
 
         return $channels;
+    }
+
+    /**
+     * @return BucketInterface[]
+     */
+    public function loadBuckets(): array
+    {
+        $buckets = [];
+        foreach ($this->fetchObjects('bucket') as $row) {
+            $row->uuid = Uuid::fromBytes($row->uuid);
+            $buckets[$row->uuid->toString()] = $this->initializeTaskFromDbRow(
+                $row,
+                new BucketRegistry(),
+                BucketInterface::class
+            );
+        }
+
+        return $buckets;
     }
 
     public function loadActions($filter = []): array
@@ -199,6 +228,11 @@ class ConfigStore
         foreach ($this->serializedProperties as $property) {
             if (isset($array[$property])) {
                 $array[$property] = JsonString::encode($array[$property]);
+            }
+        }
+        foreach ($array as $key => &$value) {
+            if (substr($key, -5) === '_uuid' && $value !== null && strlen($value) > 16) {
+                $value = Uuid::fromString($value)->getBytes();
             }
         }
     }
