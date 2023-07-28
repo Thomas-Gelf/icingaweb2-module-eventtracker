@@ -3,13 +3,18 @@
 namespace Icinga\Module\Eventtracker\Controllers;
 
 use gipfl\Json\JsonString;
+use Icinga\Module\Eventtracker\Configuration;
+use Icinga\Module\Eventtracker\Daemon\RemoteClient;
 use Icinga\Module\Eventtracker\Db\ConfigStore;
 use Icinga\Module\Eventtracker\Engine\Input;
 use Icinga\Module\Eventtracker\Engine\Input\RestApiInput;
 use Psr\Log\NullLogger;
 
+use function Clue\React\Block\await as block_await;
+
 class EventController extends Controller
 {
+    use AsyncControllerHelper;
     use RestApiMethods;
 
     protected $requiresAuthentication = false;
@@ -49,17 +54,18 @@ class EventController extends Controller
         if (strlen($body) === 0) {
             $this->sendJsonError('JSON body is required', 400);
         }
-        $wanted = false;
-        foreach ($store->loadChannels() as $channel) {
-            if ($channel->wantsInput($input)) {
-                $wanted = true;
-                $channel->addInput($input);
-            }
-        }
-        $input->processObject(JsonString::decode($body));
 
+        $loop = $this->loop();
+        $client = new RemoteClient(Configuration::getSocketPath(), $loop);
+        $accepted = block_await(
+            $client->request('event.sendToInput', [
+                $input->getUuid(),
+                JsonString::decode($body)
+            ]),
+            $loop
+        );
         $response = [
-            'success' => $wanted ? 'Event accepted' : 'Request valid, found no related Channel'
+            'success' => $accepted ? 'Event accepted' : 'Request valid, found no related Channel'
         ];
 
         $this->sendJsonResponse($response);
