@@ -156,7 +156,7 @@ creates such.
 
 ### UI settings
 
-Currently the following settings are available:
+The following settings are currently available:
 
 ```ini
 [ui]
