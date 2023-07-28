@@ -28,7 +28,7 @@ class RateLimitFormExtension implements FormExtension
             'required'    => true,
         ]);
 
-        $form->addElement('select', 'attribute_source', [
+        $form->addElement('select', 'attributeSource', [
             'label'       => $this->translate('Keep Attributes from'),
             'options' => [
                 null => $this->translate('- please choose -'),
