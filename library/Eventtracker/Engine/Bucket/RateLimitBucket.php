@@ -11,6 +11,7 @@ use Icinga\Module\Eventtracker\Engine\SimpleTaskConstructor;
 use Icinga\Module\Eventtracker\Event;
 use Icinga\Module\Eventtracker\Modifier\Settings;
 use Icinga\Module\Eventtracker\Web\Form\Bucket\RateLimitFormExtension;
+use React\EventLoop\LoopInterface;
 use React\EventLoop\TimerInterface;
 
 class RateLimitBucket extends SimpleTaskConstructor implements BucketInterface
@@ -24,6 +25,14 @@ class RateLimitBucket extends SimpleTaskConstructor implements BucketInterface
 
     /** @var ?TimerInterface */
     protected $timers = [];
+
+    /** @var LoopInterface */
+    protected $loop;
+
+    public function setLoop(LoopInterface $loop): void
+    {
+        $this->loop = $loop;
+    }
 
     public function applySettings(Settings $settings)
     {
