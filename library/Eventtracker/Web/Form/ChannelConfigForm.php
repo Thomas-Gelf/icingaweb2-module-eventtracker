@@ -23,10 +23,11 @@ class ChannelConfigForm extends UuidObjectForm
             'value' => '[]',
             'required' => true,
         ]);
-        $this->addElement('multiSelect', 'input_uuids', [
+        $this->addElement('select', 'input_uuids', [
             'label'       => $this->translate('Single Inputs'),
             'description' => $this->translate('Wire specific inputs to this channel'),
             'options'     => $this->store->enumObjects('input'),
+            'multiple'    => true,
         ]);
         $this->addElement('select', 'input_implementation', [
             'label' => $this->translate('Input Implementations'),

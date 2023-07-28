@@ -31,10 +31,10 @@ class ApiTokenForm extends UuidObjectForm
         $this->addElement('text', 'label', [
             'label'   => $this->translate('Label'),
         ]);
-        $this->addElement('multiSelect', 'permissions', [
+        $this->addElement('select', 'permissions', [
             'label'    => $this->translate('Permissions'),
-            'description' => $this->translate(''),
             'required' => true,
+            'multiple' => true,
             'options'  => [
                 'issue/acknowledge' => $this->translate('Acknowledge Issues'),
                 'issue/close' => $this->translate('Close Issues'),
