@@ -40,15 +40,18 @@ class RemoteApi implements EventEmitterInterface
     /** @var ControlSocket */
     protected $controlSocket;
 
-    /**
-     * @var CurlAsync
-     */
+    /** @var CurlAsync */
     protected $curl;
 
+    /** @var InputAndChannelRunner */
+    protected $runner;
+
     public function __construct(
-        LoopInterface        $loop,
-        LoggerInterface      $logger
+        InputAndChannelRunner $runner,
+        LoopInterface         $loop,
+        LoggerInterface       $logger
     ) {
+        $this->runner = $runner;
         $this->logger = $logger;
         $this->loop = $loop;
     }
@@ -118,7 +121,12 @@ class RemoteApi implements EventEmitterInterface
             $rpcProcess = new RpcNamespaceProcess($this->loop);
             Util::forwardEvents($rpcProcess, $this, [RpcNamespaceProcess::ON_RESTART]);
             $handler = new NamespacedPacketHandler();
-            $handler->registerNamespace('event', new RpcNamespaceEvent($this->loop, $this->logger, DbFactory::db()));
+            $handler->registerNamespace('event', new RpcNamespaceEvent(
+                $this->runner,
+                $this->loop,
+                $this->logger,
+                DbFactory::db()
+            ));
             $handler->registerNamespace('issue', new RpcNamespaceIssue($this->loop, $this->logger, DbFactory::db()));
             $handler->registerNamespace('process', $rpcProcess);
             if ($this->logger instanceof Logger) {

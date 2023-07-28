@@ -106,7 +106,7 @@ class BackgroundDaemon implements EventEmitterInterface
             ->register($this->logProxy)
             ->register($this->channelRunner)
             ->run($this->loop);
-        $this->prepareApi($this->loop, $this->logger);
+        $this->prepareApi($this->channelRunner, $this->loop, $this->logger);
         $this->setState('running');
     }
 
@@ -184,10 +184,10 @@ class BackgroundDaemon implements EventEmitterInterface
         return $db;
     }
 
-    protected function prepareApi(LoopInterface $loop, LoggerInterface $logger)
+    protected function prepareApi(InputAndChannelRunner $runner, LoopInterface $loop, LoggerInterface $logger)
     {
         $socketPath = Configuration::getSocketPath();
-        $this->remoteApi = new RemoteApi($loop, $logger);
+        $this->remoteApi = new RemoteApi($runner, $loop, $logger);
         StreamUtil::forwardEvents($this->remoteApi, $this, [RpcNamespaceProcess::ON_RESTART]);
         $this->remoteApi->run($socketPath, $loop);
     }

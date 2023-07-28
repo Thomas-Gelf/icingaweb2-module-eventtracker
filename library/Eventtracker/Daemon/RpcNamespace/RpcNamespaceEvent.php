@@ -6,6 +6,7 @@ use Evenement\EventEmitterInterface;
 use Evenement\EventEmitterTrait;
 use gipfl\Json\JsonString;
 use gipfl\ZfDb\Adapter\Adapter as Db;
+use Icinga\Module\Eventtracker\Daemon\InputAndChannelRunner;
 use Icinga\Module\Eventtracker\Db\ConfigStore;
 use Icinga\Module\Eventtracker\Engine\Action;
 use Icinga\Module\Eventtracker\Engine\Action\ActionHelper;
@@ -13,9 +14,13 @@ use Icinga\Module\Eventtracker\Engine\Counters;
 use Icinga\Module\Eventtracker\Event;
 use Icinga\Module\Eventtracker\Issue;
 use Psr\Log\LoggerInterface;
+use Ramsey\Uuid\Uuid;
+use Ramsey\Uuid\UuidInterface;
 use React\EventLoop\LoopInterface;
 use React\Promise\Deferred;
 use React\Promise\PromiseInterface;
+use stdClass;
+
 use function React\Promise\Timer\timeout;
 
 class RpcNamespaceEvent implements EventEmitterInterface
@@ -41,13 +46,16 @@ class RpcNamespaceEvent implements EventEmitterInterface
 
     /** @var Action[] */
     protected $actions;
-    /**
-     * @var LoggerInterface
-     */
+
+    /** @var LoggerInterface */
     protected $logger;
 
-    public function __construct(LoopInterface $loop, LoggerInterface $logger, Db $db)
+    /** @var InputAndChannelRunner */
+    protected $runner;
+
+    public function __construct(InputAndChannelRunner $runner, LoopInterface $loop, LoggerInterface $logger, Db $db)
     {
+        $this->runner = $runner;
         $this->loop = $loop;
         $this->logger = $logger;
         $this->db = $db;
@@ -71,8 +79,8 @@ class RpcNamespaceEvent implements EventEmitterInterface
     }
 
     /**
+     * @param Event|stdClass $event
      * @api
-     * @param Event|\stdClass $event
      */
     public function receiveRequest($event): PromiseInterface
     {
@@ -84,6 +92,27 @@ class RpcNamespaceEvent implements EventEmitterInterface
             $deferred->reject($e);
         }
 
+        return $deferred->promise();
+    }
+
+    /**
+     * @param UuidInterface $uuid
+     * @param stdClass $event
+     * @return PromiseInterface
+     */
+    public function sendToInputRequest(string $uuid, stdClass $event): PromiseInterface
+    {
+        // Hint: Rpc Handler doesn't (yet) hydrate objects
+        $inputUuid = Uuid::fromString($uuid);
+        $this->logger->notice($inputUuid->toString());
+        $deferred = new Deferred();
+        $channel = $this->runner->getInputRunner()->getOptionalInputChannel($inputUuid);
+        if ($channel) {
+            $channel->process($inputUuid, $event);
+            $deferred->resolve(true);
+        } else {
+            $deferred->resolve(false);
+        }
         return $deferred->promise();
     }
 
