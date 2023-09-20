@@ -226,7 +226,6 @@ class Channel implements LoggerAwareInterface
     protected function getOptionalBucketForEvent(stdClass $event): ?BucketInterface
     {
         if ($this->bucket) {
-            $this->logger->notice('Using default bucket');
             return $this->bucket;
         }
 
