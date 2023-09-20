@@ -135,7 +135,7 @@ class RpcNamespaceEvent implements EventEmitterInterface
     {
         $event = Event::fromSerialization($event);
         // $event->set('uuid', Uuid::uuid4()->getBytes());
-        $this->storeRawEvent($event);
+        // $this->storeRawEvent($event);
         $issue = Issue::loadIfEventExists($event, $this->db);
         if ($event->hasBeenCleared()) {
             if ($issue) {
