@@ -226,16 +226,23 @@ class Channel implements LoggerAwareInterface
     protected function getOptionalBucketForEvent(stdClass $event): ?BucketInterface
     {
         if ($this->bucket) {
+            $this->logger->notice('Using default bucket');
             return $this->bucket;
         }
 
         if ($this->bucketName) {
             try {
                 $name = ConfigHelper::fillPlaceholders($this->bucketName, $event);
+                return $this->buckets[$name] ?? null;
             } catch (\Throwable $e) {
-                $this->logger->error('Failed to extract ' . $this->bucketName . ': ' . $e->getMessage());
+                $this->logger->error(sprintf(
+                    'Failed to extract %s: %s (%s:%d)',
+                    $this->bucketName,
+                    $e->getMessage(),
+                    $e->getFile(),
+                    $e->getLine()
+                ));
             }
-            return $this->buckets[$name] ?? null;
         }
 
         return null;
