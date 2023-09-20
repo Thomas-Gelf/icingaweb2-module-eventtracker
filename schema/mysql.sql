@@ -22,14 +22,31 @@ CREATE TABLE input (
   UNIQUE INDEX(label)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE utf8mb4_bin;
 
+CREATE TABLE bucket (
+  uuid VARBINARY(16) NOT NULL,
+  label VARCHAR(32) NOT NULL,
+  implementation VARCHAR(64) NOT NULL,
+  settings TEXT DEFAULT NULL,
+  description MEDIUMTEXT DEFAULT NULL,
+  PRIMARY KEY (uuid),
+  UNIQUE INDEX(label)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE utf8mb4_bin;
+
 CREATE TABLE channel (
   uuid VARBINARY(16) NOT NULL,
   label VARCHAR(32) NOT NULL,
   rules MEDIUMTEXT NOT NULL,
   input_implementation TEXT DEFAULT NULL,
   input_uuids TEXT DEFAULT NULL,
+  bucket_uuid VARBINARY(16) DEFAULT NULL,
+  bucket_name VARCHAR(255) DEFAULT NULL,
   PRIMARY KEY (uuid),
-  UNIQUE INDEX(label)
+  UNIQUE INDEX(label),
+  CONSTRAINT channel_bucket
+    FOREIGN KEY channel_bucket_uuid (bucket_uuid)
+      REFERENCES bucket (uuid)
+      ON DELETE RESTRICT
+      ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE utf8mb4_bin;
 
 CREATE TABLE api_token (
@@ -109,6 +126,33 @@ CREATE TABLE icinga_ci_var (
       ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE utf8mb4_bin;
 
+-- clear early
+CREATE TABLE raw_event (
+  event_uuid VARBINARY(16) NOT NULL,
+  input_uuid VARBINARY(16) DEFAULT NULL, -- TODO: NOT NULL
+  -- issue_uuid VARBINARY(16) NOT NULL,
+  ts_received BIGINT(20) NOT NULL,
+  processing_result ENUM (
+    'received',
+    'failed',
+    'ignored',
+    'issue_created',
+    'issue_refreshed',
+    'issue_acknowledged',
+    'issue_closed'
+  ) NOT NULL,
+  error_message TEXT DEFAULT NULL,
+  raw_input MEDIUMTEXT NOT NULL,
+  input_format ENUM(
+    'string',
+    'json'
+  ) NOT NULL,
+  PRIMARY KEY (event_uuid),
+  -- INDEX issue (issue_uuid),
+  INDEX sender (input_uuid),
+  INDEX ts (ts_received)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE utf8mb4_bin;
+
 CREATE TABLE issue (
   issue_uuid VARBINARY(16) NOT NULL,
   status ENUM (
@@ -183,7 +227,7 @@ CREATE TABLE issue_activity (
 
 INSERT INTO sender (id, sender_name, implementation) VALUES (99999, 'compat', 'Compat');
 
-CREATE TABLE file(
+CREATE TABLE file (
   checksum binary(20) NOT NULL COMMENT 'sha1(data)',
   data mediumblob NOT NULL COMMENT 'maximum length of 16777215 (2^24 - 1) bytes, or 16MB in storage',
   size mediumint unsigned NOT NULL COMMENT 'max value 16777215',
@@ -258,6 +302,92 @@ CREATE TABLE issue_history (
   INDEX sort_first_event (ts_first_event)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE utf8mb4_bin;
 
+CREATE TABLE host_list (
+  uuid VARBINARY(16) NOT NULL,
+  label VARCHAR(128) NOT NULL,
+  PRIMARY KEY (uuid),
+  UNIQUE INDEX idx_label (label)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE utf8mb4_bin;
+
+CREATE TABLE host_list_member (
+  list_uuid VARBINARY(16) NOT NULL,
+  hostname VARCHAR(255) CHARACTER SET ascii COLLATE ascii_general_ci NOT NULL,
+  PRIMARY KEY (list_uuid, hostname),
+  CONSTRAINT host_list_member_list
+    FOREIGN KEY list (list_uuid)
+      REFERENCES host_list (uuid)
+      ON DELETE CASCADE
+      ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE utf8mb4_bin;
+
+-- activity log? Author would be nice
+CREATE TABLE downtime_rule (
+  uuid VARBINARY(16) NOT NULL,
+  time_definition TEXT NULL DEFAULT NULL COMMENT 'cron-style when recurring, at-style when not',
+  filter_definition TEXT NOT NULL,
+  label VARCHAR(128) NOT NULL,
+  message TEXT NOT NULL,
+  timezone VARCHAR(64) NOT NULL,
+  config_uuid VARBINARY(16) NOT NULL, -- uuid5(uuid, json(downtime_rule))
+  host_list_uuid VARBINARY(16) DEFAULT NULL,
+  next_calculated_uuid VARBINARY(16) NULL DEFAULT NULL,
+  is_enabled ENUM('y', 'n') NOT NULL,
+  is_recurring ENUM('y', 'n') NOT NULL,
+  ts_not_before BIGINT(20) UNSIGNED NULL DEFAULT NULL,
+  ts_not_after BIGINT(20) UNSIGNED NULL DEFAULT NULL,
+  duration INT(10) UNSIGNED NULL DEFAULT NULL,
+  max_single_problem_duration INT(10) UNSIGNED NULL DEFAULT NULL,
+  PRIMARY KEY (uuid),
+  UNIQUE INDEX idx_sort(label),
+  UNIQUE INDEX config(config_uuid)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE utf8mb4_bin;
+
+CREATE TABLE downtime_calculated (
+  uuid VARBINARY(16) NOT NULL, -- uuid5(rule_config_uuid, ts_expected_start)
+  rule_uuid VARBINARY(16) NOT NULL, -- important for cleanup?
+  rule_config_uuid VARBINARY(16) NULL DEFAULT NULL,
+  ts_expected_start BIGINT(20) UNSIGNED NOT NULL,
+  ts_expected_end BIGINT(20) UNSIGNED NOT NULL,
+  is_active ENUM('y', 'n') NOT NULL,
+  ts_started BIGINT(20) UNSIGNED DEFAULT NULL,
+  ts_triggered BIGINT(20) UNSIGNED DEFAULT NULL, -- isn't this the same as ts_started????
+  PRIMARY KEY (uuid),
+  UNIQUE INDEX (rule_config_uuid, ts_expected_start),
+  CONSTRAINT downtime_calculated_rule_config
+    FOREIGN KEY rule_config (rule_config_uuid)
+      REFERENCES downtime_rule (config_uuid)
+      ON DELETE CASCADE
+      ON UPDATE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE utf8mb4_bin;
+
+ALTER TABLE downtime_rule
+  ADD CONSTRAINT downtime_rule_next_calculated
+    FOREIGN KEY calculated (next_calculated_uuid)
+    REFERENCES downtime_calculated (uuid)
+    ON DELETE SET NULL
+       ON UPDATE RESTRICT;
+
+CREATE TABLE downtime_affected_issue (
+  calculation_uuid VARBINARY(16) NOT NULL,
+  issue_uuid VARBINARY(16) NOT NULL,
+  ts_triggered BIGINT(20) UNSIGNED NOT NULL,
+  ts_scheduled_end BIGINT(20) UNSIGNED NOT NULL, -- min(dr.ts_not_after, ts_triggered + dr.duration)
+  assignment ENUM('manual', 'rule') NOT NULL,
+  assigned_by VARCHAR(255) NULL DEFAULT NULL,
+  author VARCHAR(255) NULL DEFAULT NULL,
+  PRIMARY KEY (calculation_uuid, issue_uuid),
+  CONSTRAINT calculated_downtime_rule
+    FOREIGN KEY downtime_calculated_uuid (calculation_uuid)
+      REFERENCES downtime_calculated (uuid)
+      ON DELETE CASCADE
+      ON UPDATE CASCADE,
+  CONSTRAINT affected_issue_issue
+    FOREIGN KEY issue (issue_uuid)
+      REFERENCES downtime_calculated (uuid)
+      ON DELETE CASCADE
+      ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE utf8mb4_bin;
+
 CREATE TABLE action_history (
   uuid VARBINARY(16) NOT NULL,
   action_uuid VARBINARY(16) NOT NULL,
@@ -299,4 +429,4 @@ CREATE TABLE eventtracker_schema_migration (
 
 INSERT INTO eventtracker_schema_migration
   (schema_version, migration_time)
-VALUES (10, NOW());
+VALUES (16, NOW());
