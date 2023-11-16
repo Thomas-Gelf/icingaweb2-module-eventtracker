@@ -2,6 +2,7 @@
 
 namespace Icinga\Module\Eventtracker\Web\Widget;
 
+use gipfl\IcingaWeb2\Icon;
 use gipfl\IcingaWeb2\Link;
 use gipfl\IcingaWeb2\Url;
 use gipfl\Translation\TranslationHelper;
@@ -139,6 +140,8 @@ class IssueHeader extends BaseHtmlElement
                 ['object_class' => $issue->get('object_class')],
                 ['data-base-target' => 'col1']
             ),
+            $this->renderInputAndSender($issue),
+            "\n",
             "\n",
             Html::tag('strong', 'Status: '),
             $status,
@@ -162,13 +165,67 @@ class IssueHeader extends BaseHtmlElement
 
         array_push(
             $main,
+            Html::tag('strong', 'Problem handling: '),
+            $this->renderProblem($issue),
+            "\n"
+        );
+
+        array_push(
+            $main,
             Html::tag('strong', 'Ticket: '),
-            $this->renderTicket($issue),
-            $this->renderInputAndSender($issue),
-            $this->renderFiles($issue)
+            $this->renderTicket($issue)
         );
 
         return $main;
+    }
+
+    protected function renderProblem(Issue $issue)
+    {
+        $problemIdentifier = $issue->get('problem_identifier');
+        if ($problemIdentifier === null) {
+            return $this->translate('no problem identifier has been submitted');
+        }
+
+        $problemHandling = $this->db->fetchRow(
+            $this->db->select()->from('problem_handling')->where('label = ?', $problemIdentifier)
+        );
+
+        $isAdmin = Auth::getInstance()->hasPermission('eventtracker/admin');
+        if ($problemHandling) {
+            $result = [
+                Html::tag('a', [
+                    'href'   => $problemHandling->instruction_url,
+                    'target' => '_blank',
+                ], $problemIdentifier)
+            ];
+            if ($isAdmin) {
+                $result[] = ' ';
+                $result[] = Link::create(Icon::create('edit'), 'eventtracker/configuration/problemhandling', [
+                    'uuid' => Uuid::fromBytes($problemHandling->uuid)->toString(),
+                ], [
+                    'title' => $this->translate('Configure related problem handling'),
+                ]);
+            }
+            return $result;
+        }
+
+        $msg = sprintf(
+            $this->translate("No problem handling has been configured\n        for '%s'"),
+            $problemIdentifier
+        );
+        if ($isAdmin) {
+            return [
+                $msg,
+                ' ',
+                Link::create(Icon::create('edit'), 'eventtracker/configuration/problemhandling', [
+                    'label' => $problemIdentifier,
+                ], [
+                    'title' => $this->translate('Configure related problem handling'),
+                ])
+            ];
+        }
+
+        return $msg;
     }
 
     protected function renderTimings(Issue $issue)
@@ -216,6 +273,14 @@ class IssueHeader extends BaseHtmlElement
             $result[] = HtmlPurifier::process($value);
             $result[] = "\n";
         }
+        if (empty($result)) {
+            $result = $this->renderFiles($issue);
+        } else {
+            if ($files = $this->renderFiles($issue)) {
+                $result = array_merge($result, $files);
+            }
+        }
+
         return $result;
     }
 
