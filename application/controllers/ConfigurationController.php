@@ -172,11 +172,12 @@ class ConfigurationController extends Controller
             'label' => $this->translate('Channel Configuration'),
             'url'   => 'eventtracker/configuration/channel',
             'urlParams' => $params,
-        ])->add('rules', [
+        ])/*->add('rules', [
             'label' => $this->translate('Rules'),
             'url'   => 'eventtracker/configuration/channelrules',
             'urlParams' => $params,
-        ]);
+        ])*/;
+    }
 
     public function problemhandlingsAction()
     {
