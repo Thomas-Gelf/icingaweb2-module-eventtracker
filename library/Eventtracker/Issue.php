@@ -36,6 +36,7 @@ class Issue implements JsonSerialization
         'host_name' => null,
         'object_name' => null,
         'object_class' => null,
+        'problem_identifier' => null,
         'input_uuid' => null,
         'sender_id' => null,
         'sender_event_id' => null,

@@ -69,6 +69,16 @@ CREATE TABLE action (
   UNIQUE INDEX(label)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE utf8mb4_bin;
 
+CREATE TABLE problem_handling (
+  uuid VARBINARY(16) NOT NULL,
+  label VARCHAR(64) NOT NULL,
+  instruction_url TEXT DEFAULT NULL,
+  trigger_actions ENUM('y', 'n'),
+  enabled ENUM('y', 'n'),
+  PRIMARY KEY (uuid),
+  UNIQUE INDEX(label)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE utf8mb4_bin;
+
 CREATE TABLE icinga_ci (
   object_id BIGINT(20) UNSIGNED NOT NULL,
   host_id BIGINT(20) UNSIGNED NULL DEFAULT NULL,
@@ -186,6 +196,7 @@ CREATE TABLE issue (
   host_name VARCHAR(128) COLLATE utf8mb4_general_ci DEFAULT NULL, -- mc_host
   object_class VARCHAR(128) NOT NULL, --
   object_name VARCHAR(128) COLLATE utf8mb4_general_ci NOT NULL,
+  problem_identifier VARCHAR(64) NULL DEFAULT NULL,
   ts_expiration BIGINT(20) NULL DEFAULT NULL,
   ts_first_event BIGINT(20) NOT NULL, -- milliseconds since epoch
   ts_last_modified BIGINT(20) NOT NULL, -- milliseconds since epoch
@@ -429,4 +440,4 @@ CREATE TABLE eventtracker_schema_migration (
 
 INSERT INTO eventtracker_schema_migration
   (schema_version, migration_time)
-VALUES (16, NOW());
+VALUES (17, NOW());
