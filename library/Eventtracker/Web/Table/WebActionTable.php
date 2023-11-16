@@ -10,6 +10,7 @@ class WebActionTable extends BaseTable
 {
     /** @var WebAction */
     protected $action;
+    protected $hasColumnEnabled = false;
 
     public function __construct($db, WebAction $action)
     {
@@ -19,12 +20,21 @@ class WebActionTable extends BaseTable
 
     protected function initialize()
     {
+        $labelColumns = ['label', 'uuid'];
+        if ($this->hasColumnEnabled) {
+            $labelColumns[] = 'enabled';
+        }
         $this->addAvailableColumns([
-            $this->createColumn('label', $this->action->singular, ['label', 'uuid'])
+            $this->createColumn('label', $this->action->singular, $labelColumns)
                 ->setRenderer(function ($row) {
+                    if ($this->hasColumnEnabled && $row->enabled === 'n') {
+                        $attrs = ['style' => 'font-style: italic'];
+                    } else {
+                        $attrs = [];
+                    }
                     return Link::create($row->label, $this->action->url, [
                         'uuid' => Uuid::fromBytes($row->uuid)->toString()
-                    ]);
+                    ], $attrs);
                 }),
         ]);
     }
