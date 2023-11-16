@@ -38,7 +38,16 @@ class ConfigHelper
         }
 
         // TODO: check whether Issue has such property, and eventually use an interface
-        return $issue->get($property);
+        if ($issue->hasProperty($property)) {
+            $value = $issue->get($property);
+            if ($value === null) {
+                // return missing property? Not sure
+            }
+
+            return $value;
+        }
+
+        return static::missingProperty($property);
     }
 
     /**
