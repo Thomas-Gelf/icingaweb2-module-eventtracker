@@ -176,6 +176,23 @@ class ConfigurationController extends Controller
             'url'   => 'eventtracker/configuration/channelrules',
             'urlParams' => $params,
         ]);
+
+    public function problemhandlingsAction()
+    {
+        $this->showList($this->actions->get('problemhandling'));
+    }
+
+    public function problemhandlingAction()
+    {
+        $action = $this->actions->get('problemhandling');
+        $this->addObjectTab($action);
+        $form = $this->getForm($action);
+        if ($label = $this->params->get('label')) {
+            $form->populate([
+                'label' => $label
+            ]);
+        }
+        $this->content()->add($form);
     }
 
     public function actionsAction()
