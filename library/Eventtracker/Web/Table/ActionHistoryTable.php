@@ -22,6 +22,7 @@ class ActionHistoryTable extends BaseTable
 
     protected function initialize()
     {
+        $actions = $this->db()->fetchPairs($this->db()->select()->from('action', ['uuid', 'label']));
         $this->addAvailableColumns([
             $this->createColumn('ts_done', $this->translate('Time'), [
                 'ts_done' => 'ah.ts_done',
@@ -29,10 +30,11 @@ class ActionHistoryTable extends BaseTable
             ])->setRenderer(function ($row) {
                 return $this->linkToObject($row->uuid, Time::agoFormatted($row->ts_done));
             })->setDefaultSortDirection('DESC'),
-            $this->createColumn('message', $this->translate('Message'), [
-                'message'       => 'ah.message',
-                'success'       => 'ah.success',
-            ])->setRenderer(function ($row) {
+            $this->createColumn('message', $this->translate('Action: Message'), [
+                'action_uuid' => 'ah.action_uuid',
+                'message'     => 'ah.message',
+                'success'     => 'ah.success',
+            ])->setRenderer(function ($row) use ($actions) {
                 return [
                     $row->success === 'y' ? Icon::create('ok', [
                         'class' => 'state-ok'
@@ -40,7 +42,9 @@ class ActionHistoryTable extends BaseTable
                         'class' => 'state-critical'
                     ]),
                     ' ',
-                    preg_replace('/^(.+?)\r?\n.+$/s', '\1', $row->message)
+                    $actions[$row->action_uuid] ?? '(unknown action)',
+                    ': ',
+                    preg_replace(['/^(.+?)\r?\n.+$/s', '#/shared/PHP/Icinga/modules/incubator/vendor/gipfl/zfdbstore/src/#'], ['\1', ''], $row->message)
                 ];
             }),
             $this->createColumn('host_name', $this->translate('Host'), [
