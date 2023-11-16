@@ -36,9 +36,6 @@ class HistoryController extends Controller
         $this->setAutorefreshInterval(20);
         $db = $this->db();
         $table = new IssueHistoryTable($db, $this->url());
-        if (! $this->url()->getParam('sort')) {
-            $this->url()->setParam('sort', 'severity DESC');
-        }
         $table->getQuery()->limit(50);
         (new AdditionalTableActions($table, Auth::getInstance(), $this->url()))
             ->appendTo($this->actions());
