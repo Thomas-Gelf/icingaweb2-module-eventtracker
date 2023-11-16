@@ -8,6 +8,7 @@ use gipfl\Json\JsonDecodeException;
 use gipfl\Json\JsonString;
 use gipfl\Web\Widget\Hint;
 use gipfl\ZfDbStore\DbStorableInterface;
+use gipfl\ZfDbStore\NotFoundError;
 use gipfl\ZfDbStore\ZfDbStore;
 use Icinga\Module\Eventtracker\Db\ConfigStore;
 use Icinga\Module\Eventtracker\Engine\Downtime\DowntimeRule;
@@ -404,9 +405,16 @@ class ConfigurationController extends Controller
     {
         if ($action->formClass === DowntimeForm::class) {
             $store = new ZfDbStore($this->db());
-            return $store->load($uuid->getBytes(), DowntimeRule::class);
+            $object = $store->load($uuid->getBytes(), DowntimeRule::class);
+        } else {
+            $object = $this->getStore()->fetchObject($action->table, $uuid);
         }
-        return $this->getStore()->fetchObject($action->table, $uuid);
+
+        if ($object) {
+            return $object;
+        }
+
+        throw new NotFoundError(sprintf('UUID %s has not been found in %s', $uuid->toString(), $action->table));
     }
 
     protected function getObject(WebAction $action): ?object
