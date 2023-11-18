@@ -25,20 +25,21 @@ class Event implements JsonSerialization
     protected $files = [];
 
     protected $defaultProperties = [
-        'uuid'            => null,
-        'host_name'       => null,
-        'object_class'    => null,
-        'object_name'     => null,
-        'severity'        => null,
-        'priority'        => null,
-        'message'         => null,
-        'event_timeout'   => null,
-        'input_uuid'      => null,
-        'sender_event_id' => null,
-        'sender_id'       => null,
-        'attributes'      => null,
-        'acknowledge'     => null,
-        'clear'           => null,
+        'uuid'               => null,
+        'host_name'          => null,
+        'object_class'       => null,
+        'object_name'        => null,
+        'severity'           => null,
+        'priority'           => null,
+        'problem_identifier' => null,
+        'message'            => null,
+        'event_timeout'      => null,
+        'input_uuid'         => null,
+        'sender_event_id'    => null,
+        'sender_id'          => null,
+        'attributes'         => null,
+        'acknowledge'        => null,
+        'clear'              => null,
     ];
 
     protected function __construct()
