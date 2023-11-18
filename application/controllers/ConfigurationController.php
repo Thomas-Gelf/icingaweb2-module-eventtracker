@@ -337,9 +337,13 @@ class ConfigurationController extends Controller
             $form = new $formClass($store);
         }
         $form->on($form::ON_SUCCESS, function (UuidObjectForm $form) use ($action) {
-            $this->redirectNow(Url::fromPath($action->url, [
-                'uuid' => $form->getUuid()->toString()
-            ]));
+            if ($url = $this->getRelatedIssueUrl()) {
+                $this->redirectNow($url);
+            } else {
+                $this->redirectNow(Url::fromPath($action->url, [
+                    'uuid' => $form->getUuid()->toString()
+                ]));
+            }
         });
         return $form;
     }
@@ -368,10 +372,26 @@ class ConfigurationController extends Controller
         }
         $form->handleRequest($this->getServerRequest());
         if ($form->hasBeenDeleted()) {
-            $this->redirectNow($action->listUrl);
+            if ($url = $this->getRelatedIssueUrl()) {
+                $this->redirectNow($url);
+            } else {
+                $this->redirectNow($action->listUrl);
+            }
         }
 
         return $form;
+    }
+
+
+    protected function getRelatedIssueUrl(): ?Url
+    {
+        if ($this->params->get('issue_uuid')) {
+            return Url::fromPath('eventtracker/issue', [
+                'uuid' => $this->params->get('issue_uuid'),
+            ]);
+        }
+
+        return null;
     }
 
     protected function tabForList(WebAction $action)

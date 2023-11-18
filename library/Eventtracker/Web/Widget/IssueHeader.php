@@ -202,6 +202,7 @@ class IssueHeader extends BaseHtmlElement
                 $result[] = ' ';
                 $result[] = Link::create(Icon::create('edit'), 'eventtracker/configuration/problemhandling', [
                     'uuid' => Uuid::fromBytes($problemHandling->uuid)->toString(),
+                    'issue_uuid' => $issue->getNiceUuid(),
                 ], [
                     'title' => $this->translate('Configure related problem handling'),
                 ]);
@@ -219,8 +220,9 @@ class IssueHeader extends BaseHtmlElement
                 ' ',
                 Link::create(Icon::create('edit'), 'eventtracker/configuration/problemhandling', [
                     'label' => $problemIdentifier,
+                    'issue_uuid' => $issue->getNiceUuid(),
                 ], [
-                    'title' => $this->translate('Configure related problem handling'),
+                    'title'      => $this->translate('Configure related problem handling'),
                 ])
             ];
         }
