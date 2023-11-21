@@ -36,6 +36,9 @@ class ScomEventFactory
             $attributes[$name] = ConfigHelper::fillPlaceholders($value, $obj);
         }
         $event->set('attributes', $attributes);
+        foreach (Config::module('eventtracker')->getSection('scom_properties') as $name => $value) {
+            $event->set($name, ConfigHelper::fillPlaceholders($value, $obj));
+        }
 
         return $event;
     }
