@@ -21,6 +21,8 @@ class ProblemHandlingForm extends UuidObjectForm
             ),
             'required' => true
         ]);
+        /*
+        // Disabled for now
         $this->addElement('select', 'trigger_actions', [
             'label'       => $this->translate('Trigger Actions'),
             'description' => $this->translate(
@@ -33,7 +35,8 @@ class ProblemHandlingForm extends UuidObjectForm
             'required'    => true,
             'value'       => 'y'
         ]);
-
+        */
+        $this->addHidden('trigger_actions', 'y');
         $this->addButtons();
     }
 }
