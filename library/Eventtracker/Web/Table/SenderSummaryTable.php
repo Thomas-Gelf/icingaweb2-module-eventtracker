@@ -21,7 +21,7 @@ class SenderSummaryTable extends BaseSummaryTable
 
     protected function getMainColumnTitle(): string
     {
-        return $this->translate('Sender');
+        return $this->translate('Sender (Old)');
     }
 
     public function prepareQuery()
