@@ -93,13 +93,13 @@ class IssueHistoryTable extends BaseTable
                 ], date('H:i', $row->ts));
             })->setDefaultSortDirection('DESC'),
             $this->createColumn('message', $this->translate('Message'), [
-                'priority'   => 'i.priority',
-                'timestamp'  => 'i.ts_first_event',
-                'severity'      => 'i.severity', // Used by linkToObject
-                'issue_uuid'    => 'i.issue_uuid',
-                'message'       => 'i.message',
-                'host_name'     => 'i.host_name',
-                'object_name'   => 'i.object_name',
+                'priority'     => 'i.priority',
+                'timestamp'    => 'i.ts_first_event',
+                'severity'     => 'i.severity', // Used by linkToObject
+                'issue_uuid'   => 'i.issue_uuid',
+                'message'      => 'i.message',
+                'host_name'    => 'i.host_name',
+                'object_name'  => 'i.object_name',
                 'close_reason' => 'i.close_reason',
                 'closed_by'    => 'i.closed_by',
                 'ticket_ref'   => 'i.ticket_ref',
