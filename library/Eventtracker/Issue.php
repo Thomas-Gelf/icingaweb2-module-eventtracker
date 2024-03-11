@@ -210,6 +210,9 @@ class Issue implements JsonSerialization
             $attributes = [];
         }
         unset($properties['event_timeout'], $properties['attributes']);
+
+        // TODO: This filter is related to msend only, and can be removed, once
+        //       msend module v0.3.0 is no longer supported.
         $attributes = array_filter((array)$attributes, function ($key) {
             if ($key === 'severity' || $key === 'msg') {
                 return false;
@@ -220,6 +223,7 @@ class Issue implements JsonSerialization
 
             return true;
         }, ARRAY_FILTER_USE_KEY);
+
         $this->setAttributes($attributes);
 
         // Priority can be customized, source will not be allowed to change it
