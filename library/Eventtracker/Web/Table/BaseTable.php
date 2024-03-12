@@ -30,7 +30,7 @@ abstract class BaseTable extends ZfQueryBasedTable
     private $sortParam;
 
     /** @var array */
-    private $sortColums = [];
+    private $sortColumns = [];
 
     /** @var BaseHtmlElement|null */
     private $columnToggle;
@@ -288,7 +288,7 @@ abstract class BaseTable extends ZfQueryBasedTable
                 $columnName = substr($columnName, 0, $space);
                 $sortColumn = $this->getAvailableColumn($columnName);
             }
-            $this->sortColums[$columnName] = $direction;
+            $this->sortColumns[$columnName] = $direction;
             $sort = $sortColumn->getSortExpression();
             if (is_array($sort)) {
                 foreach ($sort as $s) {
@@ -308,8 +308,8 @@ abstract class BaseTable extends ZfQueryBasedTable
             'ASC'  => 'up-dir',
             'DESC' => 'down-dir',
         ];
-        if (array_key_exists($column->getAlias(), $this->sortColums)) {
-            $element->add(Icon::create($icons[$this->sortColums[$column->getAlias()]]));
+        if (array_key_exists($column->getAlias(), $this->sortColumns)) {
+            $element->add(Icon::create($icons[$this->sortColumns[$column->getAlias()]]));
         }
 
         return $element;
@@ -318,8 +318,8 @@ abstract class BaseTable extends ZfQueryBasedTable
     protected function getNextSortLinkString(TableColumn $column)
     {
         $string = $column->getAlias();
-        if (array_key_exists($column->getAlias(), $this->sortColums)) {
-            $current = $this->sortColums[$column->getAlias()];
+        if (array_key_exists($column->getAlias(), $this->sortColumns)) {
+            $current = $this->sortColumns[$column->getAlias()];
             if ($current === $column->getDefaultSortDirection()) {
                 $string .= ' ' . ($current === 'ASC' ? 'DESC' : 'ASC');
             }
