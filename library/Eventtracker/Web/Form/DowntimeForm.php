@@ -449,11 +449,10 @@ class DowntimeForm extends UuidObjectForm
         $store = new ZfDbStore($this->store->getDb());
         $subject = sprintf($this->translate('Downtime "%s"'), $properties['label']);
         if ($store->store($rule)) {
-            if ($new) {
-                Notification::success(sprintf($this->translate('%s has been created'), $subject));
-            } else {
-                Notification::success(sprintf($this->translate('%s has been modified'), $subject));
-            }
+            Notification::success(sprintf(
+                $new ? $this->translate('%s has been created') : $this->translate('%s has been modified'),
+                $subject
+            ));
         } else {
             Notification::info(sprintf($this->translate('%s has not been modified'), $subject));
         }
