@@ -523,27 +523,31 @@ class Issue implements JsonSerialization
         }
 
         $modifications = $this->getModifiedProperties();
+        foreach ($modifications as $key => $modification) {
+            $modifications[$key] = [$this->getStoredProperty($key), $modification];
+        }
 
         $properties = $this->getProperties();
         $eventRelatedProperties = $modifications;
         unset($eventRelatedProperties['owner']);
         unset($eventRelatedProperties['status']);
         unset($eventRelatedProperties['ticket_ref']);
-        if (true && count($eventRelatedProperties) > 0) {
-            $properties['cnt_events'] = new Expr('cnt_events + 1');
+        if (count($eventRelatedProperties) > 0) {
             $this->set('cnt_events', $this->get('cnt_events') + 1); // might be wrong, but safes a DB roundtrip
         }
-        $where = $db->quoteInto('issue_uuid = ?', $this->getUuid());
+        $this->set('ts_last_modified', Time::unixMilli());
 
         // Compat:
         if (array_key_exists('sender_event_id', $properties)) {
             if ($properties['sender_event_id'] === null) {
-                $properties['sender_event_id'] = '';
+                $this->set('sender_event_id', '');
             }
         } else {
-            $properties['sender_event_id'] = '';
+            $this->set('sender_event_id', '');
         }
-        $db->update(self::$tableName, $properties, $where);
+
+        $where = $db->quoteInto('issue_uuid = ?', $this->getUuid());
+        $db->update(self::$tableName, $this->getModifiedProperties(), $where);
         unset($modifications['ts_expiration']);
         if (! empty($modifications)) {
             $db->insert('issue_activity', [
