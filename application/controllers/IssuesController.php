@@ -3,6 +3,7 @@
 namespace Icinga\Module\Eventtracker\Controllers;
 
 use Icinga\Authentication\Auth;
+use Icinga\Module\Eventtracker\Auth\RestrictionHelper;
 use Icinga\Module\Eventtracker\Db\EventSummaryBySeverity;
 use Icinga\Module\Eventtracker\Web\Table\IssuesTable;
 use Icinga\Module\Eventtracker\Web\Widget\AdditionalTableActions;
@@ -22,6 +23,7 @@ class IssuesController extends Controller
         $db = $this->db();
 
         $table = new IssuesTable($db, $this->url());
+        RestrictionHelper::applyInputFilters($table->getQuery(), $this->Auth());
         $this->applyFilters($table);
         if (! $this->url()->getParam('sort')) {
             $this->url()->setParam('sort', 'severity DESC');

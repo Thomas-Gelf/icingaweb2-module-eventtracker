@@ -35,6 +35,14 @@ $this->providePermission(
     'eventtracker/operator',
     $this->translate('Operators are allowed to modify issues (Priority, Owner...)')
 );
+$this->provideRestriction(
+    'eventtracker/ignoreInputs',
+    $this->translate('Comma-separated list of Input UUIDs to ignore')
+);
+$this->provideRestriction(
+    'eventtracker/filterInputs',
+    $this->translate('Comma-separated list of Input UUIDs to show')
+);
 if ($this->getConfig()->get('scom', 'db_resource')) {
     // $section->add(N_('SCOM Alerts'))
     //     ->setUrl('eventtracker/scom/alerts')

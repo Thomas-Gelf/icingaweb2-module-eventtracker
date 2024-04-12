@@ -6,6 +6,8 @@ use gipfl\IcingaWeb2\Link;
 use gipfl\IcingaWeb2\Table\Extension\MultiSelect;
 use gipfl\IcingaWeb2\Url;
 use gipfl\Translation\TranslationHelper;
+use Icinga\Authentication\Auth;
+use Icinga\Module\Eventtracker\Auth\RestrictionHelper;
 use Icinga\Module\Eventtracker\Db\EventSummaryBySeverity;
 use Icinga\Module\Eventtracker\Web\Widget\SeverityFilter;
 
@@ -75,7 +77,8 @@ abstract class BaseSummaryTable extends BaseTable
             ->order('COUNT(*) DESC')
             ->order("$order ASC")
             ->group($column);
-
+        // TODO: Auth as param
+        RestrictionHelper::applyInputFilters($query, Auth::getInstance());
         EventSummaryBySeverity::addAggregationColumnsToQuery($query);
 
         return $query;
