@@ -142,7 +142,7 @@ class SyslogInput extends SimpleTaskConstructor implements Input
             });
             $connection->pipe($buffer);
             $connection->on('end', function () {
-                $this->logger->notice('Connection closed');
+                $this->logger->notice('Syslog connection closed');
             });
         });
         $server->on('error', function ($error) {
