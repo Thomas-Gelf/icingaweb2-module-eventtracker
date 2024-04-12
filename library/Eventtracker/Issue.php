@@ -236,6 +236,16 @@ class Issue implements JsonSerialization
             $properties['ts_expiration'] = Time::unixMilli() + $timeout * 1000;
         }
         $properties['sender_event_checksum'] = $event->getChecksum();
+
+        // Workaround for ghost changes... not so cool
+        if ($properties['sender_event_id'] === null) {
+            if ($this->get('sender_event_id') === '') {
+                unset($properties['sender_event_id']);
+            } else {
+                $properties['sender_event_id'] = '';
+            }
+        }
+
         $this->setProperties($properties);
 
         $this->files = $event->getFiles();
