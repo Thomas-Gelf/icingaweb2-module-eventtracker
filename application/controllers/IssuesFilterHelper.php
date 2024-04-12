@@ -85,16 +85,17 @@ trait IssuesFilterHelper
                 $table->joinInputs();
                 $column = "inp.$column";
             }
+            $query = $table->getQuery();
             if (strlen($value)) {
                 if (substr($value, 0, 1) === '!') {
-                    $table->getQuery()->where("$column != ?", substr($value, 1));
+                    $query->where("$column != ?", substr($value, 1));
                 } elseif (false !== strpos($value, ',')) {
-                    $table->getQuery()->where("$column IN (?)", explode(',', $value));
+                    $query->where("$column IN (?)", explode(',', $value));
                 } else {
-                    $table->getQuery()->where("$column = ?", $value);
+                    $query->where("$column = ?", $value);
                 }
             } else {
-                $table->getQuery()->where("$column IS NULL");
+                $query->where("$column IS NULL");
                 $value = $this->translate('- none -');
             }
             if ($compact) {
