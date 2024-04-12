@@ -86,7 +86,13 @@ trait IssuesFilterHelper
                 $column = "inp.$column";
             }
             if (strlen($value)) {
-                $table->getQuery()->where("$column = ?", $value);
+                if (substr($value, 0, 1) === '!') {
+                    $table->getQuery()->where("$column != ?", substr($value, 1));
+                } elseif (false !== strpos($value, ',')) {
+                    $table->getQuery()->where("$column IN (?)", explode(',', $value));
+                } else {
+                    $table->getQuery()->where("$column = ?", $value);
+                }
             } else {
                 $table->getQuery()->where("$column IS NULL");
                 $value = $this->translate('- none -');
