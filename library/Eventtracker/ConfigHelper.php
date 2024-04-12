@@ -73,7 +73,7 @@ class ConfigHelper
                     $value = $issue->$property;
                 }
             } else {
-                $value = $issue->$property;
+                $value = $issue->$property ?? null;
             }
             if ($value === null) {
                 return static::missingProperty($property);
