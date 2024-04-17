@@ -52,7 +52,7 @@ class IdoDetails extends BaseHtmlElement
         $this->issue = $issue;
         try {
             $this->ido = MonitoringBackend::instance();
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             return;
         }
         $this->db = $db;
