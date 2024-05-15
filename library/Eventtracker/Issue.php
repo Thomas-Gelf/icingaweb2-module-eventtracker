@@ -5,10 +5,10 @@ namespace Icinga\Module\Eventtracker;
 use gipfl\Json\JsonSerialization;
 use gipfl\Json\JsonString;
 use gipfl\ZfDb\Adapter\Adapter as Db;
-use gipfl\ZfDb\Expr;
 use Icinga\Application\Hook;
 use Icinga\Authentication\Auth;
 use Icinga\Exception\NotFoundError;
+use Icinga\Module\Eventtracker\Db\DbUtil;
 use Icinga\Module\Eventtracker\Engine\Downtime\UuidObjectHelper;
 use Icinga\Module\Eventtracker\Hook\IssueHook;
 use Ramsey\Uuid\Uuid;
@@ -545,8 +545,20 @@ class Issue implements JsonSerialization
         } else {
             $this->set('sender_event_id', '');
         }
-
         $where = $db->quoteInto('issue_uuid = ?', $this->getUuid());
+
+        $activities = $db->fetchCol(
+            $db->select()->from('issue_activity', 'activity_uuid')->where($where)->order('ts_modified')
+        );
+        // Keeping not more than 20 activities. Cannot delegate this to the DB, as DELETE with LIMIT is not
+        // replication-safe in MySQL, even when used in a deterministic way with ORDER (bug #42851)
+        $deleteUuids = array_slice($activities, 9, -10);
+        // Chunked, to avoid issues with extra-long queries. This should only have an effect in environments with
+        // lots of activities from older versions. After completed once per issue, there should never be more than
+        // one chunk
+        foreach (array_chunk($deleteUuids, 100) as $uuids) {
+            $db->delete('issue_activity', $db->quoteInto('activity_uuid IN (?)', DbUtil::quoteBinary($uuids, $db)));
+        }
         $db->update(self::$tableName, $this->getModifiedProperties(), $where);
         unset($modifications['ts_expiration']);
         if (! empty($modifications)) {
