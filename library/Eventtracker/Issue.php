@@ -432,7 +432,7 @@ class Issue implements JsonSerialization
 
     public function setOwner($owner)
     {
-        $this->properties['owner'] = $owner;
+        $this->set('owner', $owner);
         $this->fixOpenAck();
     }
 
