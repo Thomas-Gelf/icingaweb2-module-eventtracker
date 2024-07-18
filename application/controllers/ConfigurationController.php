@@ -31,6 +31,8 @@ use Ramsey\Uuid\UuidInterface;
 
 class ConfigurationController extends Controller
 {
+    use AsyncControllerHelper;
+
     /** @var ConfigStore */
     protected $store;
 
@@ -100,7 +102,7 @@ class ConfigurationController extends Controller
         $this->addCompactDashboard($dummyTable->add(
             Table::row([$this->translate(
                 'This feature is not yet available, SCOM and IDO are still being synchronized the legacy way'
-            )]),
+            )])
         ));
     }
 
@@ -244,7 +246,9 @@ class ConfigurationController extends Controller
         $action = $this->actions->get('downtimes');
         $this->addObjectTab($action);
         /** @var DowntimeForm $form */
-        $form = $this->getForm($action);
+        $form = $this->getForm($action, function () {
+            $this->syncRpcCall('config.reloadDowntimeRules');
+        });
         $this->content()->add($form);
         if ($form->hasObject()) {
             $this->content()->add(new DowntimeScheduleTable($this->db(), $form->getObject()));
@@ -328,7 +332,7 @@ class ConfigurationController extends Controller
         ]);
     }
 
-    protected function createForm(WebAction $action): UuidObjectForm
+    protected function createForm(WebAction $action, ?callable $onSuccess): UuidObjectForm
     {
         $store = $this->getStore();
         /** @var string|UuidObjectForm $formClass IDE hint */
@@ -337,6 +341,9 @@ class ConfigurationController extends Controller
             $form = new $formClass($store, new $registryClass);
         } else {
             $form = new $formClass($store);
+        }
+        if ($onSuccess) {
+            $form->on($form::ON_SUCCESS, $onSuccess);
         }
         $form->on($form::ON_SUCCESS, function (UuidObjectForm $form) use ($action) {
             if ($url = $this->getRelatedIssueUrl()) {
@@ -350,9 +357,9 @@ class ConfigurationController extends Controller
         return $form;
     }
 
-    protected function getForm(WebAction $action): UuidObjectForm
+    protected function getForm(WebAction $action, ?callable $onSuccess = null): UuidObjectForm
     {
-        $form = $this->createForm($action);
+        $form = $this->createForm($action, $onSuccess);
         $objectType = $action->singular;
         if ($this->getUuid()) {
             $object = $this->getObject($action);
