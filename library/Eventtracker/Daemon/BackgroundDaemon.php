@@ -113,6 +113,7 @@ class BackgroundDaemon implements EventEmitterInterface
             $this->dbResourceName
         );
         $this->runningConfig = new RunningConfig($this->logger);
+        $this->initializeDowntimeHandling($this->runningConfig);
         $this->daemonDb
             ->register($this->jobRunner)
             ->register($this->logProxy)
@@ -123,6 +124,16 @@ class BackgroundDaemon implements EventEmitterInterface
             ->run($this->loop);
         $this->prepareApi($this->channelRunner, $this->loop, $this->logger);
         $this->setState('running');
+    }
+
+    protected function initializeDowntimeHandling(RunningConfig $runningConfig)
+    {
+        $this->generatedDowntimeGenerator = new GeneratedDowntimeGenerator($this->logger);
+        $this->downtimeRunner = new DowntimeRunner($this->logger);
+        $runningConfig->watchRules(function ($rules) {
+            $this->generatedDowntimeGenerator->triggerCalculation($rules);
+            $this->downtimeRunner->setDowntimeRules($rules);
+        });
     }
 
     /**
