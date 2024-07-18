@@ -21,6 +21,7 @@ use Icinga\Module\Eventtracker\Web\Form\UuidObjectForm;
 use Icinga\Module\Eventtracker\Web\Table\BaseTable;
 use Icinga\Module\Eventtracker\Web\Table\ChannelRulesTable;
 use Icinga\Module\Eventtracker\Web\Table\DowntimeScheduleTable;
+use Icinga\Module\Eventtracker\Web\Table\HostListMemberTable;
 use Icinga\Module\Eventtracker\Web\WebAction;
 use Icinga\Module\Eventtracker\Web\WebActions;
 use ipl\Html\Html;
@@ -260,6 +261,7 @@ class ConfigurationController extends Controller
         $action = $this->actions->get('hostlists');
         $this->addObjectTab($action);
         $this->content()->add($this->getForm($action));
+        $this->content()->add(new HostListMemberTable($this->db(), $this->getUuid()));
     }
 
     protected function showRules(UuidInterface $uuid, $rules)
