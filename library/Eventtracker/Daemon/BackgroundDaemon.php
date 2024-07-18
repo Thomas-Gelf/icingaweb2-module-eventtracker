@@ -10,6 +10,7 @@ use gipfl\IcingaCliDaemon\DbResourceConfigWatch;
 use gipfl\SystemD\NotifySystemD;
 use Icinga\Module\Eventtracker\Configuration;
 use Icinga\Module\Eventtracker\Daemon\RpcNamespace\RpcNamespaceProcess;
+use Icinga\Module\Eventtracker\Engine\Downtime\DowntimeRunner;
 use Icinga\Module\Eventtracker\Engine\Downtime\GeneratedDowntimeGenerator;
 use Psr\Log\LoggerInterface;
 use React\EventLoop\Factory as Loop;
@@ -58,6 +59,9 @@ class BackgroundDaemon implements EventEmitterInterface
 
     /** @var GeneratedDowntimeGenerator */
     protected $generatedDowntimeGenerator;
+
+    /** @var DowntimeRunner */
+    protected $downtimeRunner;
 
     /** @var bool */
     protected $reloading = false;
@@ -115,6 +119,7 @@ class BackgroundDaemon implements EventEmitterInterface
             ->register($this->channelRunner)
             ->register($this->generatedDowntimeGenerator)
             ->register($this->runningConfig)
+            ->register($this->downtimeRunner)
             ->run($this->loop);
         $this->prepareApi($this->channelRunner, $this->loop, $this->logger);
         $this->setState('running');
