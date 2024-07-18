@@ -42,10 +42,16 @@ class ActivityTable extends BaseTable
         ]);
     }
 
-    protected function showModifications($modifications)
+    protected function showModifications($modifications): array
     {
-        foreach ($modifications as $property => list($old, $new)) {
-            $result[] = $this->showModification($property, $old, $new);
+        $result = [];
+        foreach ($modifications as $property => $modification) {
+            if (is_array($modification)) {
+                list($old, $new) = $modification;
+                $result[] = $this->showModification($property, $old, $new);
+            } else {
+                $result[] = $this->showModification($property, null, $modification);
+            }
         }
 
         return $result;

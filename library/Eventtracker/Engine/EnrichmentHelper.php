@@ -44,7 +44,7 @@ class EnrichmentHelper
         return $object;
     }
 
-    protected static function getPlainIssue(Issue $issue, $flat = false): object
+    public static function getPlainIssue(Issue $issue, $flat = false): object
     {
         $object = (object) $issue->getProperties();
         foreach (['issue_uuid', 'input_uuid'] as $key) {

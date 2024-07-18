@@ -15,7 +15,9 @@ use Icinga\Module\Eventtracker\Web\Form\DowntimeForm;
 use Icinga\Module\Eventtracker\Web\Form\HostListForm;
 use Icinga\Module\Eventtracker\Web\Form\InputConfigForm;
 use Icinga\Module\Eventtracker\Web\Form\MapConfigForm;
+use Icinga\Module\Eventtracker\Web\Form\ProblemHandlingForm;
 use Icinga\Module\Eventtracker\Web\Table\DowntimeRulesTable;
+use Icinga\Module\Eventtracker\Web\Table\ProblemHandlingTable;
 use Icinga\Module\Eventtracker\Web\Table\WebActionTable;
 
 class WebActions
@@ -63,9 +65,10 @@ class WebActions
     public function init()
     {
         $this->groups = [
-            $this->translate('Inputs, Event Sources')             => ['listeners', 'syncs', 'apitokens'],
-            $this->translate('Event Processing, Action Handling') => ['channels', 'actions', 'downtimes'],
+            $this->translate('Inputs, Event Sources')             => ['listeners', 'syncs', 'channels'],
+            $this->translate('Problem Handling') => ['problemhandling', 'actions', 'downtimes'],
             $this->translate('Processing Utilities')              => ['buckets', 'maps', 'hostlists'],
+            $this->translate('Remote Access, Integrations')       => ['apitokens'],
         ];
         $this->actions = [
             'listeners' => WebAction::create([
@@ -127,6 +130,20 @@ class WebActions
                 'tableClass' => WebActionTable::class,
                 'formClass'  => ChannelConfigForm::class,
                 'registry'   => InputRegistry::class,
+            ]),
+            'problemhandling' => WebAction::create([
+                'name'        => 'problemhandling',
+                'singular' => $this->translate('Problem Handling'),
+                'plural'   => $this->translate('Problem Handling'),
+                'description' => $this->translate(
+                    'Define Knowledgebase-URLs and behavior for recurring problems'
+                ),
+                'table'   => 'problem_handling',
+                'listUrl' => 'eventtracker/configuration/problemhandlings',
+                'url'     => 'eventtracker/configuration/problemhandling',
+                'icon'    => 'doc-text',
+                'tableClass' => ProblemHandlingTable::class,
+                'formClass'  => ProblemHandlingForm::class,
             ]),
             'actions' => WebAction::create([
                 'name'        => 'actions',

@@ -2,10 +2,10 @@
 
 namespace Icinga\Module\Eventtracker\Web\Widget;
 
+use gipfl\IcingaWeb2\Icon;
 use gipfl\IcingaWeb2\Link;
 use gipfl\IcingaWeb2\Url;
 use gipfl\Translation\TranslationHelper;
-use gipfl\Web\Widget\Hint;
 use gipfl\ZfDb\Adapter\Adapter as Db;
 use Icinga\Application\Hook;
 use Icinga\Authentication\Auth;
@@ -17,6 +17,7 @@ use Icinga\Module\Eventtracker\Issue;
 use Icinga\Module\Eventtracker\Sender;
 use Icinga\Module\Eventtracker\Web\Form\ChangePriorityForm;
 use Icinga\Module\Eventtracker\Web\Form\CloseIssueForm;
+use Icinga\Module\Eventtracker\Web\Form\FileUploadForm;
 use Icinga\Module\Eventtracker\Web\Form\GiveOwnerShipForm;
 use Icinga\Module\Eventtracker\Web\Form\ReOpenIssueForm;
 use Icinga\Module\Eventtracker\Web\Form\TakeIssueForm;
@@ -26,7 +27,6 @@ use Icinga\Web\Response;
 use ipl\Html\BaseHtmlElement;
 use ipl\Html\Html;
 use ipl\Html\HtmlDocument;
-use ipl\Html\HtmlString;
 use ipl\Html\ValidHtml;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -53,19 +53,26 @@ class IssueHeader extends BaseHtmlElement
     /** @var Response */
     protected $response;
 
+    /** @var Url */
+    protected $requestedUrl;
+
     /** @var Db */
     protected $db;
+
+    protected $showActions = true;
 
     public function __construct(
         Issue $issue,
         Db $db,
         ServerRequestInterface $request,
         Response $response,
+        Url $requestedUrl,
         Auth $auth
     ) {
         $this->issue = $issue;
         $this->request = $request;
         $this->response = $response;
+        $this->requestedUrl = $requestedUrl;
         $this->isOperator = $auth->hasPermission('eventtracker/operator');
         $this->db = $db;
     }
@@ -100,9 +107,16 @@ class IssueHeader extends BaseHtmlElement
         ]);
     }
 
+    public function disableActions(): IssueHeader
+    {
+        $this->showActions = false;
+        return $this;
+    }
+
     protected function showMainDetails(Issue $issue)
     {
-        return [
+        $status = $issue->get('status');
+        $main = [
             Html::tag('strong', 'Host:   '),
             $issue->get('host_name') ? Link::create(
                 $issue->get('host_name'),
@@ -126,9 +140,11 @@ class IssueHeader extends BaseHtmlElement
                 ['object_class' => $issue->get('object_class')],
                 ['data-base-target' => 'col1']
             ),
+            $this->renderInputAndSender($issue),
+            "\n",
             "\n",
             Html::tag('strong', 'Status: '),
-            $issue->get('status'),
+            $status,
             $this->createOpenCloseForm($issue, $this->db),
             "\n",
             /*
@@ -136,14 +152,82 @@ class IssueHeader extends BaseHtmlElement
             $this->renderPriority($issue),
             "\n",
             */
-            Html::tag('strong', 'Owner:  '),
-            $this->renderOwner($issue),
-            "\n",
-            Html::tag('strong', 'Ticket: '),
-            $this->renderTicket($issue),
-            $this->renderInputAndSender($issue),
-            $this->renderFiles($issue)
         ];
+
+        if ($status !== 'closed') {
+            array_push(
+                $main,
+                Html::tag('strong', 'Owner:  '),
+                $this->renderOwner($issue),
+                "\n"
+            );
+        }
+
+        array_push(
+            $main,
+            Html::tag('strong', 'Problem handling: '),
+            $this->renderProblem($issue),
+            "\n"
+        );
+
+        array_push(
+            $main,
+            Html::tag('strong', 'Ticket: '),
+            $this->renderTicket($issue)
+        );
+
+        return $main;
+    }
+
+    protected function renderProblem(Issue $issue)
+    {
+        $problemIdentifier = $issue->get('problem_identifier');
+        if ($problemIdentifier === null) {
+            return $this->translate('no problem identifier has been submitted');
+        }
+
+        $problemHandling = $this->db->fetchRow(
+            $this->db->select()->from('problem_handling')->where('label = ?', $problemIdentifier)
+        );
+
+        $isAdmin = Auth::getInstance()->hasPermission('eventtracker/admin');
+        if ($problemHandling) {
+            $result = [
+                Html::tag('a', [
+                    'href'   => $problemHandling->instruction_url,
+                    'target' => '_blank',
+                ], $problemIdentifier)
+            ];
+            if ($isAdmin) {
+                $result[] = ' ';
+                $result[] = Link::create(Icon::create('edit'), 'eventtracker/configuration/problemhandling', [
+                    'uuid' => Uuid::fromBytes($problemHandling->uuid)->toString(),
+                    'issue_uuid' => $issue->getNiceUuid(),
+                ], [
+                    'title' => $this->translate('Configure related problem handling'),
+                ]);
+            }
+            return $result;
+        }
+
+        $msg = sprintf(
+            $this->translate("No problem handling has been configured\n        for '%s'"),
+            $problemIdentifier
+        );
+        if ($isAdmin) {
+            return [
+                $msg,
+                ' ',
+                Link::create(Icon::create('edit'), 'eventtracker/configuration/problemhandling', [
+                    'label' => $problemIdentifier,
+                    'issue_uuid' => $issue->getNiceUuid(),
+                ], [
+                    'title'      => $this->translate('Configure related problem handling'),
+                ])
+            ];
+        }
+
+        return $msg;
     }
 
     protected function renderTimings(Issue $issue)
@@ -191,6 +275,14 @@ class IssueHeader extends BaseHtmlElement
             $result[] = HtmlPurifier::process($value);
             $result[] = "\n";
         }
+        if (empty($result)) {
+            $result = $this->renderFiles($issue);
+        } else {
+            if ($files = $this->renderFiles($issue)) {
+                $result = array_merge($result, $files);
+            }
+        }
+
         return $result;
     }
 
@@ -231,7 +323,7 @@ class IssueHeader extends BaseHtmlElement
     protected function url()
     {
         return Url::fromPath('eventtracker/issue', [
-            'uuid' => $this->issue->getHexUuid()
+            'uuid' => $this->issue->getNiceUuid()
         ]);
     }
 
@@ -239,12 +331,16 @@ class IssueHeader extends BaseHtmlElement
     {
         if ($issue->get('status') === 'closed') {
             $actions = [];
-        } else {
+        } elseif ($this->showActions) {
             $actions = $this->getHookedActions($issue);
+        } else {
+            $actions = [];
         }
         if (empty($actions)) {
             if ($ref = $issue->get('ticket_ref')) {
                 return $ref;
+            } else {
+                return '-';
             }
         }
 
@@ -284,34 +380,54 @@ class IssueHeader extends BaseHtmlElement
         return $result;
     }
 
-    protected function renderFiles(Issue $issue): ?ValidHtml
+    protected function renderFiles(Issue $issue): ?array
     {
         $files = File::loadAllByIssue($issue, $this->db);
-        if (! empty($files)) {
-            $links = [];
-
-            foreach ($files as $file) {
-                if (! empty($links)) {
-                    $links[] = new HtmlString("\n       ");
-                }
-
-                $links[] = Html::tag('a', [
-                    'href' => Url::fromPath('eventtracker/issue/file', [
-                        'uuid'              => $issue->getNiceUuid(),
-                        'checksum'          => bin2hex($file->get('checksum')),
-                        'filename_checksum' => sha1($file->get('filename'))
-                    ]),
-                    'target' => '_blank'
-                ], sprintf('%s (%s)', $file->get('filename'), Format::bytes($file->get('size'))));
+        $showUpload = $this->showActions && $issue->get('status') !== 'closed';
+        if ($showUpload || ! empty($files)) {
+            $main = [
+                "\n",
+                Html::tag('strong', 'Files:  '),
+            ];
+        } else {
+            return null;
+        }
+        if ($showUpload) {
+            if ($this->requestedUrl->getParam('upload')) {
+                $main[] = Link::create($this->translate('Hide upload form'), $this->requestedUrl->without('upload'), null, [
+                    'class' => 'icon-left-big',
+                ]);
+                $main[] = "\n";
+                $form = new FileUploadForm([Uuid::fromBytes($this->issue->get('issue_uuid'))], $this->db);
+                $form->on($form::ON_SUCCESS, function () {
+                    $this->response->redirectAndExit($this->requestedUrl->without('upload'));
+                });
+                $form->handleRequest($this->request);
+                $main[] = $form;
+            } else {
+                $main[] = Link::create($this->translate('Upload'), $this->requestedUrl->with('upload', true), null, [
+                    'class' => 'icon-upload',
+                ]);
             }
-
-            return (new HtmlDocument())
-                ->add("\n")
-                ->add(Html::tag('strong', 'Files: '))
-                ->add($links);
         }
 
-        return null;
+        foreach ($files as $file) {
+            $main[] = "\n        ";
+            $main[] = Link::create(
+                $file->get('filename'),
+                'eventtracker/issue/file',
+                [
+                    'uuid'              => $issue->getNiceUuid(),
+                    'checksum'          => bin2hex($file->get('checksum')),
+                    'filename_checksum' => sha1($file->get('filename'))
+                ], [
+                'target' => '_blank'
+                ]
+            );
+            $main[] = sprintf(' (%s)', Format::bytes($file->get('size')));
+        }
+
+        return $main;
     }
 
     protected function renderInputAndSender(Issue $issue): ?ValidHtml
@@ -322,9 +438,11 @@ class IssueHeader extends BaseHtmlElement
         if ($inputUuid !== null) {
             $input = Input::byId(Uuid::fromBytes($inputUuid), $this->db);
             if ($input !== null) {
-                $html->add("\n");
-                $html->add(Html::tag('strong', 'Input:  '));
-                $html->add($input->get('label'));
+                $html->add([
+                    "\n",
+                    Html::tag('strong', 'Input:  '),
+                    $input->get('label'),
+                ]);
             }
         }
 
@@ -332,9 +450,11 @@ class IssueHeader extends BaseHtmlElement
         if ($senderId !== null) {
             $sender = Sender::byId($senderId, $this->db);
             if ($sender !== null) {
-                $html->add("\n");
-                $html->add(Html::tag('strong', 'Sender: '));
-                $html->add($sender->get('sender_name'));
+                $html->add([
+                    "\n",
+                    Html::tag('strong', 'Sender: '),
+                    $sender->get('sender_name'),
+                ]);
             }
         }
 
@@ -348,7 +468,7 @@ class IssueHeader extends BaseHtmlElement
 
     protected function createOpenCloseForm(Issue $issue, $db)
     {
-        if (! $this->isOperator) {
+        if (! $this->isOperator || ! $this->showActions) {
             return null;
         }
 
@@ -369,7 +489,7 @@ class IssueHeader extends BaseHtmlElement
 
     protected function createGiveOwnerShipForm(Issue $issue, $db)
     {
-        if (! $this->isOperator || $issue->isClosed()) {
+        if (! $this->isOperator || ! $this->showActions || $issue->isClosed()) {
             return null;
         }
 
@@ -384,7 +504,7 @@ class IssueHeader extends BaseHtmlElement
 
     protected function createTakeOwnerShipForm(Issue $issue, $db)
     {
-        if (! $this->isOperator || $issue->isClosed()) {
+        if (! $this->isOperator || ! $this->showActions || $issue->isClosed()) {
             return null;
         }
 

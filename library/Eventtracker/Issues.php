@@ -16,9 +16,8 @@ class Issues
 
     /**
      * @return Issue[]
-     * @throws NotFoundError
      */
-    public function fetchExpiredUuids()
+    public function fetchExpiredUuids(): array
     {
         $select = $this->db->select()
             ->from('issue', 'issue_uuid')
@@ -32,7 +31,7 @@ class Issues
      * @return array
      * @throws NotFoundError
      */
-    public function fetchByUuids($uuids)
+    public function fetchByUuids($uuids): array
     {
         $issues = [];
         foreach ($uuids as $uuid) {
@@ -43,12 +42,10 @@ class Issues
     }
 
     /**
-     * @param $host
-     * @param null $object
      * @return Issue[]
      * @throws NotFoundError
      */
-    public function fetchFor($host, $object = null)
+    public function fetchFor(string $host, ?string$object = null): array
     {
         $select = $this->db->select()
             ->from('issue', 'issue_uuid')

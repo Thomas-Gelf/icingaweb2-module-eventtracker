@@ -33,6 +33,13 @@ a:focus {
   }
 }
 
+.state-critical {
+  color: @color-critical;
+}
+.state-ok {
+  color: @color-ok;
+}
+
 thead tr[href]:hover {
   background-color: inherit;
   cursor: unset;
@@ -104,10 +111,9 @@ table.common-table th {
     position: absolute;
     right: 0;
     display: none;
-    color: @text-color-inverted;
+    color: @menu-flyout-bg-color;
     background-color: @text-color;
-    border-radius: 0.1em;
-    border-top-left-radius: 0;
+    border: 1px solid @gray-light;
     box-shadow: 1em 1em 1em 0 rgba(0, 0, 0, 0.2);
 
     a {
@@ -137,11 +143,11 @@ table.common-table th {
     padding: 0.2em 0.5em;
   }
   > ul > li:hover {
-    background-color: @text-color;
+    background-color: @menu-flyout-bg-color;
     border-top-left-radius: 0.1em;
     border-top-right-radius: 0.1em;
     & > a {
-      color: @text-color-inverted;
+      color: @menu-flyout-color;
       text-decoration: none;
     }
   }
@@ -601,6 +607,10 @@ div.action-bar > a {
   margin-right: 1em;
 }
 
+form.gipfl-form select option:checked {
+  color: @text-color-inverted;
+}
+
 div.action-bar {
   > * {
     vertical-align: middle;
@@ -698,6 +708,32 @@ div.action-bar > ul > li:hover {
 }
 /** END of dropdown in action bar **/
 
+table.common-table thead th.table-header-day {
+  border-bottom: none;
+  text-align: left;
+  text-decoration: underline;
+}
+
+table.common-table table.Differences {
+  tr, th, td {
+    border: none;
+  }
+}
+
+td.collapsible-table-row {
+  a.control-collapsible > i::before {
+    content: '\e81d';
+  }
+  &.collapsed {
+    a.control-collapsible > i::before {
+      content: '\e820';
+    }
+    div {
+      display: none;
+    }
+  }
+}
+
 pre.plain-object {
   margin: 0;
   padding: 1em;
@@ -705,4 +741,200 @@ pre.plain-object {
   background: transparent;
   overflow: auto;
   white-space: pre-wrap;
+}
+
+form .gipfl-widget-hint {
+  margin-top: 1em;
+}
+
+/** Summary Tables */
+div.summary-tables {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  > div {
+    flex: 0 1 calc(33% - 1em);
+  }
+}
+#layout.twocols, #layout.poor-layout {
+  div.summary-tables > div {
+    flex: 0 1 calc(50% - 1em);
+  }
+}
+#layout.compact-layout.twocols, #layout.minimal-layout, #layout div.dashboard, #layout.twocols div.dashboard {
+  div.summary-tables > div {
+    flex: 0 1 100%;
+  }
+}
+/** End of Summary Tables */
+
+/** Dashboard Actions */
+ul.gipfl-dashboard-actions {
+  margin: 0;
+  padding: 0;
+  min-width: 38em;
+  max-width: 64em;
+
+  li {
+    list-style-type: none;
+
+    text-align: left;
+    display: inline-block;
+    padding: 0;
+    clear: both;
+    width: 18em;
+    min-width: 16em;
+    vertical-align: top;
+
+    a {
+      i {
+        font-size: 3em;
+        display: block;
+        float: left;
+        line-height: 1em;
+        margin-right: 0.3em;
+      }
+
+      &.state-critical i {
+        color: @color-critical;
+      }
+
+      &.state-warning i {
+        color: @color-warning;
+      }
+
+      &.state-ok i {
+        color: @color-ok;
+      }
+
+      &.state-unknown i {
+        color: @color-unknown;
+      }
+
+      &.state-pending i {
+        color: @color-pending;
+      }
+
+      border-left: 0.5em solid transparent;
+      padding: 1em;
+      color: @text-color;
+      font-weight: bold;
+      display: block;
+      text-decoration: none;
+      min-height: 12em;
+
+      overflow: hidden;
+
+      &.active {
+        color: inherit;
+        border-color: @icinga-blue;
+        background-color: @tr-active-color;
+      }
+
+      &:hover {
+        background-color: @tr-hover-color;
+        text-decoration: none;
+      }
+
+      &:active, &:focus {
+        color: inherit;
+        background-color: @tr-hover-color;
+        outline: none;
+      }
+    }
+
+    p {
+      font-weight: normal;
+      margin-bottom: 0.5em;
+      padding-left: 4.5em;
+      color: @text-color-light;
+    }
+  }
+}
+
+#layout.compact-layout.twocols ul.gipfl-dashboard-actions,
+#layout.minimal-layout ul.gipfl-dashboard-actions,
+.gipfl-compact-dashboard ul.gipfl-dashboard-actions {
+  max-width: unset;
+  min-width: unset;
+  li {
+    width: 100%;
+    a {
+      height: auto;
+      min-height: unset;
+    }
+    > a > i {
+      font-size: 3em;
+    }
+
+    > a > p {
+      padding-left: 4.5em;
+    }
+    margin-bottom: 0.5em;
+  }
+}
+.gipfl-compact-dashboard {
+  width: 20em;
+  // display: inline-block;
+  max-height: 100%;
+  overflow: auto;
+  float: left;
+  h1 {
+    font-size: 1em;
+  }
+}
+.gipfl-compact-dashboard ul.gipfl-dashboard-actions li {
+  vertical-align: top;
+position: relative;
+  a {
+    padding: 0.5em 0;
+    i {
+      font-size: 2em;
+      margin: 0;
+      padding: 0;
+      /*
+      position: absolute;
+      float: none;
+      right: 0;
+      top: 0.5em;
+
+       */
+    }
+    p {
+      margin-bottom: 0.2em;
+      padding-left: 2.5em;
+    }
+  }
+}
+.gipfl-content-next-to-compact-dashboard {
+  margin-left: 20.5em;
+  vertical-align: top;
+}
+
+
+/** END of gipfl dashboard actions */
+
+pre form {
+  white-space: normal;
+}
+
+.eventtracker-file-drop-zone {
+  width: 40em;
+  height: 15em;
+  border: 0.3em dashed @icinga-blue;
+  -webkit-border-radius: 1em;
+  -moz-border-radius: 1em;
+  border-radius: 1em;
+  &.is-dragover {
+    background-color: @gray-light;
+  }
+  &::before {
+    font-family: 'ifont';
+    color: @icinga-blue;
+    content: '\e808';
+    top: 0.5em;
+    position: relative;
+    padding-left: 2.75em;
+    font-size: 6em;
+  }
 }

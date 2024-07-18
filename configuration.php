@@ -8,18 +8,18 @@ if ($this->getConfig()->get('ui', 'disabled', 'no') === 'yes') {
 }
 
 $section = $this->menuSection(N_('Event Tracker'))
-    ->setIcon('attention-circled')
+    ->setIcon('warning-empty')
     ->setUrl('eventtracker/dashboard')
-    ->setPriority(62);
+    ->setPriority(17);
 $section->add(N_('Issues'))->setUrl('eventtracker/issues')->setPriority(10);
 $section->add(N_('Handled Issues'))
     ->setUrl(
         'eventtracker/issues?status=acknowledged,in_downtime'
-        . '&columns=severity%,host_name,message,owner,ticket_ref'
+        . '&columns=severity,host_name,message,owner,ticket_ref'
     )
     ->setPriority(20);
 $section->add(N_('Summaries'))->setUrl('eventtracker/summary/top10')->setPriority(30);
-$section->add(N_('History'))->setUrl('eventtracker/issueshistory')->setPriority(30);
+$section->add(N_('History'))->setUrl('eventtracker/history/issues')->setPriority(30);
 $section->add(N_('Configuration'))->setUrl('eventtracker/configuration')->setPriority(70);
 
 $this->provideSearchUrl('EventTracker', 'eventtracker/issues', 110);
@@ -34,6 +34,14 @@ $this->providePermission(
 $this->providePermission(
     'eventtracker/operator',
     $this->translate('Operators are allowed to modify issues (Priority, Owner...)')
+);
+$this->provideRestriction(
+    'eventtracker/ignoreInputs',
+    $this->translate('Comma-separated list of Input UUIDs to ignore')
+);
+$this->provideRestriction(
+    'eventtracker/filterInputs',
+    $this->translate('Comma-separated list of Input UUIDs to show')
 );
 if ($this->getConfig()->get('scom', 'db_resource')) {
     // $section->add(N_('SCOM Alerts'))

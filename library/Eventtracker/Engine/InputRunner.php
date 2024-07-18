@@ -9,7 +9,8 @@ use Icinga\Module\Eventtracker\Engine\Input\KafkaInput;
 use Icinga\Module\Eventtracker\Issue;
 use Psr\Log\LoggerAwareInterface;
 use Psr\Log\LoggerAwareTrait;
-use Psr\Log\NullLogger;
+use Psr\Log\LoggerInterface;
+use Ramsey\Uuid\UuidInterface;
 use React\EventLoop\LoopInterface;
 use React\EventLoop\TimerInterface;
 use Throwable;
@@ -41,25 +42,37 @@ class InputRunner implements LoggerAwareInterface
     /** @var TimerInterface */
     protected $reloadConfigTimer;
 
-    public function __construct(ConfigStore $store)
+    /** @var array<string, Channel> InputUuid -> Channel */
+    protected $linkedInputChannels = [];
+
+    public function __construct(ConfigStore $store, LoggerInterface $logger)
     {
         // TODO: Load all configs from DB. Recheck from time to time. Call "setSettings()" in case
         // they changed. Implementations must reload/restart on their own.
         // This one is about a single Input
         $this->store = $store;
-
-        $this->logger = new NullLogger();
+        $this->logger = $logger;
     }
 
     public function start(LoopInterface $loop)
     {
         $this->loop = $loop;
-        $this->inputs = $this->store->loadInputs();
-        $this->channels = $this->store->loadChannels();
-        $this->actions = $this->store->loadActions(['enabled' => 'y']);
-        $this->linkInputsToChannels();
-        $this->startInputs();
-        $this->reloadConfigTimer = $this->startPeriodConfigReload();
+        try {
+            $this->inputs = $this->store->loadInputs();
+            $buckets = $this->store->loadBuckets($this->loop);
+            $this->channels = $this->store->loadChannels($loop, $buckets);
+            $this->actions = $this->store->loadActions(['enabled' => 'y']);
+            $this->linkInputsToChannels();
+            $this->startInputs();
+            $this->reloadConfigTimer = $this->startPeriodConfigReload();
+        } catch (Throwable $e) {
+            $this->logger->error($e->getMessage());
+        }
+    }
+
+    public function getOptionalInputChannel(UuidInterface $uuid): ?Channel
+    {
+        return $this->linkedInputChannels[$uuid->toString()] ?? null;
     }
 
     public function stop()
@@ -103,7 +116,7 @@ class InputRunner implements LoggerAwareInterface
         }
     }
 
-    protected function startPeriodConfigReload()
+    protected function startPeriodConfigReload(): TimerInterface
     {
         return $this->loop->addPeriodicTimer(static::RELOAD_CONFIG_TIMER, function (): void {
             // Load actions without filter for enabled yes,
@@ -146,6 +159,7 @@ class InputRunner implements LoggerAwareInterface
 
     protected function linkInputsToChannels()
     {
+        $this->linkedInputChannels = [];
         foreach ($this->channels as $channel) {
             $channel->setDaemonized();
             $channel->on(Channel::ON_ISSUE, Closure::fromCallable([$this, 'onIssue']));
@@ -157,6 +171,7 @@ class InputRunner implements LoggerAwareInterface
                     } else {
                         $channel->addInput($input);
                     }
+                    $this->linkedInputChannels[$input->getUuid()->toString()] = $channel;
                 }
             }
         }
@@ -168,7 +183,8 @@ class InputRunner implements LoggerAwareInterface
             ActionHelper::processIssue(
                 $this->actions,
                 $issue,
-                $this->store->getDb()
+                $this->store->getDb(),
+                $this->logger
             )->otherwise(function (Throwable $reason) {
                 $this->logger->error($reason);
             });

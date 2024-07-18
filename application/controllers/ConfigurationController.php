@@ -8,6 +8,7 @@ use gipfl\Json\JsonDecodeException;
 use gipfl\Json\JsonString;
 use gipfl\Web\Widget\Hint;
 use gipfl\ZfDbStore\DbStorableInterface;
+use gipfl\ZfDbStore\NotFoundError;
 use gipfl\ZfDbStore\ZfDbStore;
 use Icinga\Module\Eventtracker\Db\ConfigStore;
 use Icinga\Module\Eventtracker\Engine\Downtime\DowntimeRule;
@@ -20,14 +21,18 @@ use Icinga\Module\Eventtracker\Web\Form\UuidObjectForm;
 use Icinga\Module\Eventtracker\Web\Table\BaseTable;
 use Icinga\Module\Eventtracker\Web\Table\ChannelRulesTable;
 use Icinga\Module\Eventtracker\Web\Table\DowntimeScheduleTable;
+use Icinga\Module\Eventtracker\Web\Table\HostListMemberTable;
 use Icinga\Module\Eventtracker\Web\WebAction;
 use Icinga\Module\Eventtracker\Web\WebActions;
 use ipl\Html\Html;
+use ipl\Html\Table;
 use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\UuidInterface;
 
 class ConfigurationController extends Controller
 {
+    use AsyncControllerHelper;
+
     /** @var ConfigStore */
     protected $store;
 
@@ -81,6 +86,24 @@ class ConfigurationController extends Controller
                     ]);
             }
         }
+    }
+
+    public function syncsAction()
+    {
+        $action = $this->actions->get('syncs');
+        $this->tabForList($action);
+        $this->addTitle($action->plural);
+        $this->actions()->add($this->linkBack());
+        $dummyTable = new Table();
+        $dummyTable->addAttributes([
+            'class' => ['common-table', 'table-row-selectable']
+        ]);
+        $dummyTable->getHeader()->add(Table::row([$action->plural], null, 'th'));
+        $this->addCompactDashboard($dummyTable->add(
+            Table::row([$this->translate(
+                'This feature is not yet available, SCOM and IDO are still being synchronized the legacy way'
+            )])
+        ));
     }
 
     public function apitokensAction()
@@ -152,11 +175,29 @@ class ConfigurationController extends Controller
             'label' => $this->translate('Channel Configuration'),
             'url'   => 'eventtracker/configuration/channel',
             'urlParams' => $params,
-        ])->add('rules', [
+        ])/*->add('rules', [
             'label' => $this->translate('Rules'),
             'url'   => 'eventtracker/configuration/channelrules',
             'urlParams' => $params,
-        ]);
+        ])*/;
+    }
+
+    public function problemhandlingsAction()
+    {
+        $this->showList($this->actions->get('problemhandling'));
+    }
+
+    public function problemhandlingAction()
+    {
+        $action = $this->actions->get('problemhandling');
+        $this->addObjectTab($action);
+        $form = $this->getForm($action);
+        if ($label = $this->params->get('label')) {
+            $form->populate([
+                'label' => $label
+            ]);
+        }
+        $this->content()->add($form);
     }
 
     public function actionsAction()
@@ -205,7 +246,9 @@ class ConfigurationController extends Controller
         $action = $this->actions->get('downtimes');
         $this->addObjectTab($action);
         /** @var DowntimeForm $form */
-        $form = $this->getForm($action);
+        $form = $this->getForm($action, function () {
+            $this->syncRpcCall('config.reloadDowntimeRules');
+        });
         $this->content()->add($form);
         if ($form->hasObject()) {
             $this->content()->add(new DowntimeScheduleTable($this->db(), $form->getObject()));
@@ -222,6 +265,7 @@ class ConfigurationController extends Controller
         $action = $this->actions->get('hostlists');
         $this->addObjectTab($action);
         $this->content()->add($this->getForm($action));
+        $this->content()->add(new HostListMemberTable($this->db(), $this->getUuid()));
     }
 
     protected function showRules(UuidInterface $uuid, $rules)
@@ -245,35 +289,50 @@ class ConfigurationController extends Controller
     {
         $this->addTitle(sprintf($this->translate('Configured %s'), $action->plural));
         $this->tabForList($action);
-        $this->actions()->add([Link::create($this->translate('Back'), 'eventtracker/configuration', null, [
-            'data-base-target' => '_main',
-            'class' => 'icon-left-big',
-        ]), Link::create($this->translate('Add'), $action->url, null, [
-            'data-base-target' => '_next',
-            'class' => 'icon-plus',
-        ])]);
-        $this->content()->add([
-            Html::tag('div', [
-                'class' => 'gipfl-compact-dashboard',
-            ], new ConfigurationDashboard($this->actions)),
-            $content = Html::tag('div', [
-                'class' => 'gipfl-content-next-to-compact-dashboard',
-            ])
-        ]);
+        $this->actions()->add([$this->linkBack(), $this->linkAdd($action)]);
+
         $class = $action->tableClass;
         /** @var BaseTable $table */
         $table = new $class($this->db(), $action);
         if ($table->count() > 0) {
-            $content->add($table);
+            $this->addCompactDashboard($table);
         } else {
-            $content->add(Hint::info(sprintf(
+            $this->addCompactDashboard(Hint::info(sprintf(
                 $this->translate('Please configure your first %s'),
                 $action->singular
             )));
         }
     }
 
-    protected function createForm(WebAction $action): UuidObjectForm
+    protected function linkBack(): Link
+    {
+        return Link::create($this->translate('Back'), 'eventtracker/configuration', null, [
+            'data-base-target' => '_main',
+            'class' => 'icon-left-big',
+        ]);
+    }
+
+    protected function linkAdd(WebAction $action): Link
+    {
+        return Link::create($this->translate('Add'), $action->url, null, [
+            'data-base-target' => '_next',
+            'class' => 'icon-plus',
+        ]);
+    }
+
+    protected function addCompactDashboard($content)
+    {
+        $this->content()->add([
+            Html::tag('div', [
+                'class' => 'gipfl-compact-dashboard',
+            ], new ConfigurationDashboard($this->actions)),
+            Html::tag('div', [
+                'class' => 'gipfl-content-next-to-compact-dashboard',
+            ], $content)
+        ]);
+    }
+
+    protected function createForm(WebAction $action, ?callable $onSuccess): UuidObjectForm
     {
         $store = $this->getStore();
         /** @var string|UuidObjectForm $formClass IDE hint */
@@ -283,17 +342,24 @@ class ConfigurationController extends Controller
         } else {
             $form = new $formClass($store);
         }
+        if ($onSuccess) {
+            $form->on($form::ON_SUCCESS, $onSuccess);
+        }
         $form->on($form::ON_SUCCESS, function (UuidObjectForm $form) use ($action) {
-            $this->redirectNow(Url::fromPath($action->url, [
-                'uuid' => $form->getUuid()->toString()
-            ]));
+            if ($url = $this->getRelatedIssueUrl()) {
+                $this->redirectNow($url);
+            } else {
+                $this->redirectNow(Url::fromPath($action->url, [
+                    'uuid' => $form->getUuid()->toString()
+                ]));
+            }
         });
         return $form;
     }
 
-    protected function getForm(WebAction $action): UuidObjectForm
+    protected function getForm(WebAction $action, ?callable $onSuccess = null): UuidObjectForm
     {
-        $form = $this->createForm($action);
+        $form = $this->createForm($action, $onSuccess);
         $objectType = $action->singular;
         if ($this->getUuid()) {
             $object = $this->getObject($action);
@@ -315,10 +381,26 @@ class ConfigurationController extends Controller
         }
         $form->handleRequest($this->getServerRequest());
         if ($form->hasBeenDeleted()) {
-            $this->redirectNow($action->listUrl);
+            if ($url = $this->getRelatedIssueUrl()) {
+                $this->redirectNow($url);
+            } else {
+                $this->redirectNow($action->listUrl);
+            }
         }
 
         return $form;
+    }
+
+
+    protected function getRelatedIssueUrl(): ?Url
+    {
+        if ($this->params->get('issue_uuid')) {
+            return Url::fromPath('eventtracker/issue', [
+                'uuid' => $this->params->get('issue_uuid'),
+            ]);
+        }
+
+        return null;
     }
 
     protected function tabForList(WebAction $action)
@@ -353,9 +435,16 @@ class ConfigurationController extends Controller
     {
         if ($action->formClass === DowntimeForm::class) {
             $store = new ZfDbStore($this->db());
-            return $store->load($uuid->getBytes(), DowntimeRule::class);
+            $object = $store->load($uuid->getBytes(), DowntimeRule::class);
+        } else {
+            $object = $this->getStore()->fetchObject($action->table, $uuid);
         }
-        return $this->getStore()->fetchObject($action->table, $uuid);
+
+        if ($object) {
+            return $object;
+        }
+
+        throw new NotFoundError(sprintf('UUID %s has not been found in %s', $uuid->toString(), $action->table));
     }
 
     protected function getObject(WebAction $action): ?object

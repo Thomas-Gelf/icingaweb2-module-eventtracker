@@ -50,7 +50,11 @@ class IdoDetails extends BaseHtmlElement
         $hostname = $issue->get('host_name');
         $objectName = $issue->get('object_name');
         $this->issue = $issue;
-        $this->ido = MonitoringBackend::instance();
+        try {
+            $this->ido = MonitoringBackend::instance();
+        } catch (\Throwable $e) {
+            return;
+        }
         $this->db = $db;
         $this->checkForObject($hostname, $objectName);
         if ($this->host !== null && \strpos($hostname, '.') === false) {

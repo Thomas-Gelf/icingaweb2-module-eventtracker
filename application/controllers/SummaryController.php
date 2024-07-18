@@ -6,11 +6,13 @@ use Icinga\Module\Eventtracker\DbFactory;
 use Icinga\Module\Eventtracker\Status;
 use Icinga\Module\Eventtracker\Web\Table\BaseSummaryTable;
 use Icinga\Module\Eventtracker\Web\Table\HostNameSummaryTable;
+use Icinga\Module\Eventtracker\Web\Table\InputSummaryTable;
 use Icinga\Module\Eventtracker\Web\Table\ObjectClassSummaryTable;
 use Icinga\Module\Eventtracker\Web\Table\ObjectNameSummaryTable;
 use Icinga\Module\Eventtracker\Web\Table\OwnerSummaryTable;
 use Icinga\Module\Eventtracker\Web\Table\SenderSummaryTable;
 use Icinga\Module\Eventtracker\Web\Widget\SummaryTabs;
+use ipl\Html\Html;
 
 class SummaryController extends Controller
 {
@@ -46,6 +48,14 @@ class SummaryController extends Controller
         $this->tabs(new SummaryTabs())->activate('owners');
     }
 
+    public function inputsAction()
+    {
+        $this->addTitleWithType($this->translate('Input'));
+        $this->setAutorefreshInterval(10);
+        (new InputSummaryTable($this->db()))->renderTo($this);
+        $this->tabs(new SummaryTabs())->activate('inputs');
+    }
+
     public function sendersAction()
     {
         $this->addTitleWithType($this->translate('Sender'));
@@ -63,12 +73,16 @@ class SummaryController extends Controller
 
         $db = $this->db();
         $this->setAutorefreshInterval(10);
+        $main = Html::tag('div', [
+            'class' => 'summary-tables'
+        ]);
         $tables = [
             $this->translate('Object Class') => new ObjectClassSummaryTable($db),
             $this->translate('Object Name')  => new ObjectNameSummaryTable($db),
             $this->translate('Hostname')     => new HostNameSummaryTable($db),
             $this->translate('Owner')        => new OwnerSummaryTable($db),
-            $this->translate('Sender')       => new SenderSummaryTable($db),
+            $this->translate('Input')        => new InputSummaryTable($db),
+            $this->translate('Sender (Old)') => new SenderSummaryTable($db),
         ];
         /** @var BaseSummaryTable $table */
         foreach ($tables as $title => $table) {
@@ -76,9 +90,11 @@ class SummaryController extends Controller
             if ($this->showCompact()) {
                 $table->setAttribute('data-base-target', '_next');
             }
+            $table->setAttribute('data-base-target', '_next');
             $table->getQuery()->limit(10)->where('i.status = ?', Status::OPEN);
-            $this->content()->add($table);
+            $main->add(Html::tag('div', $table));
         }
+        $this->content()->add($main);
     }
 
     protected function addTitleWithType($type)

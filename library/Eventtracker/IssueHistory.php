@@ -2,6 +2,7 @@
 
 namespace Icinga\Module\Eventtracker;
 
+use gipfl\Json\JsonString;
 use gipfl\ZfDb\Adapter\Adapter as Db;
 
 class IssueHistory
@@ -28,9 +29,23 @@ class IssueHistory
         return $result;
     }
 
+    public static function getReasonIfClosed($uuid, Db $db): ?\stdClass
+    {
+        $result = $db->fetchRow(
+            $db->select()
+                ->from(self::$tableName, ['close_reason', 'closed_by'])
+                ->where('issue_uuid = ?', $uuid)
+        );
+        if (empty($result)) {
+            return null;
+        }
+
+        return $result;
+    }
+
     public static function persist(Issue $issue, Db $db, $reason, $closedBy = null)
     {
-        $blacklist = ['status'];
+        $blacklist = ['status', 'problem_identifier'];
         $properties = $issue->getProperties();
         foreach ($blacklist as $key) {
             unset($properties[$key]);
@@ -45,14 +60,14 @@ class IssueHistory
             ->where('issue_uuid = ?', $issue->getUuid())
             ->order('ts_modified DESC');
         foreach ($db->fetchAll($query) as $activity) {
-            $activity->modifications = \json_decode($activity->modifications);
+            $activity->modifications = JsonString::decode($activity->modifications);
             $activities[] = $activity;
         }
         $properties['close_reason'] = $reason;
         if ($closedBy !== null) {
             $properties['closed_by'] = $closedBy;
         }
-        $properties['activities'] = \json_encode($activities);
+        $properties['activities'] = JsonString::encode($activities);
 
         $db->insert(self::$tableName, $properties);
     }

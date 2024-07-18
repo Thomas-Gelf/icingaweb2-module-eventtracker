@@ -12,9 +12,9 @@ use Icinga\Exception\NotFoundError;
 use Icinga\Module\Eventtracker\Config\IcingaResource;
 use Icinga\Module\Eventtracker\Db\ZfDbConnectionFactory;
 use Icinga\Module\Eventtracker\DbFactory;
-use Icinga\Module\Eventtracker\Uuid;
 use Icinga\Module\Eventtracker\Web\Table\BaseTable;
 use Icinga\Module\Eventtracker\Web\Widget\AdditionalTableActions;
+use Ramsey\Uuid\Uuid;
 
 abstract class Controller extends CompatController
 {
@@ -80,10 +80,10 @@ abstract class Controller extends CompatController
         if ($this->getRequest()->isApiRequest() || $this->getParam('format') === 'json') {
             $table->ensureAssembled();
             $result = $table->fetch();
-            foreach ($result as & $row) {
+            foreach ($result as $row) {
                 // For some tables only
                 if (isset($row->issue_uuid)) {
-                    $row->issue_uuid = Uuid::toHex($row->issue_uuid);
+                    $row->issue_uuid = Uuid::fromBytes($row->issue_uuid)->toString();
                 }
             }
             $this->getResponse()->setHeader('Content-Type', 'application/json', true)->sendHeaders();

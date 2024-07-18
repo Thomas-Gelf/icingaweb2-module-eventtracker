@@ -7,6 +7,7 @@ use gipfl\Json\JsonString;
 use gipfl\ZfDbStore\DbStorableInterface;
 use gipfl\ZfDbStore\ZfDbStore;
 use Ramsey\Uuid\Uuid;
+use RuntimeException;
 
 class DowntimeRule implements JsonSerialization, DbStorableInterface
 {
@@ -38,6 +39,10 @@ class DowntimeRule implements JsonSerialization, DbStorableInterface
         'max_single_problem_duration',
     ];
 
+    /**
+     * @param ZfDbStore $store
+     * @return static[]
+     */
     public static function loadAll(ZfDbStore $store): array
     {
         $dummy = new self();
@@ -53,20 +58,29 @@ class DowntimeRule implements JsonSerialization, DbStorableInterface
 
     public function recalculateConfigUuid()
     {
+        $new = $this->calculateMyConfigUuid();
+        if ($this->get('config_uuid') !== $new) {
+            $this->set('config_uuid', $new);
+        }
+    }
+
+    protected function calculateMyConfigUuid(): string
+    {
         $properties = $this->getProperties();
         unset($properties['config_uuid']);
         $uuid = $this->get('uuid');
         if ($uuid === null) {
-            throw new \RuntimeException('Cannot recalculate config_uuid, have no UUID');
+            throw new RuntimeException('Cannot recalculate config_uuid, have no UUID');
         }
-        $current = $this->get('config_uuid');
-        $new =  Uuid::uuid5(
+        return Uuid::uuid5(
             Uuid::fromBytes($uuid),
             JsonString::encode($this->serializeProperties($properties))
         )->getBytes();
-        if ($current !== $new) {
-            $this->set('config_uuid', $new);
-        }
+    }
+
+    public function isEnabled(): bool
+    {
+        return $this->get('is_enabled') === 'y';
     }
 
     /**

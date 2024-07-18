@@ -9,6 +9,8 @@ use ipl\Html\Table;
 
 trait IssuesFilterHelper
 {
+    protected $appliedFilters = [];
+
     protected function applyFilters(Table $table)
     {
         $table->search($this->params->get('q'));
@@ -21,6 +23,7 @@ trait IssuesFilterHelper
         $this->columnFilter($table, $sub, 'object_class', 'classes', $this->translate('Classes: %s'));
         $this->columnFilter($table, $sub, 'object_name', 'objects', $this->translate('Objects: %s'));
         $this->columnFilter($table, $sub, 'owner', 'owners', $this->translate('Owners: %s'));
+        $this->columnFilter($table, $sub, 'label', 'inputs', $this->translate('Input: %s'));
         $this->columnFilter($table, $sub, 'sender_name', 'senders', $this->translate('Sender: %s'));
         if (! $this->showCompact()) {
             $this->actions()->add($main);
@@ -53,6 +56,16 @@ trait IssuesFilterHelper
         }
     }
 
+    protected function getAppliedFilters()
+    {
+        return $this->appliedFilters;
+    }
+
+    protected function hasAppliedFilters(): bool
+    {
+        return !empty($this->appliedFilters);
+    }
+
     protected function columnFilter(Table $table, BaseHtmlElement $parent, $column, $type, $title)
     {
         $li = Html::tag('li');
@@ -61,16 +74,28 @@ trait IssuesFilterHelper
         $compact = $this->showCompact();
         if ($this->params->has($column)) {
             $value = $this->params->get($column);
+            $this->appliedFilters[$column] = $value;
 
             // TODO: move this elsewhere, here we shouldn't need to care about DB structure:
             if ($column === 'sender_name') {
                 $table->joinSenders();
                 $column = "s.$column";
             }
+            if ($column === 'label') {
+                $table->joinInputs();
+                $column = "inp.$column";
+            }
+            $query = $table->getQuery();
             if (strlen($value)) {
-                $table->getQuery()->where("$column = ?", $value);
+                if (substr($value, 0, 1) === '!') {
+                    $query->where("$column != ?", substr($value, 1));
+                } elseif (false !== strpos($value, ',')) {
+                    $query->where("$column IN (?)", explode(',', $value));
+                } else {
+                    $query->where("$column = ?", $value);
+                }
             } else {
-                $table->getQuery()->where("$column IS NULL");
+                $query->where("$column IS NULL");
                 $value = $this->translate('- none -');
             }
             if ($compact) {

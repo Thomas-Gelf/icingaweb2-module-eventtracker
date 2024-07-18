@@ -4,6 +4,7 @@ namespace Icinga\Module\Eventtracker\Engine\Downtime;
 
 use gipfl\ZfDb\Adapter\Adapter;
 use Ramsey\Uuid\UuidInterface;
+use RuntimeException;
 
 class HostList
 {
@@ -21,8 +22,9 @@ class HostList
     public function getHosts(): array
     {
         if ($this->hosts === null) {
-            throw new \RuntimeException('Hosts for this list have not been loaded');
+            throw new RuntimeException('Hosts for this list have not been loaded');
         }
+
         return $this->hosts;
     }
 
@@ -33,6 +35,15 @@ class HostList
         return $self;
     }
 
+    public function hasHost(string $hostname): bool
+    {
+        if ($this->hosts === null) {
+            throw new RuntimeException('Hosts for this list have not been loaded');
+        }
+
+        return isset($this->hosts[$hostname]);
+    }
+
     public function getUuid(): UuidInterface
     {
         return $this->uuid;
@@ -40,9 +51,12 @@ class HostList
 
     protected function loadHosts(Adapter $db)
     {
-        $this->hosts = $db->fetchCol(
+        $this->hosts = $db->fetchPairs(
             $db->select()
-                ->from('host_list_member', 'hostname')
+                ->from('host_list_member', [
+                    'a' => 'hostname',
+                    'b' => 'hostname',
+                ])
                 ->where('list_uuid = ?', $this->uuid->getBytes())
         );
     }

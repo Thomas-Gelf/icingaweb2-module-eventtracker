@@ -17,8 +17,8 @@ class InputAndChannelRunner implements DbBasedComponent
     /** @var LoopInterface */
     protected $loop;
 
-    /** @var InputRunner */
-    protected $runner;
+    /** @var ?InputRunner */
+    protected $runner = null;
 
     /**
      * @var LoggerInterface
@@ -40,11 +40,17 @@ class InputAndChannelRunner implements DbBasedComponent
         $this->db = $db;
 
         $store = new ConfigStore($db, $this->logger);
-        $this->runner = new InputRunner($store);
+        $this->runner = new InputRunner($store, $this->logger);
         $this->runner->setLogger($this->logger);
         $this->runner->start($this->loop);
 
         return resolve();
+    }
+
+
+    public function getInputRunner(): ?InputRunner
+    {
+        return $this->runner;
     }
 
     /**

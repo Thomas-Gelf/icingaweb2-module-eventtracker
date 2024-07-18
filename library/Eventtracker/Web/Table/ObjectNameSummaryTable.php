@@ -8,12 +8,12 @@ class ObjectNameSummaryTable extends BaseSummaryTable
         'object_name',
     ];
 
-    protected function getMainColumn()
+    protected function getMainColumn(): string
     {
         return 'object_name';
     }
 
-    protected function getMainColumnTitle()
+    protected function getMainColumnTitle(): string
     {
         return $this->translate('Object Name');
     }

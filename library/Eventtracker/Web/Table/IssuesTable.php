@@ -2,6 +2,7 @@
 
 namespace Icinga\Module\Eventtracker\Web\Table;
 
+use Closure;
 use gipfl\IcingaWeb2\Icon;
 use gipfl\IcingaWeb2\Link;
 use gipfl\IcingaWeb2\Table\Extension\MultiSelect;
@@ -18,6 +19,8 @@ class IssuesTable extends BaseTable
     use MultiSelect;
 
     protected $joinedSenders = false;
+
+    protected $joinedInputs = false;
 
     protected $compact = false;
 
@@ -65,23 +68,7 @@ class IssuesTable extends BaseTable
             'eventtracker/issue',
             ['uuid']
         );
-        $prioIconRenderer = function ($row) {
-            if ($this->disablePrio) {
-                return null;
-            }
-
-            $icons = [
-                Priority::HIGHEST => 'up-big',
-                Priority::HIGH    => 'up-small',
-                Priority::NORMAL  => 'right-small',
-                Priority::LOW     => 'down-small',
-                Priority::LOWEST  => 'down-big',
-            ];
-
-            return Icon::create($icons[$row->priority], [
-                'title' => \ucfirst($row->priority)
-            ]);
-        };
+        $prioIconRenderer = $this->createPrioIconRenderer();
         $this->addAvailableColumns([
             $this->createColumn('severity', $this->translate('Severity'), [
                 'severity'   => 'i.severity',
@@ -144,6 +131,7 @@ class IssuesTable extends BaseTable
             ])->setRenderer(function ($row) {
                 return $this->formatMessageColumn($row);
             }),
+            $this->createColumn('input_label', $this->translate('Input'), 'inp.label'),
             $this->createColumn('sender_name', $this->translate('Sender'), 's.sender_name'),
             $this->createColumn('owner', $this->translate('Owner'), 'i.owner'),
             $this->createColumn('ticket_ref', $this->translate('Ticket'), 'i.ticket_ref'),
@@ -249,6 +237,27 @@ class IssuesTable extends BaseTable
         ]);
     }
 
+    protected function createPrioIconRenderer(): Closure
+    {
+        return function ($row) {
+            if ($this->disablePrio) {
+                return null;
+            }
+
+            $icons = [
+                Priority::HIGHEST => 'up-big',
+                Priority::HIGH    => 'up-small',
+                Priority::NORMAL  => 'right-small',
+                Priority::LOW     => 'down-small',
+                Priority::LOWEST  => 'down-big',
+            ];
+
+            return Icon::create($icons[$row->priority], [
+                'title' => \ucfirst($row->priority)
+            ]);
+        };
+    }
+
     public function getDefaultColumnNames()
     {
         return [
@@ -266,6 +275,10 @@ class IssuesTable extends BaseTable
             $query->join(['s' => 'sender'], 's.id = i.sender_id', []);
             $this->joinedSenders = true;
         }
+        if (array_key_exists('input_label', $columns)) {
+            $query->joinLeft(['inp' => 'input'], 'inp.uuid = i.input_uuid', []);
+            $this->joinedInputs = true;
+        }
 
         return $query->columns($this->getRequiredDbColumns());
     }
@@ -275,6 +288,16 @@ class IssuesTable extends BaseTable
         if ($this->joinedSenders === false) {
             $this->getQuery()->join(['s' => 'sender'], 's.id = i.sender_id', []);
             $this->joinedSenders = true;
+        }
+
+        return $this;
+    }
+
+    public function joinInputs()
+    {
+        if ($this->joinedInputs === false) {
+            $this->getQuery()->joinLeft(['inp' => 'input'], 'inp.uuid = i.input_uuid', []);
+            $this->joinedInputs = true;
         }
 
         return $this;

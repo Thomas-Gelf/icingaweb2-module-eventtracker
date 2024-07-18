@@ -27,7 +27,9 @@ trait RestApiMethods
      */
     protected function sendJsonError($error, $code = 500)
     {
-        $data = [];
+        $data = [
+            'success' => false,
+        ];
 
         if ($error instanceof \Exception) {
             $message = $error->getMessage();
@@ -47,7 +49,7 @@ trait RestApiMethods
         $this->getResponse()->setHttpResponseCode($code);
         $this->getResponse()->setHeader('Content-Type', 'application/json', true);
         try {
-            echo JsonString::encode($object, JSON_PRETTY_PRINT);
+            echo JsonString::encode($object, JSON_PRETTY_PRINT) . "\n";
         } catch (JsonEncodeException $e) {
             $this->sendJsonError($e);
         }

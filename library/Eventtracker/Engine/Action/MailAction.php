@@ -16,7 +16,7 @@ use React\EventLoop\LoopInterface;
 use React\Promise\PromiseInterface;
 use Throwable;
 use Zend_Mail;
-use Zend_Mail_Transport_Sendmail;
+use Zend_Mail_Transport_Smtp as SmtpTransport;
 use function React\Promise\reject;
 use function React\Promise\resolve;
 
@@ -42,6 +42,9 @@ class MailAction extends SimpleTaskConstructor implements Action
     /** @var string */
     protected $body;
 
+    /** @var bool */
+    protected $stripTags = false;
+
     protected $paused = true;
 
     public function applySettings(Settings $settings)
@@ -50,6 +53,7 @@ class MailAction extends SimpleTaskConstructor implements Action
         $this->to = $settings->getRequired('to');
         $this->subject = $settings->get('subject');
         $this->body = $settings->get('body');
+        $this->stripTags = $settings->get('strip_tags', 'n') === 'y';
 
         $this->setSettings($settings);
     }
@@ -82,6 +86,18 @@ class MailAction extends SimpleTaskConstructor implements Action
         return resolve("Mail has been sent to {$this->to}");
     }
 
+    /**
+     * This is very basic, we trust our admins
+     */
+    protected static function splitNameAndMail($mail): array
+    {
+        if (preg_match('/^(.+)<([^>]+)>$/', $mail, $match)) {
+            return [trim($match[1]), $match[2]];
+        } else {
+            return [$mail, $mail]; // Zend_Mail skips the name if '', null or === $email
+        }
+    }
+
     protected function mail(Issue $issue): void
     {
         if ($this->paused) {
@@ -90,14 +106,17 @@ class MailAction extends SimpleTaskConstructor implements Action
             return;
         }
 
+        [$fromName, $fromMail] = self::splitNameAndMail($this->from);
+        [$toName, $toMail] = self::splitNameAndMail($this->to);
+
         $mail = (new Zend_Mail('UTF-8'))
-            ->setFrom($this->from)
-            ->addTo($this->to);
+            ->setFrom($fromMail, $fromName)
+            ->addTo($toMail, $toName);
 
         $mail->setSubject(ConfigHelper::fillPlaceholders($this->subject, $issue));
         $mail->setBodyText(ConfigHelper::fillPlaceholders($this->body, $issue));
 
-        $mail->send(new Zend_Mail_Transport_Sendmail('-f ' . escapeshellarg($this->from)));
+        $mail->send(new SmtpTransport());
         $this->logger->debug('A mail has been sent to ' . $this->to);
     }
 }

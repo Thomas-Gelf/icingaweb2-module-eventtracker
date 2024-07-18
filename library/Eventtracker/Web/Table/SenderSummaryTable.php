@@ -9,19 +9,19 @@ class SenderSummaryTable extends BaseSummaryTable
         's.implementation',
     ];
 
-    protected function getMainColumn()
+    protected function getMainColumn(): string
     {
         return 's.sender_name';
     }
 
-    protected function getMainColumnAlias()
+    protected function getMainColumnAlias(): string
     {
         return 'sender_name';
     }
 
-    protected function getMainColumnTitle()
+    protected function getMainColumnTitle(): string
     {
-        return $this->translate('Sender');
+        return $this->translate('Sender (Old)');
     }
 
     public function prepareQuery()

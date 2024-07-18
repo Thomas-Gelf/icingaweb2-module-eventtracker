@@ -10,85 +10,24 @@ class ConfigHelper
     public static function getList($value)
     {
         if ($value !== null && \strlen($value) > 0) {
-            $parts = \preg_split('/\s*,\s*/', $value, -1, \PREG_SPLIT_NO_EMPTY);
-
-            return $parts;
+            return \preg_split('/\s*,\s*/', $value, -1, \PREG_SPLIT_NO_EMPTY);
         } else {
             return [];
         }
     }
 
+    // has been moved to ConfigHelperCi, remains here for iET Compat
     public static function fillPlaceHoldersForIssue($string, Issue $issue, ZfDb $db)
     {
-        $ci = IcingaCi::eventuallyLoadForIssue($db, $issue);
-        if ($ci) {
-            if ($ci->object_type === 'service') {
-                if ($host = IcingaCi::eventuallyLoad($db, $issue->get('host_name'))) {
-                    $ci->host = $host;
-                }
-            }
-        }
-        return \preg_replace_callback('/({[^}]+})/', function ($match) use ($issue, $ci) {
-            $property = \trim($match[1], '{}');
-            list($property, $modifier) = static::extractPropertyModifier($property);
-            if (\preg_match('/^(host|service)\.(.+)$/', $property, $match)) {
-                if ($ci === null) {
-                    return static::missingProperty($property);
-                }
-                $value = static::getIcingaCiProperty($ci, $property);
-            } else {
-                $value = static::getIssueProperty($issue, $property);
-            }
-
-            static::applyPropertyModifier($value, $modifier);
-
-            return $value;
-        }, $string);
+        return ConfigHelperCi::fillPlaceHoldersForIssue($string, $issue, $db);
     }
 
-
-    /**
-     * @param \stdClass $ci
-     * @param $property
-     * @return null
-     */
-    protected static function getIcingaCiProperty($ci, $property)
-    {
-        if (\preg_match('/^(host|service)\.(.+)$/', $property, $match)) {
-            if ($ci->object_type === 'service') {
-                if (! isset($ci->host)) {
-                    return null;
-                }
-
-                $ci = $ci->host;
-            }
-            $property = $match[2];
-        }
-
-        return static::reallyGetCiProperty($ci, $property);
-    }
-
-    protected static function reallyGetCiProperty($ci, $property)
-    {
-        if (\preg_match('/^vars\.(.+)$/', $property, $match)) {
-            $varName = $match[1];
-            if (isset($ci->vars->$varName)) {
-                return $ci->vars->$varName;
-            }
-        }
-        if (isset($ci->$property)) {
-            return $ci->$property;
-        }
-
-        return null;
-    }
-
-    protected static function missingProperty($property)
+    public static function missingProperty($property)
     {
         return '{' . $property . '}';
     }
 
-    protected static function getIssueProperty(Issue $issue, $property)
+    public static function getIssueProperty(Issue $issue, $property)
     {
         if ($property === 'uuid') {
             return $issue->getNiceUuid();
@@ -99,7 +38,16 @@ class ConfigHelper
         }
 
         // TODO: check whether Issue has such property, and eventually use an interface
-        return $issue->get($property);
+        if ($issue->hasProperty($property)) {
+            $value = $issue->get($property);
+            if ($value === null) {
+                // return missing property? Not sure
+            }
+
+            return $value;
+        }
+
+        return static::missingProperty($property);
     }
 
     /**
@@ -125,7 +73,7 @@ class ConfigHelper
                     $value = $issue->$property;
                 }
             } else {
-                $value = $issue->$property;
+                $value = $issue->$property ?? null;
             }
             if ($value === null) {
                 return static::missingProperty($property);
@@ -147,23 +95,30 @@ class ConfigHelper
         return \preg_replace_callback('/({[^}]+})/', $replace, $string);
     }
 
-    protected static function applyPropertyModifier(&$value, $modifier)
+    public static function applyPropertyModifier(&$value, $modifier)
     {
         // Hint: $modifier could be null
         switch ($modifier) {
             case 'lower':
                 $value = \strtolower($value);
                 break;
+            case 'stripTags':
+                $value = \strip_tags($value);
+                break;
         }
     }
 
-    protected static function extractPropertyModifier($property)
+    public static function extractPropertyModifier($property)
     {
         $modifier = null;
         // TODO: make property modifiers dynamic
         if (\preg_match('/:lower$/', $property)) {
             $property = \preg_replace('/:lower$/', '', $property);
             $modifier = 'lower';
+        }
+        if (\preg_match('/:stripTags$/', $property)) {
+            $property = \preg_replace('/:stripTags$/', '', $property);
+            $modifier = 'stripTags';
         }
 
         return [$property, $modifier];
