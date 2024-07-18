@@ -15,6 +15,7 @@ use gipfl\Protocol\NetString\StreamWrapper;
 use gipfl\Socket\UnixSocketInspection;
 use gipfl\Socket\UnixSocketPeer;
 use Icinga\Module\Eventtracker\Daemon\RpcNamespace\RpcNamespaceEvent;
+use Icinga\Module\Eventtracker\Daemon\RpcNamespace\RpcNamespaceConfig;
 use Icinga\Module\Eventtracker\Daemon\RpcNamespace\RpcNamespaceIssue;
 use Icinga\Module\Eventtracker\Daemon\RpcNamespace\RpcNamespaceProcess;
 use Icinga\Module\Eventtracker\Daemon\RpcNamespace\RpcNamespaceLogger;
@@ -46,14 +47,19 @@ class RemoteApi implements EventEmitterInterface
     /** @var InputAndChannelRunner */
     protected $runner;
 
+    /** @var RunningConfig */
+    protected $runningConfig;
+
     public function __construct(
         InputAndChannelRunner $runner,
+        RunningConfig         $runningConfig,
         LoopInterface         $loop,
         LoggerInterface       $logger
     ) {
         $this->runner = $runner;
         $this->logger = $logger;
         $this->loop = $loop;
+        $this->runningConfig = $runningConfig;
     }
 
     public function run($socketPath, LoopInterface $loop)
@@ -127,6 +133,7 @@ class RemoteApi implements EventEmitterInterface
                 $this->logger,
                 DbFactory::db()
             ));
+            $handler->registerNamespace('config', new RpcNamespaceConfig($this->runningConfig));
             $handler->registerNamespace('issue', new RpcNamespaceIssue($this->loop, $this->logger, DbFactory::db()));
             $handler->registerNamespace('process', $rpcProcess);
             if ($this->logger instanceof Logger) {
