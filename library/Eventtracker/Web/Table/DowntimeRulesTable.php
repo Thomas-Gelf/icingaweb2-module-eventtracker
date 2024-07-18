@@ -30,6 +30,7 @@ class DowntimeRulesTable extends WebActionTable
                 'label'       => 'dr.label',
                 'message'     => 'dr.message',
                 'is_active'         => 'dc.is_active',
+                'ts_started'        => 'dc.ts_started',
                 'ts_expected_start' => 'dc.ts_expected_start',
                 'ts_expected_end'   => 'dc.ts_expected_end',
             ])
