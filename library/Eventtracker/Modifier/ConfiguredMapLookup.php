@@ -8,6 +8,9 @@ use ipl\Html\Html;
 use ipl\Html\ValidHtml;
 use RuntimeException;
 
+/**
+ * @deprecated: this is probably not in use anywhere, and should not be used
+ */
 class ConfiguredMapLookup extends MapLookup
 {
     protected static $name = 'Lookup (and map) values via a configured Map';
