@@ -108,17 +108,18 @@ class ConfigHelper
             case 'problemHandlingUrl':
                 if ($db !== null && $value !== null) {
                     try {
-                        if ($link = $db->fetchRow(
-                            $db->select()->from('problem_handling')->where('label = ?', $value)
+                        if ($link = $db->fetchOne(
+                            $db->select()->from('problem_handling', 'instruction_url')->where('label = ?', $value)
                         )) {
                             $value = $link;
                         }
                     } catch (\Exception $e) {
-                        // Keep value?
+                        $value = null;
                     }
+                } else {
+                    $value = null;
                 }
 
-                $value = null;
                 break;
         }
     }
