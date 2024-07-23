@@ -95,7 +95,7 @@ class ConfigHelper
         return \preg_replace_callback('/({[^}]+})/', $replace, $string);
     }
 
-    public static function applyPropertyModifier(&$value, $modifier)
+    public static function applyPropertyModifier(&$value, $modifier, ?ZfDb $db = null)
     {
         // Hint: $modifier could be null
         switch ($modifier) {
@@ -104,6 +104,21 @@ class ConfigHelper
                 break;
             case 'stripTags':
                 $value = \strip_tags($value);
+                break;
+            case 'problemHandlingUrl':
+                if ($db !== null && $value !== null) {
+                    try {
+                        if ($link = $db->fetchRow(
+                            $db->select()->from('problem_handling')->where('label = ?', $value)
+                        )) {
+                            $value = $link;
+                        }
+                    } catch (\Exception $e) {
+                        // Keep value?
+                    }
+                }
+
+                $value = null;
                 break;
         }
     }

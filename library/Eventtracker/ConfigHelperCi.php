@@ -16,7 +16,7 @@ class ConfigHelperCi
                 }
             }
         }
-        return \preg_replace_callback('/({[^}]+})/', function ($match) use ($issue, $ci) {
+        return \preg_replace_callback('/({[^}]+})/', function ($match) use ($issue, $ci, $db) {
             $property = \trim($match[1], '{}');
             list($property, $modifier) = ConfigHelper::extractPropertyModifier($property);
             if (\preg_match('/^(host|service)\.(.+)$/', $property, $match)) {
@@ -28,7 +28,7 @@ class ConfigHelperCi
                 $value = ConfigHelper::getIssueProperty($issue, $property);
             }
 
-            ConfigHelper::applyPropertyModifier($value, $modifier);
+            ConfigHelper::applyPropertyModifier($value, $modifier, $db);
 
             return $value;
         }, $string);
