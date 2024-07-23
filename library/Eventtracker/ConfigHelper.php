@@ -124,7 +124,7 @@ class ConfigHelper
         }
     }
 
-    public static function extractPropertyModifier($property)
+    public static function extractPropertyModifier(string $property): array
     {
         $modifier = null;
         // TODO: make property modifiers dynamic
@@ -135,6 +135,10 @@ class ConfigHelper
         if (\preg_match('/:stripTags$/', $property)) {
             $property = \preg_replace('/:stripTags$/', '', $property);
             $modifier = 'stripTags';
+        }
+        if (\preg_match('/:problemHandlingUrl$/', $property)) {
+            $property = \preg_replace('/:problemHandlingUrl$/', '', $property);
+            $modifier = 'problemHandlingUrl';
         }
 
         return [$property, $modifier];
