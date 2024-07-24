@@ -170,9 +170,10 @@ class DowntimeForm extends UuidObjectForm
             'label' => $this->translate('Start at a specific minute'),
             'ignore' => true,
         ]);
-        $this->addElement('multiSelect', 'day_of_week', [
+        $this->addElement('select', 'day_of_week', [
             'label' => $this->translate('Only specific weekdays'),
             'ignore' => true,
+            'multiple' => true,
             'options' => [
                 '1' => $this->translate('Monday'),
                 '2' => $this->translate('Tuesday'),
@@ -184,9 +185,10 @@ class DowntimeForm extends UuidObjectForm
             ],
             'description' => $this->translate('Runs on every weekday, if not specified'),
         ]);
-        $this->addElement('multiSelect', 'month', [
+        $this->addElement('select', 'month', [
             'label' => $this->translate('Only specific months'),
-            'ignore' => true,
+            'ignore'   => true,
+            'multiple' => true,
             'options' => [
                 '1' => $this->translate('January'),
                 '2' => $this->translate('February'),
