@@ -28,6 +28,10 @@ class DowntimeForm extends UuidObjectForm
     protected $db;
 
     protected $table = 'downtime_rule';
+    protected $multiSelectElements = [
+        'day_of_week',
+        'month',
+    ];
 
     protected $tsCombinations = [
         'ts_not_before',

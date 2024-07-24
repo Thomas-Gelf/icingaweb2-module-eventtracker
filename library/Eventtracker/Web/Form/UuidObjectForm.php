@@ -31,6 +31,8 @@ class UuidObjectForm extends Form
 
     protected $mainProperties;
 
+    protected $multiSelectElements = [];
+
     public function __construct(ConfigStore $store, ?Registry $registry = null)
     {
         $this->store = $store;
@@ -42,6 +44,12 @@ class UuidObjectForm extends Form
         if (isset($values['uuid'])) {
             $this->uuid = Uuid::fromBytes($values['uuid']);
             unset($values['uuid']);
+        }
+        // Hint: unfortunately we have to configure them, because they do not yet exist on submission
+        foreach ($this->multiSelectElements as $elementName) {
+            if (! isset($values[$elementName])) {
+                $values[$elementName] = null;
+            }
         }
         foreach ($values as $key => &$value) {
             if ($value !== null && substr($key, -5) === '_uuid' && strlen($value) === 16) {

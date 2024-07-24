@@ -9,6 +9,7 @@ class ApiTokenForm extends UuidObjectForm
 {
     protected $table = 'api_token';
     protected $mainProperties = ['label', 'permissions'];
+    protected $multiSelectElements = ['permissions'];
     protected $storing = false;
 
     protected function assemble()
