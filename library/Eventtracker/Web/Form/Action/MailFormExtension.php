@@ -56,7 +56,7 @@ EOT
             'placeholder' => <<<'EOT'
 {message}
 Env: {attributes.env}
-OS: {host.vars.os}'
+OS: {host.vars.os}
 EOT,
             'rows'        => 3
         ]);
