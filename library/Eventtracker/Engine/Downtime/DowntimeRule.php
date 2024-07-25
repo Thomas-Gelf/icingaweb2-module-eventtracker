@@ -4,6 +4,7 @@ namespace Icinga\Module\Eventtracker\Engine\Downtime;
 
 use gipfl\Json\JsonSerialization;
 use gipfl\Json\JsonString;
+use gipfl\ZfDb\Adapter\Adapter;
 use gipfl\ZfDbStore\DbStorableInterface;
 use gipfl\ZfDbStore\ZfDbStore;
 use Ramsey\Uuid\Uuid;
@@ -38,6 +39,19 @@ class DowntimeRule implements JsonSerialization, DbStorableInterface
         'duration',
         'max_single_problem_duration',
     ];
+
+    public static function loadByConfigUuid(string $uuid, Adapter $db): ?DowntimeRule
+    {
+        $dummy = new self();
+        $table = $dummy->getTableName();
+        if ($row = $db->fetchRow($db->select()->from($table)->where('config_uuid = ?', $uuid))) {
+            $self = static::fromSerialization((object) $row);
+            $self->setStored();
+            return $self;
+        }
+
+        return null;
+    }
 
     /**
      * @param ZfDbStore $store
