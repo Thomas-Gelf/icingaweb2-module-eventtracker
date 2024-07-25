@@ -756,12 +756,16 @@ div.summary-tables {
     flex: 0 1 calc(33% - 1em);
   }
 }
-#layout.twocols, #layout.poor-layout {
+#layout.compact-layout, #layout.poor-layout {
   div.summary-tables > div {
     flex: 0 1 calc(50% - 1em);
   }
+  div.summary-tables > div {
+    flex: 0 1 100%;
+  }
 }
-#layout.compact-layout.twocols, #layout.minimal-layout, #layout div.dashboard, #layout.twocols div.dashboard {
+
+#layout.twocols, #layout.minimal-layout, div.dashboard {
   div.summary-tables > div {
     flex: 0 1 100%;
   }
