@@ -44,12 +44,12 @@ class HostListMemberTable extends BaseTable
                     $row->hostname,
                 ];
             }),
-            $this->createColumn('start_time', $this->translate('From'))->setRenderer(function ($row) use ($formatTime) {
-                return $formatTime($row->start_time);
-            }),
-            $this->createColumn('end_time', $this->translate('To'))->setRenderer(function ($row) use ($formatTime) {
-                return $formatTime($row->end_time);
-            }),
+            // $this->createColumn('start_time', $this->translate('From'))->setRenderer(function ($row) use ($formatTime) {
+            //     return $formatTime($row->start_time);
+            // }),
+            // $this->createColumn('end_time', $this->translate('To'))->setRenderer(function ($row) use ($formatTime) {
+            //     return $formatTime($row->end_time);
+            // }),
         ]);
     }
 
