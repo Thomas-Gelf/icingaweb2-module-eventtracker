@@ -366,8 +366,8 @@ class DowntimeRunner implements EventEmitterInterface, DbBasedComponent
     {
         // $this->logger->debug('Fetching lost calculated downtimes');
         $query = $this->db->select()
-            ->from(['dc' => 'downtime_calculated'], [])
-            ->joinLeft(['dr' => 'downtime_rule'], 'dr.next_calculated_uuid = dc.uuid', '*')
+            ->from(['dc' => 'downtime_calculated'], '*')
+            ->joinLeft(['dr' => 'downtime_rule'], 'dr.next_calculated_uuid = dc.uuid', [])
             ->where('dr.next_calculated_uuid IS NULL')
             ->where('dc.is_active = ?', 'y');
 
