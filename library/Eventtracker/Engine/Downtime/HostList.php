@@ -6,8 +6,12 @@ use gipfl\ZfDb\Adapter\Adapter;
 use Ramsey\Uuid\UuidInterface;
 use RuntimeException;
 
+// TODO: start_time, end_time
 class HostList
 {
+    public const TABLE_NAME = 'host_list';
+    public const MEMBER_TABLE_NAME = 'host_list_member';
+
     /** @var UuidInterface */
     protected $uuid;
 
@@ -53,7 +57,7 @@ class HostList
     {
         $this->hosts = $db->fetchPairs(
             $db->select()
-                ->from('host_list_member', [
+                ->from(self::MEMBER_TABLE_NAME, [
                     'a' => 'hostname',
                     'b' => 'hostname',
                 ])
