@@ -3,13 +3,19 @@
 namespace Icinga\Module\Eventtracker\Web\Table;
 
 use gipfl\Format\LocalDateFormat;
+use gipfl\IcingaWeb2\Icon;
 use gipfl\Translation\TranslationHelper;
+use gipfl\Web\Table\NameValueTable;
+use Icinga\Module\Eventtracker\Engine\Downtime\DowntimeCalculated;
 use Icinga\Module\Eventtracker\Time;
+use ipl\Html\Html;
 use ipl\Html\HtmlElement;
 
 class ScheduledDowntimesTable extends BaseTable
 {
     use TranslationHelper;
+
+    protected $currentDayString = '';
 
     protected $searchColumns = [
     ];
@@ -18,8 +24,15 @@ class ScheduledDowntimesTable extends BaseTable
     {
         if (isset($row->ts_expected_start)) {
             $this->renderDayIfNew($this->formatTsHeader($row->ts_expected_start), count($this->getChosenColumns()));
+            $this->currentDayString = date('Y-m-d', $row->ts_expected_start / 1000);
         }
+
         return parent::renderRow($row);
+    }
+
+    protected function tsMatchesCurrentDay(int $ts): bool
+    {
+        return $this->currentDayString === date('Y-m-d', $ts / 1000);
     }
 
     /**
@@ -43,9 +56,10 @@ class ScheduledDowntimesTable extends BaseTable
     protected function formatTsHeader($ts)
     {
         $timestamp = (int) ($ts / 1000);
-        $now = time();
         $formatter = new LocalDateFormat();
         return $formatter->getFullDay($timestamp);
+
+        $now = time();
         if ($timestamp > ($now - 120)) {
             return $this->translate('Now');
         }
@@ -61,24 +75,60 @@ class ScheduledDowntimesTable extends BaseTable
         return null;
     }
 
+    protected function formatRelatedTimestamp(?int $ts): string
+    {
+        // Hint: TS_NEVER is treated as NULL, NULL is not allowed
+        if ($ts === null || $ts === DowntimeCalculated::TS_NEVER) {
+            return $this->translate('never');
+        }
+        if ($this->tsMatchesCurrentDay($ts)) {
+            return $this->getTimeFormatter()->getShortTime($ts / 1000);
+        }
+
+        return $this->getDateFormatter()->getFullDay($ts / 1000)
+            . ', '
+            . $this->getTimeFormatter()->getShortTime($ts / 1000);
+    }
+
     protected function initialize()
     {
         $this->addAvailableColumns([
             $this->createColumn('ts_expected_start', $this->translate('Downtime Rule'), [
+                'is_active'         => 'dc.is_active',
+                'ts_started'        => 'dc.ts_started',
                 'ts_expected_start' => 'dc.ts_expected_start',
                 'ts_expected_end'   => 'dc.ts_expected_end',
             ])->setRenderer(function ($row) {
-                return date('H:i', (int) ($row->ts_expected_start / 1000))
-                    . '-'
-                    . date('H:i', (int) ($row->ts_expected_end / 1000))
-                    . ': '
-                    . $row->label;
-                return Time::agoFormatted($row->received);
+                $result = [];
+
+                $infoTable = new NameValueTable();
+                if ($row->is_active === 'y') {
+                    $result[] = Icon::create('plug', ['class' => ['downtime-icon', 'active-downtime']]);
+                    $infoTable->addNameValueRow(
+                        $this->translate('Started'),
+                        $this->formatRelatedTimestamp($row->ts_started)
+                    );
+                } else {
+                    $result[] = Icon::create('history', ['class' => 'downtime-icon']);
+                    $infoTable->addNameValueRow(
+                        $this->translate('Starts'),
+                        $this->formatRelatedTimestamp($row->ts_expected_start)
+                    );
+                }
+                $infoTable->addNameValueRow(
+                    $this->translate('Ends'),
+                    $this->formatRelatedTimestamp($row->ts_expected_end)
+                );
+                $result[] = Html::tag('strong', $row->label);
+                $result[] = Html::tag('br');
+                $result[] = $infoTable;
+
+                return $result;
             }),
             $this->createColumn('label', $this->translate('Downtime Rule'), [
                 'label'             => 'dr.label',
             ])->setRenderer(function ($row) {
-                return ;
+                return ; // ??
                 return Time::agoFormatted($row->received);
             }),
         ]);

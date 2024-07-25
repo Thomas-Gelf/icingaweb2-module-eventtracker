@@ -914,9 +914,30 @@ position: relative;
   margin-left: 20.5em;
   vertical-align: top;
 }
-
-
 /** END of gipfl dashboard actions */
+
+/** Downtimes Table */
+i.downtime-icon {
+  font-size: 3em;
+  float: left;
+  &.active-downtime {
+    color: @color-ok;
+  }
+}
+
+table table.gipfl-name-value-table {
+  display: inline-block;
+  width: auto;
+  tr, th, td {
+    border: none;
+    padding: 0.2em 0.5em;
+  }
+  th {
+    width: auto;
+    text-align: left;
+  }
+}
+/** END of Downtimes Table */
 
 pre form {
   white-space: normal;
