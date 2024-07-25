@@ -76,7 +76,7 @@ class DowntimeRunner implements EventEmitterInterface, DbBasedComponent
                 $filter = Filter::fromQueryString($filter);
                 // TODO: use enrichIssueForFilter()?
                 if (! $filter->matches(EnrichmentHelper::getPlainIssue($issue, true))) {
-                    $this->logger->debug("Issue $logUuid ignored for this downtime, it does not match " . $filter);
+                    // $this->logger->debug("Issue $logUuid ignored for this downtime, it does not match " . $filter);
                     continue;
                 }
                 if ($hostListUuid = $downtime->get('hostlist_uuid')) {
@@ -88,7 +88,7 @@ class DowntimeRunner implements EventEmitterInterface, DbBasedComponent
                         continue;
                     }
                     if (! $this->hostLists[$hostListUuid]->hasHost($issue->get('host_name'))) {
-                        $this->logger->debug("Issue $logUuid ignored, host not in list: " . $issue->get('host_name'));
+                        // $this->logger->debug("Issue $logUuid ignored, host not in list: " . $issue->get('host_name'));
                         continue;
                     }
                 }
@@ -102,7 +102,7 @@ class DowntimeRunner implements EventEmitterInterface, DbBasedComponent
 
     protected function recheckOpenIssues()
     {
-        $this->logger->notice('XXXx ---- rechecking open issues'. count($this->activeDowntimes));
+        // $this->logger->notice('XXXx ---- rechecking open issues'. count($this->activeDowntimes));
         foreach ($this->fetchOpenIssues() as $issue) {
             foreach ($this->activeDowntimes as $rule) {
                 $label = $rule->get('label');
@@ -110,7 +110,7 @@ class DowntimeRunner implements EventEmitterInterface, DbBasedComponent
                 if ($filter && $filter !== '[]') { // Why [] ??
                     $filter = Filter::fromQueryString($filter);
                     if ($filter->matches($issue)) {
-                        $this->logger->notice(sprintf('%s, Filter: XXXXXXXXX %s should be in Downtime', $label, $issue->getNiceUuid()));
+                        // $this->logger->notice(sprintf('%s, Filter: XXXXXXXXX %s should be in Downtime', $label, $issue->getNiceUuid()));
                     } else {
                         // $this->logger->notice(sprintf('%s, Filter: XXXXXXXXX %s should NOT be in Downtime', $label, $issue->getNiceUuid()));
                     }
@@ -167,7 +167,7 @@ class DowntimeRunner implements EventEmitterInterface, DbBasedComponent
      */
     protected function fetchFormerlyActive(): array
     {
-        $this->logger->debug('Fetching formerly active');
+        // $this->logger->debug('Fetching formerly active');
         return array_merge($this->fetchFinished(), $this->fetchLost());
     }
 
@@ -191,7 +191,7 @@ class DowntimeRunner implements EventEmitterInterface, DbBasedComponent
             $finishedIssues = [];
             if (! empty($finished)) {
                 $finishedIssueUuids = [];
-                $this->logger->debug('Got some finished: ' . print_r($finished, 1));
+                // $this->logger->debug('Got some finished: ' . print_r($finished, 1));
                 foreach ($finished as $finishedDowntimeCalculated) {
                     foreach ($this->db->fetchCol($this->selectAffectedIssues($finishedDowntimeCalculated)) as $uuid) {
                         $finishedIssueUuids[$uuid] = $uuid; // catch duplicates
@@ -208,7 +208,7 @@ class DowntimeRunner implements EventEmitterInterface, DbBasedComponent
                 $this->activeDowntimes = [];
                 $this->activeDowntimes[$ruleConfigUuid] = $active[$ruleConfigUuid]
                     ?? DowntimeRule::loadByConfigUuid($ruleConfigUuid, $this->db);
-                $this->logger->notice('Next: ' . Uuid::fromBytes($n->get('rule_config_uuid'))->toString() . print_r($n->getProperties(), 1));
+                // $this->logger->notice('Next: ' . Uuid::fromBytes($n->get('rule_config_uuid'))->toString() . print_r($n->getProperties(), 1));
                 $this->db->update(DowntimeCalculated::TABLE_NAME, [
                         'is_active' => 'y',
                         'ts_started' => $this->currentTime
@@ -351,7 +351,7 @@ class DowntimeRunner implements EventEmitterInterface, DbBasedComponent
      */
     protected function fetchFinished(): array
     {
-        $this->logger->debug('Fetch finished Downtimes');
+        // $this->logger->debug('Fetch finished Downtimes');
         return $this->fetchCalculatedDowntimes(
             $this->selectActiveDowntimes()->where('dc.ts_expected_end <= ?', $this->currentTime)
         );
@@ -364,7 +364,7 @@ class DowntimeRunner implements EventEmitterInterface, DbBasedComponent
      */
     protected function fetchLost(): array
     {
-        $this->logger->debug('Fetching lost calculated downtimes');
+        // $this->logger->debug('Fetching lost calculated downtimes');
         $query = $this->db->select()
             ->from(['dc' => 'downtime_calculated'], [])
             ->joinLeft(['dr' => 'downtime_rule'], 'dr.next_calculated_uuid = dc.uuid', '*')
@@ -380,7 +380,7 @@ class DowntimeRunner implements EventEmitterInterface, DbBasedComponent
     protected function fetchCalculatedDowntimes(Select $select): array
     {
         $calculated = [];
-        echo "$select\n";
+        // echo "$select\n";
         foreach ($this->db->fetchAll($select) as $row) {
             $calculated[] = DowntimeCalculated::fromSerialization($row);
         }
