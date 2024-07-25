@@ -64,6 +64,7 @@ class JobRunner implements DbBasedComponent
 
         $tasks = [
             'expire',
+            'hostlist',
         ];
         if (Icinga::app()->getModuleManager()->hasLoaded('monitoring')) {
             $tasks[] = 'ido';
