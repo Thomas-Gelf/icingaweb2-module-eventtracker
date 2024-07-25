@@ -2,6 +2,7 @@
 
 namespace Icinga\Module\Eventtracker\Web\Table;
 
+use gipfl\Format\LocalTimeFormat;
 use Icinga\Module\Eventtracker\Web\Widget\ToggleTableColumns;
 use ipl\Html\BaseHtmlElement;
 use ipl\Html\Html;
@@ -14,6 +15,9 @@ use InvalidArgumentException;
 
 abstract class BaseTable extends ZfQueryBasedTable
 {
+    /** @var LocalTimeFormat */
+    protected $timeFormatter;
+
     /** @var TableColumn[] */
     private $availableColumns = [];
 
@@ -373,4 +377,14 @@ abstract class BaseTable extends ZfQueryBasedTable
             $this->columnToggle = (new ToggleTableColumns($this, $url))->ensureAssembled();
         }
     }
+
+    protected function getTimeFormatter(): LocalTimeFormat
+    {
+        if ($this->timeFormatter === null) {
+            $this->timeFormatter = new LocalTimeFormat();
+        }
+
+        return $this->timeFormatter;
+    }
+
 }

@@ -3,7 +3,6 @@
 namespace Icinga\Module\Eventtracker\Web\Table;
 
 use gipfl\Format\LocalDateFormat;
-use gipfl\Format\LocalTimeFormat;
 use gipfl\IcingaWeb2\Link;
 use gipfl\Translation\TranslationHelper;
 use ipl\Html\Html;
@@ -13,17 +12,8 @@ class DowntimeRulesTable extends WebActionTable
 {
     use TranslationHelper;
 
-    /** @var LocalTimeFormat */
-    protected $timeFormatter;
-
-    /** @var LocalDateFormat */
-    protected $dateFormatter;
-
     protected function initialize()
     {
-        $this->timeFormatter = new LocalTimeFormat();
-        // $this->timeFormatter->setTimezone(new \DateTimeZone('Europe/Berlin'));
-        $this->dateFormatter = new LocalDateFormat();
         $this->addAvailableColumns([
             $this->createColumn('label', $this->action->singular, [
                 'uuid'        => 'dr.uuid',
@@ -65,7 +55,7 @@ class DowntimeRulesTable extends WebActionTable
     protected function niceTsFormat($ts): string
     {
         $ts = $ts / 1000;
-        return $this->dateFormatter->getFullDay($ts) . ' ' . $this->timeFormatter->getShortTime($ts);
+        return $this->getDateFormatter()->getFullDay($ts) . ' ' . $this->getTimeFormatter()->getShortTime($ts);
     }
 
     public function prepareQuery()

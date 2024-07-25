@@ -11,14 +11,13 @@ use Icinga\Module\Eventtracker\Time;
 use ipl\Html\Html;
 use ipl\Html\HtmlElement;
 
-class ScheduledDowntimesTable extends BaseTable
+class DowntimesTable extends BaseTable
 {
     use TranslationHelper;
 
     protected $currentDayString = '';
 
-    protected $searchColumns = [
-    ];
+    protected $searchColumns = [];
 
     public function renderRow($row): HtmlElement
     {

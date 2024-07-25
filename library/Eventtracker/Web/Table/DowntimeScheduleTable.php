@@ -2,8 +2,6 @@
 
 namespace Icinga\Module\Eventtracker\Web\Table;
 
-use gipfl\Format\LocalDateFormat;
-use gipfl\Format\LocalTimeFormat;
 use gipfl\Translation\TranslationHelper;
 use Icinga\Module\Eventtracker\Engine\Downtime\DowntimeRule;
 
@@ -11,15 +9,9 @@ class DowntimeScheduleTable extends BaseTable
 {
     use TranslationHelper;
 
-    /** @var LocalTimeFormat */
-    protected $timeFormatter;
-
-    /** @var LocalDateFormat */
-    protected $dateFormatter;
     protected $db;
-    /**
-     * @var DowntimeRule
-     */
+
+    /** @var DowntimeRule */
     protected $rule;
 
     /** @var ?string */
@@ -34,10 +26,6 @@ class DowntimeScheduleTable extends BaseTable
 
     protected function initialize()
     {
-        $this->timeFormatter = new LocalTimeFormat();
-        $this->timeFormatter->setTimezone(new \DateTimeZone('Europe/Berlin'));
-        $this->dateFormatter = new LocalDateFormat();
-        $this->dateFormatter->setTimezone(new \DateTimeZone('Europe/Berlin'));
         $this->addAvailableColumns([
             $this->createColumn('ts_expected_start', $this->translate('Expected Start'), 'ts_expected_start')
                 ->setRenderer(function ($row) {
@@ -61,8 +49,8 @@ class DowntimeScheduleTable extends BaseTable
         }
         $ts = $ts / 1000;
         // return date('Y-m-d H:i', $ts);
-        $date = $this->dateFormatter->getFullDay($ts);
-        $time = $this->timeFormatter->getShortTime($ts);
+        $date = $this->getDateFormatter()->getFullDay($ts);
+        $time = $this->getTimeFormatter()->getShortTime($ts);
         if ($date === $this->currentDateString) {
             return $time;
         }
