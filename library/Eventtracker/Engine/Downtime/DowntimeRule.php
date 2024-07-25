@@ -64,7 +64,9 @@ class DowntimeRule implements JsonSerialization, DbStorableInterface
         $objects = [];
         $db = $store->getDb();
         foreach ($db->fetchAll($db->select()->from($table)) as $row) {
-            $objects[$row->uuid] = static::fromSerialization((object) $row);
+            $object = static::fromSerialization((object) $row);
+            $object->setStored();
+            $objects[$row->uuid] = $object;
         }
 
         return $objects;
