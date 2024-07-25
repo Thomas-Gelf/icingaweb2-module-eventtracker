@@ -11,7 +11,9 @@ use Ramsey\Uuid\Uuid;
 class DowntimeCalculated implements JsonSerialization, DbStorableInterface
 {
     use UuidObjectHelper;
+
     public const TABLE_NAME = 'downtime_calculated';
+    public const TS_NEVER = 2145916800000; // 2038-01-01
 
     protected $tableName = self::TABLE_NAME;
     protected $keyProperty = 'uuid';
@@ -32,7 +34,7 @@ class DowntimeCalculated implements JsonSerialization, DbStorableInterface
         if ($duration = $rule->get('duration')) {
             $end = $start + $duration * 1000;
         } else {
-            $end = 2145916800000; // 2038-01-01
+            $end = self::TS_NEVER; // must NOT be NULL
         }
 
         return (new static())->setProperties([
