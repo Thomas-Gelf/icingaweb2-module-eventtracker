@@ -7,6 +7,8 @@ use gipfl\Process\ProcessList;
 use gipfl\Protocol\JsonRpc\Handler\NamespacedPacketHandler;
 use gipfl\Protocol\JsonRpc\JsonRpcConnection;
 use gipfl\ZfDb\Adapter\Adapter as Db;
+use Icinga\Application\Config;
+use Icinga\Application\Icinga;
 use Psr\Log\LoggerInterface;
 use React\ChildProcess\Process;
 use React\EventLoop\LoopInterface;
@@ -56,6 +58,24 @@ class JobRunner implements DbBasedComponent
         return $this;
     }
 
+    protected function getTaskList(): array
+    {
+        $config = Config::module('eventtracker');
+
+        $tasks = [
+            'expire',
+        ];
+        if (Icinga::app()->getModuleManager()->hasLoaded('monitoring')) {
+            $tasks[] = 'ido';
+            $tasks[] = 'idostate';
+        }
+        if ($config->get('scom', 'simulation_file') || $config->get('scom', 'db_resource')) {
+            $tasks[] = 'scom';
+        }
+
+        return $tasks;
+    }
+
     /**
      * @param Db $db
      * @return ExtendedPromiseInterface
@@ -71,12 +91,7 @@ class JobRunner implements DbBasedComponent
             }
         };
         $schedule = function () {
-            $taskNames = [
-                'scom',
-                'ido',
-                'idostate',
-                'expire',
-            ];
+            $taskNames = $this->getTaskList();
             foreach ($taskNames as $taskName) {
                 if (! isset($this->scheduledTasks[$taskName])) {
                     $this->scheduledTasks[$taskName] = $taskName;
