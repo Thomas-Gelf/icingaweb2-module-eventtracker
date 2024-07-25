@@ -4,10 +4,13 @@ namespace Icinga\Module\Eventtracker\Web\Table;
 
 use gipfl\Format\LocalDateFormat;
 use gipfl\IcingaWeb2\Icon;
+use gipfl\IcingaWeb2\Link;
 use gipfl\Translation\TranslationHelper;
 use gipfl\Web\Table\NameValueTable;
 use Icinga\Module\Eventtracker\Engine\Downtime\DowntimeCalculated;
+use Icinga\Module\Eventtracker\Engine\Downtime\HostList;
 use Icinga\Module\Eventtracker\Time;
+use ipl\Html\DeferredText;
 use ipl\Html\Html;
 use ipl\Html\HtmlElement;
 
@@ -18,6 +21,8 @@ class DowntimesTable extends BaseTable
     protected $currentDayString = '';
 
     protected $searchColumns = [];
+
+    protected $requestedHostLists = [];
 
     public function renderRow($row): HtmlElement
     {
@@ -97,6 +102,8 @@ class DowntimesTable extends BaseTable
                 'ts_started'        => 'dc.ts_started',
                 'ts_expected_start' => 'dc.ts_expected_start',
                 'ts_expected_end'   => 'dc.ts_expected_end',
+                'host_list_uuid'    => 'dr.host_list_uuid',
+                'host_list_label'   => 'hl.label',
             ])->setRenderer(function ($row) {
                 $result = [];
 
@@ -104,21 +111,28 @@ class DowntimesTable extends BaseTable
                 if ($row->is_active === 'y') {
                     $result[] = Icon::create('plug', ['class' => ['downtime-icon', 'active-downtime']]);
                     $infoTable->addNameValueRow(
-                        $this->translate('Started'),
+                        $this->translate('Started:'),
                         $this->formatRelatedTimestamp($row->ts_started)
                     );
                 } else {
                     $result[] = Icon::create('history', ['class' => 'downtime-icon']);
                     $infoTable->addNameValueRow(
-                        $this->translate('Starts'),
+                        $this->translate('Starts:'),
                         $this->formatRelatedTimestamp($row->ts_expected_start)
                     );
                 }
                 $infoTable->addNameValueRow(
-                    $this->translate('Ends'),
+                    $this->translate('Ends:'),
                     $this->formatRelatedTimestamp($row->ts_expected_end)
                 );
-                $result[] = Html::tag('strong', $row->label);
+                if ($row->host_list_uuid) {
+                    $infoTable->addNameValueRow($this->translate('Host list:'), Html::sprintf(
+                        $this->translate('%s (currently %s hosts)'),
+                        $row->host_list_label,
+                        $this->deferredHostListCount($row->host_list_uuid)
+                    ));
+                }
+                $result[] = Link::create($row->label, '#');
                 $result[] = Html::tag('br');
                 $result[] = $infoTable;
 
@@ -141,11 +155,46 @@ class DowntimesTable extends BaseTable
         ];
     }
 
+    protected function deferredHostListCount(string $hostListUuid): DeferredText
+    {
+        if (! array_key_exists($hostListUuid, $this->requestedHostLists)) {
+            $this->requestedHostLists[$hostListUuid] = null;
+        }
+
+        return new DeferredText(function () use ($hostListUuid) {
+            if ($this->requestedHostLists[$hostListUuid] === null) {
+                $this->fetchRequestedHostListCounts();
+            }
+
+            return $this->requestedHostLists[$hostListUuid] ?? '??';
+        });
+    }
+
+    protected function fetchRequestedHostListCounts()
+    {
+        if (empty($this->requestedHostLists)) {
+            return;
+        }
+
+        foreach ($this->requestedHostLists as $key) {
+            $this->requestedHostLists[$key] = 0;
+        }
+
+        foreach ($this->db()->fetchPairs($this->db()->select()->from(['hl' => HostList::TABLE_NAME], [
+            'uuid',
+            'cnt' => 'COUNT(*)'
+        ])->joinLeft(['hlm' => 'host_list_member'], 'hl.uuid = hlm.list_uuid', [])
+            ->where('uuid IN (?)', array_keys($this->requestedHostLists))) as $uuid => $count) {
+            $this->requestedHostLists[$uuid] = $count;
+        }
+    }
+
     public function prepareQuery()
     {
         return $this->db()->select()
             ->from(['dc' => 'downtime_calculated'], $this->getRequiredDbColumns())
             ->join(['dr' => 'downtime_rule'], 'dr.config_uuid = dc.rule_config_uuid', [])
+            ->joinLeft(['hl' => 'host_list'], 'dr.host_list_uuid = hl.uuid', [])
             ->order('dc.ts_expected_start ASC');
     }
 }
