@@ -56,6 +56,16 @@ class SyncCommand extends Command
         });
     }
 
+    /**
+     * Daemon/JobRunner is running this action
+     */
+    public function hostlistAction()
+    {
+        $this->runWithLoop(function () {
+            $this->runHostlists();
+        });
+    }
+
     protected function runScom()
     {
         $scom = new ScomSync(DbFactory::db());
@@ -123,6 +133,17 @@ class SyncCommand extends Command
         }
 
         return resolve();
+    }
+
+    public function runHostlists(): ExtendedPromiseInterface
+    {
+        $configured = $this->Config()->getSection('director-host-lists')->toArray();
+        if (empty($configured)) {
+            return resolve(null);
+        }
+        $db = DbFactory::db();
+
+        return resolve(null);
     }
 
     protected function readJsonFile($filename)
