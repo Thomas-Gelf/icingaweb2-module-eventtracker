@@ -251,7 +251,14 @@ class ConfigurationController extends Controller
         });
         $this->content()->add($form);
         if ($form->hasObject()) {
-            $this->content()->add(new DowntimeScheduleTable($this->db(), $form->getObject()));
+            $table = new DowntimeScheduleTable($this->db(), $form->getObject());
+            if (count($table) === 0) {
+                $this->content()->add(
+                    Hint::info($this->translate('Currently, no iteration has been scheduled for this downtime'))
+                );
+            } else {
+                $this->content()->add($table);
+            }
         }
     }
 
