@@ -135,7 +135,7 @@ class SyslogInput extends SimpleTaskConstructor implements Input
                     ) {
                         $this->emit(InputRunner::ON_EVENT, [$event]);
                     }
-                } catch (\Exception $e) {
+                } catch (\Throwable $e) {
                     $this->logger->error("Failed to process '$line': " . $e->getMessage());
                     echo $e->getTraceAsString();
                 }
