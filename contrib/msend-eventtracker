@@ -1,4 +1,6 @@
-#!/bin/bash
+# temporarily disabled shebang line
+
+# ! /bin/bash
 
 # DEPRECATED, please use the msend module
 

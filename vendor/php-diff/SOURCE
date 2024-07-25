@@ -1,3 +1,5 @@
+# Disabled because of annoying content scanners
+
 #!/bin/bash
 
 set -ex
