@@ -2,7 +2,6 @@
 
 namespace Icinga\Module\Eventtracker\Controllers;
 
-use Icinga\Module\Eventtracker\DbFactory;
 use Icinga\Module\Eventtracker\Status;
 use Icinga\Module\Eventtracker\Web\Table\BaseSummaryTable;
 use Icinga\Module\Eventtracker\Web\Table\HostNameSummaryTable;
