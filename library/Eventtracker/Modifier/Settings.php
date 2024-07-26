@@ -59,7 +59,7 @@ class Settings implements JsonSerializable
         return (array) $this->getRequired(($name));
     }
 
-    public function getAsSettings($name, Settings $default = null)
+    public function getAsSettings($name, Settings $default = null): Settings
     {
         if ($this->has($name)) {
             return Settings::fromSerialization($this->settings[$name]);
@@ -79,6 +79,41 @@ class Settings implements JsonSerializable
         }
 
         throw new InvalidArgumentException("Setting '$name' is not available");
+    }
+
+    public function shift($name, $default = null)
+    {
+        $value = $this->get($name, $default);
+        unset($this->settings[$name]);
+        return $value;
+    }
+
+    public function shiftArray($name, $default = [])
+    {
+        $value = $this->getArray($name, $default);
+        unset($this->settings[$name]);
+        return $value;
+    }
+
+    public function shiftRequiredArray($name): array
+    {
+        $value = $this->requireArray($name);
+        unset($this->settings[$name]);
+        return $value;
+    }
+
+    public function shiftAsSettings($name, Settings $default = null): Settings
+    {
+        $value = $this->getAsSettings($name);
+        unset($this->settings[$name]);
+        return $value;
+    }
+
+    public function shiftRequired($name)
+    {
+        $value = $this->getRequired($name);
+        unset($this->settings[$name]);
+        return $value;
     }
 
     public function has($name): bool
