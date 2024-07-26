@@ -4,7 +4,9 @@ namespace Icinga\Module\Eventtracker\Web\Form\Input;
 
 use gipfl\Translation\TranslationHelper;
 use Icinga\Module\Eventtracker\Engine\FormExtension;
+use Icinga\Module\Eventtracker\Web\Widget\Documentation;
 use ipl\Html\Form;
+use ipl\Html\Html;
 use Ramsey\Uuid\Uuid;
 
 class RestApiFormExtension implements FormExtension
@@ -27,5 +29,28 @@ class RestApiFormExtension implements FormExtension
             ),
             'value'       => Uuid::uuid4()->toString(),
         ]);
+        if ($token = $form->getValue('token')) {
+            $docs = Documentation::link(
+                $this->translate('Documentation'),
+                'eventtracker',
+                '61-REST_API',
+                $this->translate('Documentation')
+            );
+
+            $form->add(Html::tag('dl', [
+                Html::tag('dt', Html::tag('label', $this->translate('Usage'))),
+                Html::tag('dd', [
+                    Html::tag('strong', $token),
+                    Html::tag('p', ['class' => 'description'], Html::sprintf(
+                        $this->translate(
+                            'Please use this token as a Bearer Token in your Authentication-Header'
+                            . ' when talking to our REST API: %s. Check our related %s for details'
+                        ),
+                        Html::tag('pre', 'Authorization: Bearer '. $token),
+                        $docs
+                    ))
+                ])
+            ]));
+        }
     }
 }
