@@ -9,6 +9,7 @@ class ActionRegistry extends SimpleRegistry
     protected $implementations = [
         'command' => CommandAction::class,
         'mail'    => MailAction::class,
+        'soap'    => SoapAction::class,
         'iet'     => IetAction::class
     ];
 }
