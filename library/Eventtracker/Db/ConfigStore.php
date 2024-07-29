@@ -163,9 +163,11 @@ class ConfigStore
         if (! empty($filter)) {
             $query .= ' WHERE';
         }
+        $filters = [];
         foreach ($filter as $key => $value) {
-            $query .= $db->quoteInto(sprintf(' %s = ?', $db->quoteIdentifier($key)), $value);
+            $filters[] = $db->quoteInto(sprintf(' %s = ?', $db->quoteIdentifier($key)), $value);
         }
+        $query .= implode(' AND ', $filters);
         $query .= ' ORDER BY label';
         $rows = $db->fetchAll($query);
         foreach ($rows as $row) {
