@@ -17,6 +17,7 @@ use Icinga\Module\Eventtracker\Engine\Task;
 use Icinga\Module\Eventtracker\Modifier\Settings;
 use Psr\Log\LoggerAwareInterface;
 use Psr\Log\LoggerInterface;
+use Psr\Log\NullLogger;
 use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\UuidInterface;
 use React\EventLoop\LoopInterface;
@@ -34,6 +35,9 @@ class ConfigStore
     public function __construct(Adapter $db, LoggerInterface $logger = null)
     {
         $this->db = $db;
+        if ($logger === null) {
+            $logger = new NullLogger();
+        }
         $this->logger = $logger;
     }
 
