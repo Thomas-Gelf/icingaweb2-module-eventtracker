@@ -72,6 +72,14 @@ class SoapClientDefinitionParser
         return $result;
     }
 
+    public static function discover(SoapClient $client): SoapClientDefinitionParser
+    {
+        return new SoapClientDefinitionParser(
+            $client->__getFunctions(),
+            $client->__getTypes()
+        );
+    }
+
     protected function requireType($name): SoapTypeMeta
     {
         if (isset($this->types[$name])) {
