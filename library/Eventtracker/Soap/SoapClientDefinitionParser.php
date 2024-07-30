@@ -72,6 +72,11 @@ class SoapClientDefinitionParser
         return $result;
     }
 
+    public function getReturnType(string $method): SoapTypeMeta
+    {
+        return $this->requireType($this->methods[$method]->returnType);
+    }
+
     public static function discover(SoapClient $client): SoapClientDefinitionParser
     {
         return new SoapClientDefinitionParser(
@@ -86,7 +91,7 @@ class SoapClientDefinitionParser
             return $this->types[$name];
         }
 
-        throw new \RuntimeException('No sucht type: ' . $name);
+        throw new \RuntimeException('No such type: ' . $name);
     }
 
     protected function parseMethodDefinitions(array $soapMethods): array
