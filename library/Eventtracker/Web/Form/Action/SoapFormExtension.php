@@ -7,6 +7,8 @@ use gipfl\Web\Widget\Hint;
 use Icinga\Module\Eventtracker\Engine\FormExtension;
 use Icinga\Module\Eventtracker\Soap\SoapClient;
 use Icinga\Module\Eventtracker\Soap\SoapClientDefinitionParser;
+use Icinga\Module\Eventtracker\Soap\SoapMethodMeta;
+use Icinga\Module\Eventtracker\Soap\SoapParamMeta;
 use ipl\Html\Form;
 use ipl\Html\Html;
 
@@ -73,6 +75,20 @@ EOT
                         ]);
                     }
                 }
+
+                $form->addElement('text', 'ackMessage', [
+                    'label'       => $this->translate('Icinga ACK Message'),
+                    'description' => Html::sprintf(
+                        $this->translate(
+                            'If defined, the related issue will be acknowledged, once the SOAP action has been triggered.'
+                            . ' Available placeholders / properties of %s: %s'
+                        ),
+                        $parser->getReturnType($methodName)->name,
+                        Html::tag('strong', implode(', ', array_map(function (SoapParamMeta $param) {
+                            return '{' . $param->name . '}';
+                        }, $parser->getReturnType($methodName)->parameters)))
+                    ),
+                ]);
             } catch (\Exception $e) {
                 $form->getElement('url')->addMessage($e->getMessage());
                  $form->add($e->getMessage() .  ' ' . $e->getFile() . ':' . $e->getLine());
