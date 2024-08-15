@@ -144,6 +144,12 @@ class ConfigHelper
                     } else {
                         $value = $issue->host->name;
                     }
+                } elseif ($property === 'address') {
+                    if ($issue instanceof IcingaDbHost) {
+                        $value = $issue->address;
+                    } else {
+                        $value = $issue->host->address;
+                    }
                 } elseif (in_array($property, ['service_name', 'service_description'])) {
                     if ($issue instanceof IcingaDbHost) {
                         $value = null;
