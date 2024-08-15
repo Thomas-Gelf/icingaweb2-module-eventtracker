@@ -42,7 +42,8 @@ class SoapFormExtension implements FormExtension
                 $form->addElement('select', 'methodName', [
                     'label' => $this->translate('SOAP Method'),
                     'class' => 'autosubmit',
-                    'options' => [
+                    'required' => true,
+                    'options'  => [
                         null => $this->translate('- please choose -'),
                     ] + array_combine($methodNames, $methodNames)
                 ]);
