@@ -12,6 +12,7 @@ use Icinga\Module\Eventtracker\Soap\SoapInteractiveActionForm;
 use Icinga\Module\Monitoring\Backend\MonitoringBackend;
 use Icinga\Module\Monitoring\Object\Host;
 use Icinga\Module\Monitoring\Object\Service;
+use Icinga\Web\Notification;
 
 class ActionController extends Controller
 {
@@ -51,13 +52,16 @@ class ActionController extends Controller
             throw new NotFoundError('Neither icingadb nor monitoring is active');
         }
 
-
         $action = $actions[$uuidString];
         $this->addTitle($action->getName());
         if (! $action instanceof SoapAction) {
             throw new NotFoundError($this->translate('Triggering actions is available for SOAP actions only'));
         }
         $form = new SoapInteractiveActionForm($action, $object);
+        $form->on($form::ON_SUCCESS, function () {
+            Notification::success('Succeeded');
+            $this->redirectNow($this->url());
+        });
         $form->handleRequest($this->getServerRequest());
         $this->content()->add($form);
     }
