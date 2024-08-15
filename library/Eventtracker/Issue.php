@@ -137,7 +137,7 @@ class Issue implements JsonSerialization
         $result = $db->fetchRow(
             $db->select()
                 ->from(self::$tableName)
-                ->where('sender_event_checksum = ?', $event->getChecksum())
+                ->where('sender_event_checksum = ?', DbUtil::quoteBinary($event->getChecksum(), $db))
         );
 
         if ($result) {
