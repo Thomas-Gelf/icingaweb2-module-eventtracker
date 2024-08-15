@@ -33,7 +33,7 @@ class SoapInteractiveActionForm extends Form
     protected function assemble()
     {
         $action = $this->soapAction;
-        $settings = $action->getSettings();
+        $settings = $action->getServiceSettings();
         $client = $action->getSoapClient();
         $parser = SoapClientDefinitionParser::discover($client);
         $methodParams = $parser->getFlatMethodProperties($action->getMethodName());
@@ -67,7 +67,7 @@ class SoapInteractiveActionForm extends Form
         $method = $this->soapAction->getMethodName();
         $result = $this->soapAction->getSoapClient()->$method(...$values);
         $username = Auth::getInstance()->getUser()->getUsername();
-        if ($message = $this->soapAction->getSettings()->get('ackMessage')) {
+        if ($message = $this->soapAction->getAckMessage()) {
             $message = ConfigHelper::fillPlaceholders($message, $result);
             if ($this->object instanceof Model) {
                 $commandPipe = new CommandPipe();
