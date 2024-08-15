@@ -1,6 +1,6 @@
 <?php
 
-namespace Icinga\Module\Eventracker\IcingaDb;
+namespace Icinga\Module\Eventtracker\IcingaDb;
 
 use ArrayIterator;
 use Icinga\Module\Icingadb\Command\Object\AcknowledgeProblemCommand;
