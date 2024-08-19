@@ -438,7 +438,7 @@ class Issue implements JsonSerialization
 
     public function setTicketRef($ticketRef)
     {
-        $this->properties['ticket_ref'] = $ticketRef;
+        $this->set('ticket_ref', $ticketRef);
         $this->fixOpenAck();
     }
 
