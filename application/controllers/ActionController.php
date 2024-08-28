@@ -20,6 +20,7 @@ class ActionController extends Controller
 
     public function runAction()
     {
+        $this->assertPermission('eventtracker/operator');
         $this->addSingleTab($this->translate('Trigger Action'));
         $db = DbFactory::db();
         $actions = SoapActionHelper::loadSoapActions($db);
