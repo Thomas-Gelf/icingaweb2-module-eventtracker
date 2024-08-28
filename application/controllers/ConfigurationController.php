@@ -41,6 +41,7 @@ class ConfigurationController extends Controller
 
     public function init()
     {
+        $this->assertPermission('eventtracker/admin');
         $this->actions = new WebActions();
     }
 
