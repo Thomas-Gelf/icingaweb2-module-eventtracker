@@ -2,6 +2,7 @@
 
 namespace Icinga\Module\Eventtracker\ProvidedHook\Monitoring;
 
+use Icinga\Authentication\Auth;
 use Icinga\Module\Eventtracker\DbFactory;
 use Icinga\Module\Eventtracker\Soap\SoapActionHelper;
 use Icinga\Module\Monitoring\Hook\ServiceActionsHook;
@@ -18,6 +19,9 @@ class ServiceActions extends ServiceActionsHook
     public function getActionsForService(Service $service)
     {
         $urls = [];
+        if (!Auth::getInstance()->hasPermission('eventtracker/operator')) {
+            return [];
+        }
         $db = DbFactory::db();
         $actions = SoapActionHelper::loadSoapActions($db);
         foreach ($actions as $action) {
