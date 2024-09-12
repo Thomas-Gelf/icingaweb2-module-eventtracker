@@ -299,6 +299,7 @@ CREATE TABLE issue_history (
   host_name VARCHAR(128) COLLATE utf8mb4_general_ci DEFAULT NULL, -- mc_host
   object_class VARCHAR(128) NOT NULL, --
   object_name VARCHAR(128) COLLATE utf8mb4_general_ci NOT NULL,
+  problem_identifier VARCHAR(64) NULL DEFAULT NULL,
   ts_expiration BIGINT(20) NULL DEFAULT NULL,
   ts_first_event BIGINT(20) NOT NULL, -- milliseconds since epoch
   ts_last_modified BIGINT(20) NOT NULL, -- milliseconds since epoch
@@ -440,4 +441,4 @@ CREATE TABLE eventtracker_schema_migration (
 
 INSERT INTO eventtracker_schema_migration
   (schema_version, migration_time)
-VALUES (17, NOW());
+VALUES (18, NOW());

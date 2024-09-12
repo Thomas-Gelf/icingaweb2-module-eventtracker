@@ -45,7 +45,7 @@ class IssueHistory
 
     public static function persist(Issue $issue, Db $db, $reason, $closedBy = null)
     {
-        $blacklist = ['status', 'problem_identifier'];
+        $blacklist = ['status'];
         $properties = $issue->getProperties();
         foreach ($blacklist as $key) {
             unset($properties[$key]);
