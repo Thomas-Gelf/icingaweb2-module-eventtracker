@@ -36,6 +36,8 @@ class DowntimeRunner implements EventEmitterInterface, DbBasedComponent
     protected $currentTime;
     /** @var DowntimeRule[] */
     protected $allDowntimeRules = [];
+    /** @var array<string, Filter> */
+    protected static $knownFilters = [];
 
     public function __construct(LoggerInterface $logger)
     {
@@ -108,7 +110,10 @@ class DowntimeRunner implements EventEmitterInterface, DbBasedComponent
                 $label = $rule->get('label');
                 $filter = $rule->get('filter_definition');
                 if ($filter && $filter !== '[]') { // Why [] ??
-                    $filter = Filter::fromQueryString($filter);
+                    if (!isset(self::$knownFilters[$filter])) {
+                        self::$knownFilters[$filter] = Filter::fromQueryString($filter);
+                    }
+                    $filter = self::$knownFilters[$filter];
                     if ($filter->matches($issue)) {
                         // $this->logger->notice(sprintf('%s, Filter: XXXXXXXXX %s should be in Downtime', $label, $issue->getNiceUuid()));
                     } else {
