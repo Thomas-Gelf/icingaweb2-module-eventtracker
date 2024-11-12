@@ -392,7 +392,7 @@ class ConfigurationController extends Controller
             if ($url = $this->getRelatedIssueUrl()) {
                 $this->redirectNow($url);
             } else {
-                $this->redirectNow($action->listUrl);
+                $this->redirectNow($action->listUrl . '#!__CLOSE__');
             }
         }
 
