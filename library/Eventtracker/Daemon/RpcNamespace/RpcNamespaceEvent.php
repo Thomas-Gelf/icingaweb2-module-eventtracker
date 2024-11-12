@@ -153,6 +153,9 @@ class RpcNamespaceEvent implements EventEmitterInterface
                 $issue = Issue::createFromEvent($event);
                 $this->counters->increment(self::CNT_NEW);
             }
+            if ($issue->get('severity') === null) {
+                $issue->set('severity', 'notice');
+            }
             $issue->storeToDb($this->db);
         } elseif ($issue) {
             $this->counters->increment(self::CNT_RECOVERED);
