@@ -10,6 +10,5 @@ class ActionRegistry extends SimpleRegistry
         'command' => CommandAction::class,
         'mail'    => MailAction::class,
         'soap'    => SoapAction::class,
-        'iet'     => IetAction::class
     ];
 }
