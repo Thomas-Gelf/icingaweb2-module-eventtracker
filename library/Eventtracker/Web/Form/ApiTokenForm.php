@@ -3,6 +3,7 @@
 namespace Icinga\Module\Eventtracker\Web\Form;
 
 use gipfl\Json\JsonString;
+use Icinga\Module\Eventtracker\Web\Widget\Documentation;
 use ipl\Html\Html;
 
 class ApiTokenForm extends UuidObjectForm
@@ -15,17 +16,31 @@ class ApiTokenForm extends UuidObjectForm
     protected function assemble()
     {
         if ($this->uuid) {
+            $docs = Documentation::link(
+                $this->translate('Documentation'),
+                'eventtracker',
+                '61-REST_API',
+                $this->translate('Documentation')
+            );
+
             $this->add(Html::tag('dl', [
                 Html::tag('dt', Html::tag('label', $this->translate('Token'))),
                 Html::tag('dd', [
                     Html::tag('strong', $this->uuid->toString()),
-                    Html::tag('p', ['class' => 'description'], Html::sprintf(
-                        $this->translate(
-                            'Please use this token as a Bearer Token in your Authentication-Header'
-                            . ' when talking to our REST API: %s'
+                    Html::tag('p', ['class' => 'description'], [
+                        Html::sprintf(
+                            $this->translate(
+                                'Please use this token as a Bearer Token in your Authentication-Header'
+                                . ' when talking to our REST API: %s'
+                            ),
+                            Html::tag('pre', 'Authorization: Bearer '. $this->uuid->toString())
                         ),
-                        Html::tag('pre', 'Authorization: Bearer '. $this->uuid->toString())
-                    ))
+                        Html::sprintf(
+                            $this->translate('Check our related %s for details'),
+                            $docs
+                        ),
+
+                    ])
                 ])
             ]));
         }
