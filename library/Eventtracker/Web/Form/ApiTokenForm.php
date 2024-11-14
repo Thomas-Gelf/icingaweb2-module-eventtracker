@@ -33,7 +33,10 @@ class ApiTokenForm extends UuidObjectForm
                                 'Please use this token as a Bearer Token in your Authentication-Header'
                                 . ' when talking to our REST API: %s'
                             ),
-                            Html::tag('pre', 'Authorization: Bearer '. $this->uuid->toString())
+                            Html::tag(
+                                'pre',
+                                "Accept: application/json\nAuthorization: Bearer ". $this->uuid->toString()
+                            )
                         ),
                         Html::sprintf(
                             $this->translate('Check our related %s for details'),

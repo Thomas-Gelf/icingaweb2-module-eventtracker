@@ -40,14 +40,16 @@ class RestApiFormExtension implements FormExtension
             $form->add(Html::tag('dl', [
                 Html::tag('dt', Html::tag('label', $this->translate('Usage'))),
                 Html::tag('dd', [
-                    Html::tag('strong', $token),
                     Html::tag('p', ['class' => 'description'], [
                         Html::sprintf(
                             $this->translate(
                                 'Please use this token as a Bearer Token in your Authentication-Header'
                                 . ' when talking to our REST API: %s'
                             ),
-                            Html::tag('pre', 'Authorization: Bearer '. $token)
+                            Html::tag(
+                                'pre',
+                                "Accept: application/json\nAuthorization: Bearer ". $token
+                            )
                         ),
                         Html::sprintf(
                             $this->translate('Check our related %s for details'),
