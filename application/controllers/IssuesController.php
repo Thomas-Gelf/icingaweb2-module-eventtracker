@@ -5,6 +5,7 @@ namespace Icinga\Module\Eventtracker\Controllers;
 use Icinga\Authentication\Auth;
 use Icinga\Module\Eventtracker\Auth\RestrictionHelper;
 use Icinga\Module\Eventtracker\Db\EventSummaryBySeverity;
+use Icinga\Module\Eventtracker\Issue;
 use Icinga\Module\Eventtracker\Web\Table\IssuesTable;
 use Icinga\Module\Eventtracker\Web\Widget\AdditionalTableActions;
 use Icinga\Module\Eventtracker\Web\Widget\SeverityFilter;
@@ -12,13 +13,34 @@ use Icinga\Module\Eventtracker\Web\Widget\ToggleSeverities;
 use Icinga\Module\Eventtracker\Web\Widget\ToggleStatus;
 use Icinga\Web\Widget\Tabextension\DashboardAction;
 use ipl\Html\Html;
+use Ramsey\Uuid\Uuid;
 
 class IssuesController extends Controller
 {
     use IssuesFilterHelper;
+    use RestApiMethods;
+
+    protected $requiresAuthentication = false;
+
+    public function init()
+    {
+        parent::init();
+        if ($this->getRequest()->isApiRequest()) {
+            return;
+        } else {
+            $this->assertPermission('module/eventtracker');
+        }
+    }
 
     public function indexAction()
     {
+        if ($this->getRequest()->isApiRequest()) {
+            $this->runForApi(function () {
+                $this->listForApi();
+            });
+            return;
+        }
+
         $this->setAutorefreshInterval(20);
         $db = $this->db();
 
@@ -66,5 +88,36 @@ class IssuesController extends Controller
         if (! $this->showCompact()) {
             $this->tabs()->extend(new DashboardAction());
         }
+    }
+
+    protected function listForApi()
+    {
+        if (! $this->checkBearerToken('issues/fetch')) { // Hint: does not return on error
+            return;
+        }
+
+        $query = $this->db()->select()->from(['i' => 'issue'], []);
+        self::applyColumnAndFilterParams($query, $this->url(), $this->listValidIssueProperties());
+        $result = $this->db()->fetchAll($query);
+        foreach ($result as $row) {
+            self::fixIssueResultRow($row);
+        }
+        $this->sendJsonResponse($result);
+    }
+
+    protected function listValidIssueProperties(): array
+    {
+        return array_keys((new Issue())->getDefaultProperties());
+    }
+
+    protected static function fixIssueResultRow($row)
+    {
+        if (isset($row->issue_uuid)) {
+            $row->issue_uuid = Uuid::fromBytes($row->issue_uuid)->toString();
+        }
+        if (isset($row->input_uuid)) {
+            $row->input_uuid = Uuid::fromBytes($row->input_uuid)->toString();
+        }
+        unset($row->sender_event_checksum);
     }
 }
