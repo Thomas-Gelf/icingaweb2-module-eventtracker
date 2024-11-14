@@ -324,6 +324,11 @@ class IssueController extends Controller
             }
         } elseif ($uuid = $this->params->get('uuid')) {
             $uuids = [Uuid::fromString($uuid)->toString()];
+        } elseif ($id = $this->params->get('sender_event_id')) {
+            $uuids = $db->fetchCol($db->select()->from('issue', 'issue_uuid')->where('sender_event_id = ?', $id));
+            foreach ($uuids as $idx => $uuid) {
+                $uuids[$idx] = Uuid::fromBytes($uuid)->toString();
+            }
         } else {
             throw new \InvalidArgumentException('Got neither "ticket" nor "uuid"');
         }
