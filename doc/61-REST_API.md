@@ -69,3 +69,67 @@ we also support closing issues by ticket ID:
   "error": "Unable to connect to socket:///run/icinga-eventtracker/eventtracker.sock"
 }
 ```
+
+Creating Issues
+---------------
+
+Configuration for Event Senders is slightly different, as a related Event sender
+must be configured:
+
+![Configuration Dashboard: Inputs](screenshot/config_dashboard_inputs.png)
+
+Same as above, the web form shows basic usage instructions and links to this documentation
+section:
+
+![REST API: Event Sender](screenshot/rest_api_event-sender.png)
+
+### Perl Example
+
+Our ```contrib``` directory contains a small library, ```EventTracker.pm``` and
+the following example code:
+
+```perl
+#!/usr/bin/env perl
+
+# Where to find EventTracker.pm:
+use lib '/usr/local/lib/perl';
+use EventTracker;
+
+my $base_url = 'https://icinga.example.com/icingaweb2';
+my $token = '84caa56f-0e69-4ff2-874f-71e743bac89d';
+my $event_tracker = EventTracker->new($base_url, $token);
+my $job_name = 'Backup Job'
+
+# Use optional SSL Client Certificate:
+# $event_tracker->ssl_opts(
+#     SSL_ca_file         => '/some/where/ca.pem',
+#     SSL_cert_file       => '/some/where/client.example.com.pem',
+#     SSL_key_file        => '/some/where/client.example.com.key'
+# );
+
+# Disable SSL Checks (don't do this):
+# $event_tracker->ssl_opts(verify_hostname => 0, SSL_verify_mode => 0x00);
+
+my $response = $event_tracker->send_event({
+    'severity'     => 'warning',
+    'host_name'    => 'some.example.com',
+    'object_name'  => 'Some Job',
+    'object_class' => 'Job Errors',
+    'message'      => sprintf('Job failed: %s', $job_name),
+    'problem_identifier' => $jobName,
+    'attributes'   => {
+        'team' => 'Operating',
+        'wiki' => 'https://wiki.example.com/wiki/Some_Page',
+    },
+    'files' => [
+        {
+            'name' => 'screenshot.png',
+            # data can be the raw data or (when problematic with JSON-encoding)
+            # base64-encoded when prefixed as follows: base64,bl0a===
+            'data' => 'File content',
+        }
+    ]
+});
+
+printf("Submitted: %s\n", $response);
+```
