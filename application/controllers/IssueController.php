@@ -277,7 +277,6 @@ class IssueController extends Controller
         $this->runForApi(function () {
             $this->closeForApi();
         });
-
     }
 
     public function closeForApi()
