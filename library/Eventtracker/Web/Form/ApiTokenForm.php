@@ -37,8 +37,9 @@ class ApiTokenForm extends UuidObjectForm
             'required' => true,
             'multiple' => true,
             'options'  => [
-                'issue/acknowledge' => $this->translate('Acknowledge Issues'),
+                'issue/acknowledge' => $this->translate('Acknowledge Issues (not yet)'),
                 'issue/close' => $this->translate('Close Issues'),
+                'issues/fetch' => $this->translate('Fetch Issues'),
             ],
         ]);
         $this->addButtons();
