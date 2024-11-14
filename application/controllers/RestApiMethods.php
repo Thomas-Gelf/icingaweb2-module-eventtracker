@@ -125,7 +125,7 @@ trait RestApiMethods
 
     protected static function applyColumnAndFilterParams(Select $query, Url $url, array $validColumns)
     {
-        $columns = self::getColumnsFromUrlParam($url->getParams()->shift('columns'), $validColumns);
+        $columns = self::getColumnsFromUrlParam($url->getParams()->shift('properties'), $validColumns);
         $query->columns($columns ?? '*');
         $filter = Filter::fromQueryString($url->getQueryString());
         foreach ($filter->listFilteredColumns() as $column) {
