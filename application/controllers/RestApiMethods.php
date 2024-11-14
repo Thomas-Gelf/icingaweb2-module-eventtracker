@@ -7,6 +7,8 @@ use gipfl\Json\JsonEncodeException;
 use gipfl\Json\JsonString;
 use gipfl\Web\Widget\Hint;
 use Icinga\Exception\NotFoundError;
+use Ramsey\Uuid\Uuid;
+use Ramsey\Uuid\UuidInterface;
 
 trait RestApiMethods
 {
@@ -62,5 +64,48 @@ trait RestApiMethods
         $this->addSingleTab($this->translate('Error'));
         $this->addTitle($this->translate('API only'));
         $this->content()->add(Hint::error($this->translate('This URL is available for API requests only')));
+    }
+
+    protected function checkBearerToken(string $permission): bool
+    {
+        $token = null;
+        foreach ($this->getServerRequest()->getHeader('Authorization') as $line) {
+            if (preg_match('/^Bearer\s+([A-z0-9-]+)$/', $line, $match)) {
+                $token = $match[1];
+            }
+        }
+        if ($token === null) {
+            $this->sendJsonError('Bearer token is required', 401);
+            return false;
+        }
+        try {
+            $uuid = Uuid::fromString($token);
+        } catch (\Exception $e) {
+            $this->sendJsonError($e->getMessage());
+            return false;
+        }
+        $tokenPermissions = $this->getTokenPermissions($uuid);
+        if ($tokenPermissions === null) {
+            $this->sendJsonError(sprintf('Token %s is not valid', $token), 401);
+        }
+        if (in_array($permission, $tokenPermissions)) {
+            return true;
+        }
+
+        $this->sendJsonError(sprintf('Bearer token has no %s permission', $permission), 401);
+        return false;
+    }
+
+    protected function getTokenPermissions(UuidInterface $token): ?array
+    {
+        $db = $this->db();
+        $permissions = $db->fetchOne(
+            $db->select()->from('api_token', 'permissions')->where('uuid = ?', $token->getBytes())
+        );
+        if (empty($permissions)) {
+            return null;
+        }
+
+        return JsonString::decode($permissions);
     }
 }

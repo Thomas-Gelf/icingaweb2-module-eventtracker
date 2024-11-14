@@ -4,7 +4,6 @@ namespace Icinga\Module\Eventtracker\Controllers;
 
 use gipfl\IcingaWeb2\Link;
 use gipfl\IcingaWeb2\Url;
-use gipfl\Json\JsonString;
 use gipfl\Web\Widget\Hint;
 use Icinga\Application\Hook;
 use Icinga\Exception\Http\HttpNotFoundException;
@@ -26,8 +25,6 @@ use Icinga\Module\Eventtracker\Web\Widget\IssueHeader;
 use ipl\Html\Html;
 use Ramsey\Uuid\Uuid;
 
-use Ramsey\Uuid\UuidInterface;
-
 use function Clue\React\Block\awaitAll;
 
 class IssueController extends Controller
@@ -36,7 +33,6 @@ class IssueController extends Controller
     use RestApiMethods;
 
     protected $requiresAuthentication = false;
-    protected $tokenPermissions = [];
 
     public function init()
     {
@@ -345,49 +341,6 @@ class IssueController extends Controller
             $this->translate('%d issues have been closed'),
             $this->params->getRequired('cnt')
         )));
-    }
-
-    protected function checkBearerToken(string $permission): bool
-    {
-        $token = null;
-        foreach ($this->getServerRequest()->getHeader('Authorization') as $line) {
-            if (preg_match('/^Bearer\s+([A-z0-9-]+)$/', $line, $match)) {
-                $token = $match[1];
-            }
-        }
-        if ($token === null) {
-            $this->sendJsonError('Bearer token is required', 401);
-            return false;
-        }
-        try {
-            $uuid = Uuid::fromString($token);
-        } catch (\Exception $e) {
-            $this->sendJsonError($e->getMessage());
-            return false;
-        }
-        $tokenPermissions = $this->getTokenPermissions($uuid);
-        if ($tokenPermissions === null) {
-            $this->sendJsonError(sprintf('Token %s is not valid', $token), 401);
-        }
-        if (in_array($permission, $tokenPermissions)) {
-            return true;
-        }
-
-        $this->sendJsonError(sprintf('Bearer token has no %s permission', $permission), 401);
-        return false;
-    }
-
-    protected function getTokenPermissions(UuidInterface $token): ?array
-    {
-        $db = $this->db();
-        $permissions = $db->fetchOne(
-            $db->select()->from('api_token', 'permissions')->where('uuid = ?', $token->getBytes())
-        );
-        if (empty($permissions)) {
-            return null;
-        }
-
-        return JsonString::decode($permissions);
     }
 
     // TODO: IssueList?
