@@ -1,14 +1,16 @@
-# Disabled:
+# Disabled to avoid problems with a specific content filter.
+# Please remove this comment and fix the shebang line, before using this:
 
 #  ! /usr/bin/env perl
 
-# Where to fine EventTracker.pm:
+# Where to find EventTracker.pm:
 use lib '/usr/local/lib/perl';
 use EventTracker;
 
 my $base_url = 'https://icinga.example.com/icingaweb2';
 my $token = '84caa56f-0e69-4ff2-874f-71e743bac89d';
 my $event_tracker = EventTracker->new($base_url, $token);
+my $job_name = 'Backup Job'
 
 # Use optional SSL Client Certificate:
 # $event_tracker->ssl_opts(
@@ -25,11 +27,20 @@ my $response = $event_tracker->send_event({
     'host_name'    => 'some.example.com',
     'object_name'  => 'Some Job',
     'object_class' => 'Job Errors',
-    'message'      => 'The Job failed: ...',
+    'message'      => sprintf('Job failed: %s', $job_name),
+    'problem_identifier' => $jobName,
     'attributes'   => {
         'team' => 'Operating',
         'wiki' => 'https://wiki.example.com/wiki/Some_Page',
-    }
+    },
+    'files' => [
+        {
+            'name' => 'screenshot.png',
+            # data can be the raw data or (when problematic with JSON-encoding)
+            # base64-encoded when prefixed as follows: base64,bl0a===
+            'data' => 'File content',
+        }
+    ]
 });
 
 printf("Submitted: %s\n", $response);
