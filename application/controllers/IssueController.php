@@ -271,38 +271,37 @@ class IssueController extends Controller
      */
     public function closeAction()
     {
-        if (! $this->getRequest()->isApiRequest() || ! $this->getRequest()->isPost()) {
+        if (!$this->getRequest()->isApiRequest() || !$this->getRequest()->isPost()) {
             throw new NotFoundError('Not found');
         }
-        try {
-            if (! $this->checkBearerToken('issue/close')) {
-                return;
-            }
-        } catch (\Throwable $e) {
-            echo $e->getMessage();
-            exit;
-        }
-        try {
-            $uuids = $this->findApiRequestIssues();
-            $closedBy = $this->params->getRequired('closedBy');
-            $client = $this->remoteClient();
-            $requests = [];
-            foreach ($uuids as $uuid) {
-                $requests[$uuid] = $client->request('issue.close', [
-                    $uuid,
-                    $closedBy
-                ]);
-            }
-            $result = [];
-            foreach (awaitAll($requests, $this->loop()) as $uuid => $success) {
-                if ($success) {
-                    $result[] = $uuid;
-                }
-            }
-        } catch (\Exception $e) {
-            $this->sendJsonError($e);
+        $this->runForApi(function () {
+            $this->closeForApi();
+        });
+
+    }
+
+    public function closeForApi()
+    {
+        if (! $this->checkBearerToken('issue/close')) {
             return;
         }
+        $uuids = $this->findApiRequestIssues();
+        $closedBy = $this->params->getRequired('closedBy');
+        $client = $this->remoteClient();
+        $requests = [];
+        foreach ($uuids as $uuid) {
+            $requests[$uuid] = $client->request('issue.close', [
+                $uuid,
+                $closedBy
+            ]);
+        }
+        $result = [];
+        foreach (awaitAll($requests, $this->loop()) as $uuid => $success) {
+            if ($success) {
+                $result[] = $uuid;
+            }
+        }
+
         if (empty($result)) {
             $this->sendJsonResponse((object) [
                 'success' => false,
@@ -351,13 +350,6 @@ class IssueController extends Controller
         /** @var EventActionsHook $impl */
         foreach (Hook::all('eventtracker/EventActions') as $impl) {
             $actions->add($impl->getIssueActions($issue));
-        }
-    }
-
-    protected function notForApi()
-    {
-        if ($this->getRequest()->isApiRequest()) {
-            throw new NotFoundError('Not found');
         }
     }
 }

@@ -23,6 +23,13 @@ trait RestApiMethods
         }
     }
 
+    protected function notForApi()
+    {
+        if ($this->getRequest()->isApiRequest()) {
+            $this->sendJsonError('Not found', '404');
+        }
+    }
+
     /**
      * @param \Throwable|string $error
      * @param int $code
