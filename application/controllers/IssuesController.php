@@ -2,6 +2,7 @@
 
 namespace Icinga\Module\Eventtracker\Controllers;
 
+use gipfl\Json\JsonString;
 use Icinga\Authentication\Auth;
 use Icinga\Module\Eventtracker\Auth\RestrictionHelper;
 use Icinga\Module\Eventtracker\Db\EventSummaryBySeverity;
@@ -117,6 +118,9 @@ class IssuesController extends Controller
         }
         if (isset($row->input_uuid)) {
             $row->input_uuid = Uuid::fromBytes($row->input_uuid)->toString();
+        }
+        if (isset($row->attributes)) {
+            $row->attributes = JsonString::decode($row->attributes);
         }
         unset($row->sender_event_checksum);
     }
