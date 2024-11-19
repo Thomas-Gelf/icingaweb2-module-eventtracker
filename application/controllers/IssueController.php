@@ -232,11 +232,11 @@ class IssueController extends Controller
         if ($hostname = $issue->get('host_name')) {
             $this->addTitle(sprintf(
                 '%s (%s)',
-                $issue->get('object_name'),
-                $hostname
+                self::cleanTitleString($issue->get('object_name')),
+                self::cleanTitleString($hostname)
             ));
         } else {
-            $this->addTitle($issue->get('object_name'));
+            $this->addTitle(self::cleanTitleString($issue->get('object_name')));
         }
         // $this->addHookedActions($issue);
         $this->content()->add([
@@ -252,6 +252,11 @@ class IssueController extends Controller
             new IssueDetails($issue),
             new IssueActivities($issue, $db),
         ]);
+    }
+
+    protected static function cleanTitleString(string $string): string
+    {
+        return str_replace(["\r", "\n"], '_', $string);
     }
 
     /**
