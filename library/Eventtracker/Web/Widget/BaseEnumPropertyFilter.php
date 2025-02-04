@@ -71,8 +71,8 @@ class BaseEnumPropertyFilter extends BaseHtmlElement
             if ($count === 0 && $this->skipMissing) {
                 continue;
             }
-            $countHandled = (int) $this->summary->{"cnt_${key}_handled"};
-            $countUnhandled = (int) $this->summary->{"cnt_${key}_unhandled"};
+            $countHandled = (int) $this->summary->{"cnt_{$key}_handled"};
+            $countUnhandled = (int) $this->summary->{"cnt_{$key}_unhandled"};
             $classes = ['badge', $param, "$param-$key"];
             if ($this->active === null) {
                 $isActive = true;
