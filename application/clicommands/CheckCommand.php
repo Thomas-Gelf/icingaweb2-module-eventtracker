@@ -193,6 +193,9 @@ class CheckCommand extends Command
 
     protected function showWithState($message, PluginState $state)
     {
+        if ($message === null) {
+            $message = '(no message)';
+        }
         \printf("[%s] %s\n", $state, \rtrim($message, "\n"));
     }
 
