@@ -33,7 +33,7 @@ trait RestApiMethods
     protected function notForApi()
     {
         if ($this->getRequest()->isApiRequest()) {
-            $this->sendJsonError('Not found', '404');
+            $this->sendJsonError('Not found', 404);
         }
     }
 
