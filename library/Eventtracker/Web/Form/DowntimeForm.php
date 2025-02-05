@@ -135,34 +135,6 @@ class DowntimeForm extends UuidObjectForm
                 'hostlist'      => $this->translate('Apply hosts in a given list'),
             ],
         ]);
-        $typeElement = $this->getElement('filter_type');
-        $currentFilterType = $this->getValue('filter_type');
-        if ($this->hasBeenSent()) {
-            if ($currentFilterType === null) {
-                $this->addHidden('filter_definition');
-                $this->populate(['filter_definition' => null]);
-                $this->addHidden('host_list_uuid');
-                $this->populate(['host_list_uuid' => null]);
-            } elseif ($currentFilterType === 'hostlist') {
-                $this->addHidden('filter_definition');
-                $this->populate(['filter_definition' => null]);
-            } else {
-                $this->addHidden('host_list_uuid');
-                $this->populate(['host_list_uuid' => null]);
-            }
-        }
-
-        $currentFilter = $this->getPopulatedValue('filter_definition');
-        $hasFilter = is_string($currentFilter) && $currentFilter !== '';
-        if ($hasFilter && $this->getValue('filter_type') !== 'custom_filter') {
-            $filter = Filter::fromQueryString($currentFilter);
-            if ($filterArray = $this->getSimpleFilterFormValues($filter)) {
-                $typeElement->setValue('simple_filter');
-                $this->populate($filterArray);
-            } else {
-                $typeElement->setValue('custom_filter');
-            }
-        }
 
         if ($this->getValue('filter_type') === 'simple_filter') {
             foreach ($this->getAllowedSimpleFilterProperties() as $propertyName => $label) {
@@ -544,6 +516,36 @@ EOT
                     } else {
                         $values['recurrence_type'] = 'run_once';
                     }
+            }
+        }
+
+        $currentFilterType = $values['filter_type'] ?? $this->getPopulatedValue('filter_type');
+        $currentFilter = $values['filter_definition'] ?? $this->getPopulatedValue('filter_definition');
+        $hasFilter = is_string($currentFilter) && $currentFilter !== '';
+
+        if ($currentFilterType === null) {
+            if (null !== ($values['host_list_uuid'] ?? $this->getPopulatedValue('host_list_uuid'))) {
+                $currentFilterType = $values['filter_type'] = 'hostlist';
+            } elseif ($hasFilter) {
+                $currentFilterType = $values['filter_type'] = 'simple_filter';
+            }
+        }
+        if ($currentFilterType === null) {
+            $values['filter_definition'] = null;
+            $values['host_list_uuid'] = null;
+        } elseif ($currentFilterType === 'hostlist') {
+            $values['filter_definition'] = null;
+        } else {
+            $values['host_list_uuid'] = null;
+        }
+
+        if ($hasFilter && $currentFilterType !== 'custom_filter') {
+            $filter = Filter::fromQueryString($currentFilter);
+            if ($filterArray = $this->getSimpleFilterFormValues($filter)) {
+                $values['filter_type'] = 'simple_filter';
+                $values += $filterArray;
+            } else {
+                $values['filter_type'] = 'custom_filter';
             }
         }
 
