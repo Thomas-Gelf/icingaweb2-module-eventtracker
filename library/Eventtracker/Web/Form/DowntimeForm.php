@@ -12,9 +12,11 @@ use gipfl\Web\Widget\Hint;
 use gipfl\ZfDb\Adapter\Adapter as DbAdapter;
 use gipfl\ZfDbStore\DbStorableInterface;
 use gipfl\ZfDbStore\ZfDbStore;
+use Icinga\Authentication\Auth;
 use Icinga\Data\Filter\Filter;
 use Icinga\Data\Filter\FilterAnd;
 use Icinga\Data\Filter\FilterMatch;
+use Icinga\Module\Eventtracker\ConfigHistory;
 use Icinga\Module\Eventtracker\Engine\Downtime\DowntimeRule;
 use Icinga\Module\Eventtracker\Time;
 use Icinga\Module\Eventtracker\Web\Form\Validator\CronExpressionValidator;
@@ -548,8 +550,13 @@ EOT
         if ($new) {
             $this->uuid = Uuid::uuid4();
             $rule = new DowntimeRule();
+            $formerObject = null;
         } else {
             $rule = $this->object;
+            $formerObject = DowntimeRule::fromSerialization(
+                $this->store->fetchObject(DowntimeRule::TABLE_NAME, $this->uuid)
+            );
+            $formerObject->setStored();
         }
         $properties = $this->getValues();
         $properties['uuid'] = $this->uuid->getBytes();
@@ -561,6 +568,13 @@ EOT
         $store = new ZfDbStore($this->store->getDb());
         $subject = sprintf($this->translate('Downtime "%s"'), $properties['label']);
         if ($store->store($rule)) {
+            $history = new ConfigHistory($store->getDb());
+            $history->trackChanges(
+                'downtime_rule',
+                $formerObject,
+                $rule,
+                Auth::getInstance()->getUser()->getUsername()
+            );
             Notification::success(sprintf(
                 $new ? $this->translate('%s has been created') : $this->translate('%s has been modified'),
                 $subject
