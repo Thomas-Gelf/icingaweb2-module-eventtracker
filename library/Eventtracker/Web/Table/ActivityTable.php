@@ -2,12 +2,10 @@
 
 namespace Icinga\Module\Eventtracker\Web\Table;
 
-use gipfl\Diff\HtmlRenderer\InlineDiff;
 use gipfl\Diff\HtmlRenderer\SideBySideDiff;
 use gipfl\Diff\PhpDiff;
 use Icinga\Module\Eventtracker\Issue;
 use Icinga\Module\Eventtracker\Time;
-use Icinga\Module\Eventtracker\Web\Widget\ConfigDiff;
 use ipl\Html\Html;
 
 class ActivityTable extends BaseTable

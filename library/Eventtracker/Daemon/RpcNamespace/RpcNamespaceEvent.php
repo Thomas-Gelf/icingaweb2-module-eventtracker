@@ -11,6 +11,7 @@ use Icinga\Module\Eventtracker\Db\ConfigStore;
 use Icinga\Module\Eventtracker\Engine\Action;
 use Icinga\Module\Eventtracker\Engine\Action\ActionHelper;
 use Icinga\Module\Eventtracker\Engine\Counters;
+use Icinga\Module\Eventtracker\Engine\Downtime\DowntimeRunner;
 use Icinga\Module\Eventtracker\Event;
 use Icinga\Module\Eventtracker\Issue;
 use Psr\Log\LoggerInterface;
@@ -52,10 +53,20 @@ class RpcNamespaceEvent implements EventEmitterInterface
 
     /** @var InputAndChannelRunner */
     protected $runner;
+    /**
+     * @var DowntimeRunner
+     */
+    protected $downtimeRunner;
 
-    public function __construct(InputAndChannelRunner $runner, LoopInterface $loop, LoggerInterface $logger, Db $db)
-    {
+    public function __construct(
+        InputAndChannelRunner $runner,
+        DowntimeRunner $downtimeRunner,
+        LoopInterface $loop,
+        LoggerInterface $logger,
+        Db $db
+    ) {
         $this->runner = $runner;
+        $this->downtimeRunner = $downtimeRunner;
         $this->loop = $loop;
         $this->logger = $logger;
         $this->db = $db;
@@ -141,6 +152,7 @@ class RpcNamespaceEvent implements EventEmitterInterface
             if ($issue) {
                 $this->counters->increment(self::CNT_RECOVERED);
                 $issue->recover($event, $this->db);
+                // TODO: Tell DowntimeRunner?
             } else {
                 $this->counters->increment(self::CNT_IGNORED);
                 return null;
@@ -155,6 +167,9 @@ class RpcNamespaceEvent implements EventEmitterInterface
             }
             if ($issue->get('severity') === null) {
                 $issue->set('severity', 'notice');
+            }
+            if ($this->downtimeRunner->issueShouldBeInDowntime($issue)) {
+                $issue->set('status', 'in_downtime');
             }
             $issue->storeToDb($this->db);
         } elseif ($issue) {
