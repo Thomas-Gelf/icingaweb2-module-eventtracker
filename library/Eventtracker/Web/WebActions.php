@@ -42,6 +42,17 @@ class WebActions
         return $this->actions[$name];
     }
 
+    public function getByTableName(string $tableName): WebAction
+    {
+        foreach ($this->actions as $action) {
+            if ($action->table === $tableName) {
+                return $action;
+            }
+        }
+
+        throw new NotFoundError("No action found for table '$tableName'");
+    }
+
     /**
      * @return array<string, WebAction[]>
      * @throws NotFoundError
