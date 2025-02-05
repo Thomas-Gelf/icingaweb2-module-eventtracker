@@ -2,6 +2,8 @@
 
 namespace Icinga\Module\Eventtracker;
 
+use gipfl\Format\LocalDateFormat;
+use gipfl\Format\LocalTimeFormat;
 use Icinga\Date\DateFormatter;
 use ipl\Html\Html;
 
@@ -36,9 +38,13 @@ class Time
 
     public static function info($ms)
     {
+        $t = new LocalTimeFormat();
+        $d = new LocalDateFormat();
+
         return Html::sprintf(
-            '%s (%s)',
-            Html::tag('span', ['class' => 'time-since'], static::since($ms)),
+            '%s, %s (%s)',
+            $d->getFullDay(floor($ms / 1000)),
+            $t->getTime(floor($ms / 1000)),
             Html::tag('span', ['class' => 'time-ago'], static::ago($ms))
         );
     }
