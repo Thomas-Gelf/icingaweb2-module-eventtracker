@@ -132,7 +132,7 @@ class DowntimeForm extends UuidObjectForm
                 null            => $this->translate('- please choose -'),
                 'simple_filter' => $this->translate('Apply to all Events with specific properties'),
                 'custom_filter' => $this->translate('Define a custom filter'),
-                'hostlist'      => $this->translate('Apply hosts in a given list'),
+                'host_list'     => $this->translate('Apply hosts in a given list'),
             ],
         ]);
 
@@ -169,7 +169,7 @@ EOT
                 ),
                 'placeholder' => 'severity=critical&message=*SAP*&attributes.env=production&host.vars.os=Linux'
             ]);
-        } elseif ($this->getValue('filter_type') === 'hostlist') {
+        } elseif ($this->getValue('filter_type') === 'host_list') {
             $this->addElement('select', 'host_list_uuid', [
                 'label' => $this->translate('Host list'),
                 'required' => true,
@@ -525,7 +525,7 @@ EOT
 
         if ($currentFilterType === null) {
             if (null !== ($values['host_list_uuid'] ?? $this->getPopulatedValue('host_list_uuid'))) {
-                $currentFilterType = $values['filter_type'] = 'hostlist';
+                $currentFilterType = $values['filter_type'] = 'host_list';
             } elseif ($hasFilter) {
                 $currentFilterType = $values['filter_type'] = 'simple_filter';
             }
@@ -533,7 +533,7 @@ EOT
         if ($currentFilterType === null) {
             $values['filter_definition'] = null;
             $values['host_list_uuid'] = null;
-        } elseif ($currentFilterType === 'hostlist') {
+        } elseif ($currentFilterType === 'host_list') {
             $values['filter_definition'] = null;
         } else {
             $values['host_list_uuid'] = null;
