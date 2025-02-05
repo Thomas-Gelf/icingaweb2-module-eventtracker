@@ -12,17 +12,21 @@ use gipfl\Web\Widget\Hint;
 use gipfl\ZfDb\Adapter\Adapter as DbAdapter;
 use gipfl\ZfDbStore\DbStorableInterface;
 use gipfl\ZfDbStore\ZfDbStore;
+use Icinga\Data\Filter\Filter;
+use Icinga\Data\Filter\FilterAnd;
+use Icinga\Data\Filter\FilterMatch;
 use Icinga\Module\Eventtracker\Engine\Downtime\DowntimeRule;
 use Icinga\Module\Eventtracker\Time;
 use Icinga\Module\Eventtracker\Web\Form\Validator\CronExpressionValidator;
 use Icinga\Web\Notification;
 use ipl\Html\Html;
-use ipl\Html\HtmlElement;
 use Ramsey\Uuid\Uuid;
 
 class DowntimeForm extends UuidObjectForm
 {
     use TranslationHelper;
+
+    protected const FILTER_PREFIX = 'f_';
 
     /** @var DbAdapter */
     protected $db;
@@ -48,62 +52,36 @@ class DowntimeForm extends UuidObjectForm
      */
     protected $object;
 
+    /** @var ?array */
+    protected $allowedSimpleFilterProperties = null;
+
     protected function assemble()
     {
+        $this->addMainProperties();
+
+        $this->addHtml(Html::tag('h3', $this->translate('Filter settings')));
+        $this->addFilterElements();
+
+        $this->addHtml(Html::tag('h3', $this->translate('Time constraints')));
+        $this->addTimeConstraints();
+
+        $this->addButtons();
+    }
+
+    /**
+     * @return void
+     */
+    public function addMainProperties(): void
+    {
         $this->addElement('text', 'label', [
-            'label'    => $this->translate('Label'),
+            'label' => $this->translate('Label'),
+            'class' => 'autofocus',
             'required' => true,
         ]);
         $this->addElement('textarea', 'message', [
-            'label'    => $this->translate('Rule Description / Message'),
+            'label' => $this->translate('Rule Description / Message'),
             'required' => true,
         ]);
-        $this->addElement('select', 'filter_type', [
-            'label' => $this->translate('Filter Type'),
-            'ignore' => true,
-            'options' => [
-                'host'   => $this->translate('Apply to all Events related to a specific host'),
-                'object' => $this->translate('Apply to all Events related to a specific object'),
-                'filter' => $this->translate('Define a free-form filter rule'),
-            ],
-        ]);
-        $this->addElement('select', 'host_list_uuid', [
-            'label' => $this->translate('Host list'),
-            'description' => $this->translate(
-                'Apply this Downtime Rule to all Hosts in a fixed (or dynamic) host list'
-            ),
-            'options' => [null => $this->translate('- please choose (optional) -')] + $this->enumHostLists(),
-        ]);
-        $this->addElement('select', 'recurrence_type', [
-            'label' => $this->translate('Recurrence'),
-            'ignore' => true,
-            'class' => 'autosubmit',
-            'options' => [
-                'run_once' => $this->translate('run once'),
-                '@daily'   => $this->translate('daily'),
-                '@weekly'  => $this->translate('weekly'),
-                '@monthly' => $this->translate('monthly'),
-                '@yearly'  => $this->translate('yearly'),
-                'custom'   => $this->translate('based on custom rules'),
-                'cron'     => $this->translate('write a cron expression'),
-            ],
-            'value' => 'run_once',
-        ]);
-        $this->addDurationElements();
-        // time_definition
-        switch ($this->getValue('recurrence_type')) {
-            case 'run_once':
-//                $this->removeTsCombination('ts_not_after');
-                break;
-            case 'custom':
-                $this->addCustomElements();
-                break;
-            case 'cron':
-                $this->addCronExpression();
-                break;
-            default: // daily, weekly...
-        }
-
         $this->addElement('select', 'is_enabled', [
             'label' => $this->translate('Enabled'),
             'description' => $this->translate(
@@ -114,8 +92,127 @@ class DowntimeForm extends UuidObjectForm
                 'n' => $this->translate('No'),
             ],
         ]);
+    }
 
-        $this->addButtons();
+    public function addFilterElements(): void
+    {
+        $this->addElement('select', 'filter_type', [
+            'label' => $this->translate('Filter Type'),
+            'ignore' => true,
+            'class' => 'autosubmit',
+            'options' => [
+                'hostlist' => $this->translate('Apply hosts in a given list'),
+                'simple_filter' => $this->translate('Apply to all Events with specific properties'),
+                'custom_filter' => $this->translate('Define a custom filter')
+            ],
+        ]);
+
+        $simpleFilterProperties = $this->getAllowedSimpleFilterProperties();
+        if ($this->object &&
+            (!$this->hasBeenSubmitted() || $this->getValue('filter_type') !== 'custom_filter')) {
+            $filter = Filter::fromQueryString($this->object->get('filter_definition'));
+            if ($filter->isExpression()) {
+                $filter = Filter::matchAll([$filter]);
+            }
+            if ($filter instanceof FilterAnd) {
+                $simpleFilter = true;
+                $filterArray = [];
+                foreach ($filter->filters() as $subFilter) {
+                    if ($subFilter instanceof FilterMatch
+                        && isset($simpleFilterProperties[$subFilter->getColumn()])
+                    ) {
+                        $filterArray[self::FILTER_PREFIX . $subFilter->getColumn()] = $subFilter->getExpression();
+                    } else {
+                        $simpleFilter = false;
+                        break;
+                    }
+                }
+                if ($simpleFilter) {
+                    $this->getElement('filter_type')->setValue('simple_filter');
+                    $this->populate($filterArray);
+                } else {
+                    $this->getElement('filter_type')->setValue('custom_filter');
+                }
+            } else {
+                $this->populate(['filter_definition' => rawurldecode($filter->toQueryString())]);
+                $this->getElement('filter_type')->setValue('custom_filter');
+            };
+        }
+
+        if ($this->getValue('filter_type') === 'simple_filter') {
+            foreach ($simpleFilterProperties as $propertyName => $label) {
+                $this->addElement('text', self::FILTER_PREFIX . $propertyName, [
+                    'label' => $label,
+                    'ignore' => true
+                ]);
+            }
+        } elseif ($this->getValue('filter_type') === 'custom_filter') {
+            $this->addElement('text', 'filter_definition', [
+                'label' => $this->translate('Custom filter'),
+                'description' => Html::sprintf(
+                    $this->translate(<<<'EOT'
+Filter to restrict where this Rule should be applied.
+A filter consists of filter expressions in the format %s.
+%s can be any issue property,
+and you can use the asterisk %s as a wildcard match placeholder in %s.
+Issue attributes can be accessed via %s and custom variables via %s.
+Expressions can be combined via %s (and) and %s (or),
+and you can also use parentheses to group expressions.'
+EOT
+                    ),
+                    Html::tag('b', 'key=value'),
+                    Html::tag('b', 'key'),
+                    Html::tag('b', '*'),
+                    Html::tag('b', 'value'),
+                    Html::tag('b', 'attributes.key'),
+                    Html::tag('b', 'host.vars.os'),
+                    Html::tag('b', '&'),
+                    Html::tag('b', '|')
+                ),
+                'placeholder' => 'severity=critical&message=*SAP*&attributes.env=production&host.vars.os=Linux'
+            ]);
+        } elseif ($this->getValue('filter_type') === 'hostlist') {
+            $this->addElement('select', 'host_list_uuid', [
+                'label' => $this->translate('Host list'),
+                'description' => $this->translate(
+                    'Apply this Downtime Rule to all Hosts in a fixed (or dynamic) host list'
+                ),
+                'options' => [null => $this->translate('- please choose (optional) -')] + $this->enumHostLists(),
+            ]);
+        }
+    }
+
+    public function addTimeConstraints(): void
+    {
+        $this->addElement('select', 'recurrence_type', [
+            'label' => $this->translate('Recurrence'),
+            'ignore' => true,
+            'class' => 'autosubmit',
+            'options' => [
+                'run_once' => $this->translate('run once'),
+                '@daily' => $this->translate('daily'),
+                '@weekly' => $this->translate('weekly'),
+                '@monthly' => $this->translate('monthly'),
+                '@yearly' => $this->translate('yearly'),
+                'custom' => $this->translate('based on custom rules'),
+                'cron' => $this->translate('write a cron expression'),
+            ],
+            'value' => 'run_once',
+        ]);
+        $this->addDurationElements();
+        // time_definition
+        switch ($this->getValue('recurrence_type')) {
+            case 'run_once':
+//                $this->removeTsCombination('ts_not_after');
+                break;
+            case 'custom':
+                $this->addCustomTimeDefinitionElements();
+                break;
+            case 'cron':
+                $this->addCronExpression();
+                break;
+            default: // daily, weekly...
+        }
     }
 
     protected function runsOnce(): bool
@@ -160,7 +257,7 @@ class DowntimeForm extends UuidObjectForm
         ]);
     }
 
-    protected function addCustomElements()
+    protected function addCustomTimeDefinitionElements()
     {
         $this->add(Hint::info(Html::sprintf(
             $this->translate('Your Rules will be evaluated relative to the start time (%s) defined above'),
@@ -299,7 +396,7 @@ class DowntimeForm extends UuidObjectForm
         return $result;
     }
 
-    protected function inlinePre($content): HtmlElement
+    protected function inlinePre($content)
     {
         return Html::tag('span', [
             'class' => 'preformatted',
@@ -337,12 +434,26 @@ class DowntimeForm extends UuidObjectForm
         if ($this->getValue('recurrence_type') === 'run_once') {
             $values['ts_not_after'] = null;
         }
-        $values['filter_definition'] = '[]'; // Not yet
         foreach ($this->timeProperties as $key) {
             if (isset($values[$key])) {
                 [$hours, $minutes] = explode(':', $values[$key]);
                 $values[$key] = (int) $hours * 3600 + (int) $minutes * 60;
             }
+        }
+
+        if ($this->getValue('filter_type') === 'simple_filter') {
+            $simpleFilter = $this->getAllowedSimpleFilterProperties();
+            $filter = Filter::matchAll();
+            foreach (array_keys($simpleFilter) as $key) {
+                var_dump($key);
+                if (null !== ($value = $this->getValue(self::FILTER_PREFIX . $key))) {
+                    $filter->addFilter(Filter::expression($key, '=', $value));
+                }
+            }
+
+            // This is not safe, but filters are configured by admins only
+            // We need this to work around hard-coded rawurlencode in Filter
+            $values['filter_definition'] = rawurldecode($filter->toQueryString());
         }
 
         return $values;
@@ -462,5 +573,20 @@ class DowntimeForm extends UuidObjectForm
         } else {
             Notification::info(sprintf($this->translate('%s has not been modified'), $subject));
         }
+    }
+
+    protected function getAllowedSimpleFilterProperties(): array
+    {
+        if ($this->allowedSimpleFilterProperties === null) {
+            $this->allowedSimpleFilterProperties = [
+                'host_name'          => $this->translate('Host Name'),
+                'object_name'        => $this->translate('Object name'),
+                'object_class'       => $this->translate('Object class'),
+                'problem_identifier' => $this->translate('Problem identifier'),
+                'message'            => $this->translate('Message')
+            ];
+        }
+
+        return $this->allowedSimpleFilterProperties;
     }
 }
