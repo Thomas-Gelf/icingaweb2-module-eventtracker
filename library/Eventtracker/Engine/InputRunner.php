@@ -5,6 +5,7 @@ namespace Icinga\Module\Eventtracker\Engine;
 use Closure;
 use Icinga\Module\Eventtracker\Db\ConfigStore;
 use Icinga\Module\Eventtracker\Engine\Action\ActionHelper;
+use Icinga\Module\Eventtracker\Engine\Downtime\DowntimeRunner;
 use Icinga\Module\Eventtracker\Engine\Input\KafkaInput;
 use Icinga\Module\Eventtracker\Issue;
 use Psr\Log\LoggerAwareInterface;
@@ -30,6 +31,9 @@ class InputRunner implements LoggerAwareInterface
     /** @var ConfigStore */
     protected $store;
 
+    /** @var DowntimeRunner */
+    protected $downtimeRunner;
+
     /** @var Input[] */
     protected $inputs = [];
 
@@ -45,12 +49,13 @@ class InputRunner implements LoggerAwareInterface
     /** @var array<string, Channel> InputUuid -> Channel */
     protected $linkedInputChannels = [];
 
-    public function __construct(ConfigStore $store, LoggerInterface $logger)
+    public function __construct(ConfigStore $store, DowntimeRunner $downtimeRunner, LoggerInterface $logger)
     {
         // TODO: Load all configs from DB. Recheck from time to time. Call "setSettings()" in case
         // they changed. Implementations must reload/restart on their own.
         // This one is about a single Input
         $this->store = $store;
+        $this->downtimeRunner = $downtimeRunner;
         $this->logger = $logger;
     }
 
@@ -60,7 +65,7 @@ class InputRunner implements LoggerAwareInterface
         try {
             $this->inputs = $this->store->loadInputs();
             $buckets = $this->store->loadBuckets($this->loop);
-            $this->channels = $this->store->loadChannels($loop, $buckets);
+            $this->channels = $this->store->loadChannels($loop, $this->downtimeRunner, $buckets);
             $this->actions = $this->store->loadActions(['enabled' => 'y']);
             $this->linkInputsToChannels();
             $this->startInputs();

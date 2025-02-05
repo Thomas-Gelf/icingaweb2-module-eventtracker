@@ -116,7 +116,6 @@ class RpcNamespaceEvent implements EventEmitterInterface
     {
         // Hint: Rpc Handler doesn't (yet) hydrate objects
         $inputUuid = Uuid::fromString($uuid);
-        $this->logger->notice($inputUuid->toString());
         $deferred = new Deferred();
         $channel = $this->runner->getInputRunner()->getOptionalInputChannel($inputUuid);
         if ($channel) {
@@ -142,6 +141,9 @@ class RpcNamespaceEvent implements EventEmitterInterface
         ]);
     }
 
+    /**
+     * Runs for legacy Senders only (-> TODO: verify)
+     */
     protected function processEvent($event): ?Issue
     {
         $event = Event::fromSerialization($event);
@@ -175,6 +177,7 @@ class RpcNamespaceEvent implements EventEmitterInterface
         } elseif ($issue) {
             $this->counters->increment(self::CNT_RECOVERED);
             $issue->recover($event, $this->db);
+            // TODO: Tell DowntimeRunner?
 
             return null;
         } else {

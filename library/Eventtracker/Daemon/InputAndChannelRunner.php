@@ -4,6 +4,7 @@ namespace Icinga\Module\Eventtracker\Daemon;
 
 use gipfl\ZfDb\Adapter\Adapter as Db;
 use Icinga\Module\Eventtracker\Db\ConfigStore;
+use Icinga\Module\Eventtracker\Engine\Downtime\DowntimeRunner;
 use Icinga\Module\Eventtracker\Engine\InputRunner;
 use Psr\Log\LoggerInterface;
 use React\EventLoop\LoopInterface;
@@ -20,13 +21,15 @@ class InputAndChannelRunner implements DbBasedComponent
     /** @var ?InputRunner */
     protected $runner = null;
 
-    /**
-     * @var LoggerInterface
-     */
+    /** @var DowntimeRunner */
+    protected $downtimeRunner;
+
+    /** @var LoggerInterface */
     protected $logger;
 
-    public function __construct(LoopInterface $loop, LoggerInterface $logger)
+    public function __construct(DowntimeRunner $downtimeRunner, LoopInterface $loop, LoggerInterface $logger)
     {
+        $this->downtimeRunner = $downtimeRunner;
         $this->loop = $loop;
         $this->logger = $logger;
     }
@@ -40,7 +43,7 @@ class InputAndChannelRunner implements DbBasedComponent
         $this->db = $db;
 
         $store = new ConfigStore($db, $this->logger);
-        $this->runner = new InputRunner($store, $this->logger);
+        $this->runner = new InputRunner($store, $this->downtimeRunner, $this->logger);
         $this->runner->setLogger($this->logger);
         $this->runner->start($this->loop);
 

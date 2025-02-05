@@ -106,14 +106,19 @@ class BackgroundDaemon implements EventEmitterInterface
             ->registerProcessList($this->jobRunner->getProcessList());
         $this->logProxy = new LogProxy($this->logger);
         $this->jobRunner->forwardLog($this->logProxy);
-        $this->channelRunner = new InputAndChannelRunner($this->loop, $this->logger);
+        $this->generatedDowntimeGenerator = new GeneratedDowntimeGenerator($this->logger);
+        $this->downtimeRunner = new DowntimeRunner($this->logger);
+        $this->channelRunner = new InputAndChannelRunner($this->downtimeRunner, $this->loop, $this->logger);
         $this->daemonDb = $this->initializeDb(
             $this->processDetails,
             $this->processState,
             $this->dbResourceName
         );
         $this->runningConfig = new RunningConfig($this->logger);
-        $this->initializeDowntimeHandling($this->runningConfig);
+        $this->runningConfig->watchRules(function ($rules) {
+            $this->generatedDowntimeGenerator->triggerCalculation($rules);
+            $this->downtimeRunner->setDowntimeRules($rules);
+        });
         $this->daemonDb
             ->register($this->jobRunner)
             ->register($this->logProxy)
@@ -124,16 +129,6 @@ class BackgroundDaemon implements EventEmitterInterface
             ->run($this->loop);
         $this->prepareApi($this->channelRunner, $this->loop, $this->logger);
         $this->setState('running');
-    }
-
-    protected function initializeDowntimeHandling(RunningConfig $runningConfig)
-    {
-        $this->generatedDowntimeGenerator = new GeneratedDowntimeGenerator($this->logger);
-        $this->downtimeRunner = new DowntimeRunner($this->logger);
-        $runningConfig->watchRules(function ($rules) {
-            $this->generatedDowntimeGenerator->triggerCalculation($rules);
-            $this->downtimeRunner->setDowntimeRules($rules);
-        });
     }
 
     /**

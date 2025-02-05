@@ -10,6 +10,7 @@ use Icinga\Module\Eventtracker\Engine\Action\ActionRegistry;
 use Icinga\Module\Eventtracker\Engine\Bucket\BucketInterface;
 use Icinga\Module\Eventtracker\Engine\Bucket\BucketRegistry;
 use Icinga\Module\Eventtracker\Engine\Channel;
+use Icinga\Module\Eventtracker\Engine\Downtime\DowntimeRunner;
 use Icinga\Module\Eventtracker\Engine\Input;
 use Icinga\Module\Eventtracker\Engine\Input\InputRegistry;
 use Icinga\Module\Eventtracker\Engine\Registry;
@@ -80,17 +81,19 @@ class ConfigStore
      * @return Channel[]
      * @throws JsonDecodeException
      */
-    public function loadChannels(LoopInterface $loop, array $buckets): array
+    public function loadChannels(LoopInterface $loop, DowntimeRunner $downtimeRunner, array $buckets): array
     {
         $channels = [];
         foreach ($this->fetchObjects('channel') as $row) {
             $uuid = Uuid::fromBytes($row->uuid);
             $bucketUuid = $row->bucket_uuid ? Uuid::fromBytes($row->bucket_uuid) : null;
-            $channels[$uuid->toString()] = new Channel(Settings::fromSerialization([
+            $channel = new Channel(Settings::fromSerialization([
                 'rules'          => JsonString::decode($row->rules),
                 'implementation' => $row->input_implementation,
                 'inputs'         => $row->input_uuids,
             ]), $uuid, $row->label, $bucketUuid, $row->bucket_name, $buckets, $this->logger, $loop);
+            $channel->setDowntimeRunner($downtimeRunner);
+            $channels[$uuid->toString()] = $channel;
         }
 
         return $channels;

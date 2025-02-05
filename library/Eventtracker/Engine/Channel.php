@@ -8,6 +8,7 @@ use gipfl\ZfDb\Adapter\Adapter;
 use Icinga\Module\Eventtracker\ConfigHelper;
 use Icinga\Module\Eventtracker\DbFactory;
 use Icinga\Module\Eventtracker\Engine\Bucket\BucketInterface;
+use Icinga\Module\Eventtracker\Engine\Downtime\DowntimeRunner;
 use Icinga\Module\Eventtracker\Engine\Downtime\UuidObjectHelper;
 use Icinga\Module\Eventtracker\Event;
 use Icinga\Module\Eventtracker\EventReceiver;
@@ -75,6 +76,9 @@ class Channel implements LoggerAwareInterface
     /** @var ?string */
     protected $bucketName = null;
 
+    /** @var ?DowntimeRunner */
+    protected $downtimeRunner = null;
+
     public function __construct(
         Settings $settings,
         UuidInterface $uuid,
@@ -107,6 +111,11 @@ class Channel implements LoggerAwareInterface
         }
         $this->bucketName = $bucketName;
         $this->applySettings($settings);
+    }
+
+    public function setDowntimeRunner(DowntimeRunner $downtimeRunner)
+    {
+        $this->downtimeRunner = $downtimeRunner;
     }
 
     public function isDaemonized(): bool
@@ -268,6 +277,7 @@ class Channel implements LoggerAwareInterface
             if ($issue) {
                 // $this->counters->increment(self::CNT_RECOVERED);
                 $issue->recover($event, $db);
+                // TODO: Tell DowntimeRunner?
             } else {
                 // $this->counters->increment(self::CNT_IGNORED);
                 return null;
@@ -279,6 +289,13 @@ class Channel implements LoggerAwareInterface
             } else {
                 $issue = Issue::createFromEvent($event);
                 // $this->counters->increment(self::CNT_NEW);
+            }
+            if ($this->downtimeRunner === null) {
+                $this->logger->notice('DowntimeRunner is missing in channel');
+            } else {
+                if ($this->downtimeRunner->issueShouldBeInDowntime($issue)) {
+                    $issue->set('status', 'in_downtime');
+                }
             }
             $issue->storeToDb($db);
         } elseif ($issue) {
