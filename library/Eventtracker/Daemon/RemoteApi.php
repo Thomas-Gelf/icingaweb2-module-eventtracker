@@ -20,6 +20,7 @@ use Icinga\Module\Eventtracker\Daemon\RpcNamespace\RpcNamespaceIssue;
 use Icinga\Module\Eventtracker\Daemon\RpcNamespace\RpcNamespaceProcess;
 use Icinga\Module\Eventtracker\Daemon\RpcNamespace\RpcNamespaceLogger;
 use Icinga\Module\Eventtracker\DbFactory;
+use Icinga\Module\Eventtracker\Engine\Downtime\DowntimeRunner;
 use Psr\Log\LoggerInterface;
 use React\EventLoop\LoopInterface;
 use React\Promise\ExtendedPromiseInterface;
@@ -50,8 +51,12 @@ class RemoteApi implements EventEmitterInterface
     /** @var RunningConfig */
     protected $runningConfig;
 
+    /** @var DowntimeRunner */
+    protected $downtimeRunner;
+
     public function __construct(
         InputAndChannelRunner $runner,
+        DowntimeRunner        $downtimeRunner,
         RunningConfig         $runningConfig,
         LoopInterface         $loop,
         LoggerInterface       $logger
@@ -60,6 +65,7 @@ class RemoteApi implements EventEmitterInterface
         $this->logger = $logger;
         $this->loop = $loop;
         $this->runningConfig = $runningConfig;
+        $this->downtimeRunner = $downtimeRunner;
     }
 
     public function run($socketPath, LoopInterface $loop)
@@ -129,6 +135,7 @@ class RemoteApi implements EventEmitterInterface
             $handler = new NamespacedPacketHandler();
             $handler->registerNamespace('event', new RpcNamespaceEvent(
                 $this->runner,
+                $this->downtimeRunner,
                 $this->loop,
                 $this->logger,
                 DbFactory::db()

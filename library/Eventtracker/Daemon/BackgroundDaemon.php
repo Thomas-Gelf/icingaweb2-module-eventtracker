@@ -213,7 +213,7 @@ class BackgroundDaemon implements EventEmitterInterface
     protected function prepareApi(InputAndChannelRunner $runner, LoopInterface $loop, LoggerInterface $logger)
     {
         $socketPath = Configuration::getSocketPath();
-        $this->remoteApi = new RemoteApi($runner, $this->runningConfig, $loop, $logger);
+        $this->remoteApi = new RemoteApi($runner, $this->downtimeRunner, $this->runningConfig, $loop, $logger);
         StreamUtil::forwardEvents($this->remoteApi, $this, [RpcNamespaceProcess::ON_RESTART]);
         $this->remoteApi->run($socketPath, $loop);
     }

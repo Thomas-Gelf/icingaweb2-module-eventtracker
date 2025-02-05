@@ -73,6 +73,7 @@ class DowntimeRunner implements EventEmitterInterface, DbBasedComponent
     public function issueShouldBeInDowntime(Issue $issue): bool
     {
         $logUuid = $issue->getNiceUuid();
+        // TODO: return true immediately, continue is here for debugging purposes - I wanted to see all log lines
         foreach ($this->activeDowntimes as $downtime) {
             if ($filter = $downtime->get('filter_definition')) {
                 $filter = Filter::fromQueryString($filter);
