@@ -336,7 +336,7 @@ CREATE TABLE host_list_member (
 CREATE TABLE downtime_rule (
   uuid VARBINARY(16) NOT NULL,
   time_definition TEXT NULL DEFAULT NULL COMMENT 'cron-style when recurring, at-style when not',
-  filter_definition TEXT NOT NULL,
+  filter_definition TEXT NULL DEFAULT NULL,
   label VARCHAR(128) NOT NULL,
   message TEXT NOT NULL,
   timezone VARCHAR(64) NOT NULL,
@@ -455,4 +455,4 @@ CREATE TABLE eventtracker_schema_migration (
 
 INSERT INTO eventtracker_schema_migration
   (schema_version, migration_time)
-VALUES (18, NOW());
+VALUES (20, NOW());
