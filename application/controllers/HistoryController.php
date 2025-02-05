@@ -4,19 +4,19 @@ namespace Icinga\Module\Eventtracker\Controllers;
 
 use gipfl\Diff\HtmlRenderer\SideBySideDiff;
 use gipfl\Diff\PhpDiff;
+use gipfl\Format\LocalDateFormat;
+use gipfl\Format\LocalTimeFormat;
 use gipfl\Json\JsonString;
-use gipfl\Web\Table\NameValueTable;
 use Icinga\Authentication\Auth;
 use Icinga\Module\Eventtracker\ConfigHistory;
 use Icinga\Module\Eventtracker\Data\PlainObjectRenderer;
-use Icinga\Module\Eventtracker\Time;
 use Icinga\Module\Eventtracker\Web\Table\ActionHistoryTable;
 use Icinga\Module\Eventtracker\Web\Table\ConfigurationHistoryTable;
 use Icinga\Module\Eventtracker\Web\Table\IssueHistoryTable;
 use Icinga\Module\Eventtracker\Web\Table\RawEventHistoryTable;
 use Icinga\Module\Eventtracker\Web\WebActions;
 use Icinga\Module\Eventtracker\Web\Widget\AdditionalTableActions;
-use RuntimeException;
+use Icinga\Module\Eventtracker\Web\Widget\ConfigHistoryDetails;
 
 class HistoryController extends Controller
 {
@@ -99,33 +99,25 @@ class HistoryController extends Controller
         $change = $db->fetchRow($db->select()->from(ConfigHistory::TABLE_NAME)->where('ts_modification = ?', $ts));
         $webAction = $this->actions->getByTableName($change->object_type);
         $singular = $webAction->singular;
-        switch ($change->action) {
-            case 'create':
-                $actionName = sprintf($this->translate('%s has been created'), $singular);
-                break;
-            case 'modify':
-                $actionName = sprintf($this->translate('%s has been modified'), $singular);
-                break;
-            case 'delete':
-                $actionName = sprintf($this->translate('%s has been deleted'), $singular);
-                break;
-            default:
-                throw new RuntimeException(sprintf('Invalid configuration change action: %s', $change->action));
-        }
-
-        $this->addTitle($actionName);
+        $configDetails = new ConfigHistoryDetails($this->actions, $change);
+        $this->addTitle(sprintf('%s %s: %s', $singular, $change->label, $change->action));
         $this->addSingleTab($this->translate('Configuration'));
-        $summary = NameValueTable::create([
-            $this->translate('Change Time') => Time::info($ts),
-            $this->translate('Author')      => $change->author,
-            $this->translate('Object Type') => $singular,
-            $this->translate('Action')      => $actionName,
-        ]);
         $diff = new SideBySideDiff(new PhpDiff(
             self::renderForDiff($change->properties_old),
             self::renderForDiff($change->properties_new)
         ));
-        $this->content()->add([$summary, $diff]);
+
+        $t = new LocalTimeFormat();
+        $d = new LocalDateFormat();
+
+        $this->content()->add([
+            $configDetails . ' ' . sprintf(
+                $this->translate('on %s at %s'),
+                $d->getFullDay(floor($ts / 1000)),
+                $t->getShortTime(floor($ts / 1000))
+            ),
+            $diff
+        ]);
     }
 
     public function rawAction()
