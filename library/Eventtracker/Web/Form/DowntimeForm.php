@@ -68,9 +68,6 @@ class DowntimeForm extends UuidObjectForm
         $this->addButtons();
     }
 
-    /**
-     * @return void
-     */
     public function addMainProperties(): void
     {
         $this->addElement('text', 'label', [
@@ -418,7 +415,6 @@ EOT
 
     /**
      * merge date/time fields into one
-     * @return array
      */
     public function getValues(): array
     {
@@ -445,7 +441,6 @@ EOT
             $simpleFilter = $this->getAllowedSimpleFilterProperties();
             $filter = Filter::matchAll();
             foreach (array_keys($simpleFilter) as $key) {
-                var_dump($key);
                 if (null !== ($value = $this->getValue(self::FILTER_PREFIX . $key))) {
                     $filter->addFilter(Filter::expression($key, '=', $value));
                 }
