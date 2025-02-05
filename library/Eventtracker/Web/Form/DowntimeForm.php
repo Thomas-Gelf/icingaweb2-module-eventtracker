@@ -93,53 +93,79 @@ class DowntimeForm extends UuidObjectForm
         ]);
     }
 
+    /**
+     * Returns an array with (prefixed) element name => filter pairs, in case the
+     * given filter qualifies as "simple", null otherwise
+     */
+    protected function getSimpleFilterFormValues(Filter $filter): ?array
+    {
+        if ($filter->isExpression()) {
+            $filter = Filter::matchAll([$filter]);
+        }
+        if (!$filter instanceof FilterAnd) {
+            return null;
+        }
+        $filterArray = [];
+        $simpleFilterProperties = $this->getAllowedSimpleFilterProperties();
+        foreach ($filter->filters() as $subFilter) {
+            if ($subFilter instanceof FilterMatch && isset($simpleFilterProperties[$subFilter->getColumn()])) {
+                $filterArray[self::FILTER_PREFIX . $subFilter->getColumn()] = $subFilter->getExpression();
+            } else {
+                return null;
+            }
+        }
+        if (empty($filterArray)) {
+            return null;
+        }
+
+        return $filterArray;
+    }
+
     public function addFilterElements(): void
     {
         $this->addElement('select', 'filter_type', [
-            'label' => $this->translate('Filter Type'),
-            'ignore' => true,
-            'class' => 'autosubmit',
+            'label'    => $this->translate('Filter Type'),
+            'ignore'   => true,
+            'required' => true,
+            'class'    => 'autosubmit',
             'options' => [
-                'hostlist' => $this->translate('Apply hosts in a given list'),
+                null            => $this->translate('- please choose -'),
                 'simple_filter' => $this->translate('Apply to all Events with specific properties'),
-                'custom_filter' => $this->translate('Define a custom filter')
+                'custom_filter' => $this->translate('Define a custom filter'),
+                'hostlist'      => $this->translate('Apply hosts in a given list'),
             ],
         ]);
-
-        $simpleFilterProperties = $this->getAllowedSimpleFilterProperties();
-        if ($this->object &&
-            (!$this->hasBeenSubmitted() || $this->getValue('filter_type') !== 'custom_filter')) {
-            $filter = Filter::fromQueryString($this->object->get('filter_definition'));
-            if ($filter->isExpression()) {
-                $filter = Filter::matchAll([$filter]);
-            }
-            if ($filter instanceof FilterAnd) {
-                $simpleFilter = true;
-                $filterArray = [];
-                foreach ($filter->filters() as $subFilter) {
-                    if ($subFilter instanceof FilterMatch
-                        && isset($simpleFilterProperties[$subFilter->getColumn()])
-                    ) {
-                        $filterArray[self::FILTER_PREFIX . $subFilter->getColumn()] = $subFilter->getExpression();
-                    } else {
-                        $simpleFilter = false;
-                        break;
-                    }
-                }
-                if ($simpleFilter) {
-                    $this->getElement('filter_type')->setValue('simple_filter');
-                    $this->populate($filterArray);
-                } else {
-                    $this->getElement('filter_type')->setValue('custom_filter');
-                }
+        $typeElement = $this->getElement('filter_type');
+        $currentFilterType = $this->getValue('filter_type');
+        if ($this->hasBeenSent()) {
+            if ($currentFilterType === null) {
+                $this->addHidden('filter_definition');
+                $this->populate(['filter_definition' => null]);
+                $this->addHidden('host_list_uuid');
+                $this->populate(['host_list_uuid' => null]);
+            } elseif ($currentFilterType === 'hostlist') {
+                $this->addHidden('filter_definition');
+                $this->populate(['filter_definition' => null]);
             } else {
-                $this->populate(['filter_definition' => rawurldecode($filter->toQueryString())]);
-                $this->getElement('filter_type')->setValue('custom_filter');
-            };
+                $this->addHidden('host_list_uuid');
+                $this->populate(['host_list_uuid' => null]);
+            }
+        }
+
+        $currentFilter = $this->getPopulatedValue('filter_definition');
+        $hasFilter = is_string($currentFilter) && $currentFilter !== '';
+        if ($hasFilter && $this->getValue('filter_type') !== 'custom_filter') {
+            $filter = Filter::fromQueryString($currentFilter);
+            if ($filterArray = $this->getSimpleFilterFormValues($filter)) {
+                $typeElement->setValue('simple_filter');
+                $this->populate($filterArray);
+            } else {
+                $typeElement->setValue('custom_filter');
+            }
         }
 
         if ($this->getValue('filter_type') === 'simple_filter') {
-            foreach ($simpleFilterProperties as $propertyName => $label) {
+            foreach ($this->getAllowedSimpleFilterProperties() as $propertyName => $label) {
                 $this->addElement('text', self::FILTER_PREFIX . $propertyName, [
                     'label' => $label,
                     'ignore' => true
@@ -148,6 +174,7 @@ class DowntimeForm extends UuidObjectForm
         } elseif ($this->getValue('filter_type') === 'custom_filter') {
             $this->addElement('text', 'filter_definition', [
                 'label' => $this->translate('Custom filter'),
+                'required'    => true,
                 'description' => Html::sprintf(
                     $this->translate(<<<'EOT'
 Filter to restrict where this Rule should be applied.
@@ -173,6 +200,7 @@ EOT
         } elseif ($this->getValue('filter_type') === 'hostlist') {
             $this->addElement('select', 'host_list_uuid', [
                 'label' => $this->translate('Host list'),
+                'required' => true,
                 'description' => $this->translate(
                     'Apply this Downtime Rule to all Hosts in a fixed (or dynamic) host list'
                 ),
