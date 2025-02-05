@@ -32,8 +32,8 @@ class RawEventHistoryTable extends BaseTable
                 return $this->linkToObject($row->uuid, [
                     $row->processing_result,
                     ' ',
-                    Time::agoFormatted($row->ts_received)]
-                );
+                    Time::agoFormatted($row->ts_received)
+                ]);
             })->setDefaultSortDirection('DESC'),
             $this->createColumn('raw_input', $this->translate('Raw Event'), [
                 'raw_input'           => 'rh.raw_input',
@@ -46,7 +46,10 @@ class RawEventHistoryTable extends BaseTable
                     $result[] = Html::tag('br');
                 }
                 if ($row->input_format === 'json') {
-                    $result[] = Html::tag('pre', JsonString::encode(JsonString::decode($row->raw_input), JSON_PRETTY_PRINT));
+                    $result[] = Html::tag(
+                        'pre',
+                        JsonString::encode(JsonString::decode($row->raw_input), JSON_PRETTY_PRINT)
+                    );
                 } else {
                     $result[] = $row->raw_input;
                 }

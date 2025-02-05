@@ -44,7 +44,10 @@ class ActionHistoryTable extends BaseTable
                     ' ',
                     $actions[$row->action_uuid] ?? '(unknown action)',
                     ': ',
-                    preg_replace(['/^(.+?)\r?\n.+$/s', '#/shared/PHP/Icinga/modules/incubator/vendor/gipfl/zfdbstore/src/#'], ['\1', ''], $row->message)
+                    preg_replace([
+                        '/^(.+?)\r?\n.+$/s',
+                        '#/shared/PHP/Icinga/modules/incubator/vendor/gipfl/zfdbstore/src/#'
+                    ], ['\1', ''], $row->message)
                 ];
             }),
             $this->createColumn('host_name', $this->translate('Host'), [

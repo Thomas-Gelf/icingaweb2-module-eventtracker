@@ -36,7 +36,10 @@ class ProblemHandlingTable extends WebActionTable
                             'uuid' => Uuid::fromBytes($row->uuid)->toString()
                         ], $attrs),
                         Html::tag('br'),
-                        Html::tag('span', ['style' => 'font-style: italic; display: inline-block; height: 1.5em; max-width: 100%; 	white-space: nowrap; text-overflow: ellipsis; overflow: hidden;'], $row->instruction_url),
+                        Html::tag('span', [
+                            'style' => 'font-style: italic; display: inline-block; height: 1.5em; max-width: 100%;'
+                                        . 'white-space: nowrap; text-overflow: ellipsis; overflow: hidden;'
+                        ], $row->instruction_url),
                     ];
                 }),
         ]);

@@ -91,7 +91,7 @@ class DowntimeRunner implements EventEmitterInterface, DbBasedComponent
                         continue;
                     }
                     if (! $this->hostLists[$hostListUuid]->hasHost($issue->get('host_name'))) {
-                        // $this->logger->debug("Issue $logUuid ignored, host not in list: " . $issue->get('host_name'));
+                        // $this->logger->debug("Issue $logUuid ignored, host not in list: " .$issue->get('host_name'));
                         continue;
                     }
                 }
@@ -116,22 +116,35 @@ class DowntimeRunner implements EventEmitterInterface, DbBasedComponent
                     }
                     $filter = self::$knownFilters[$filter];
                     if ($filter->matches($issue)) {
-                        // $this->logger->notice(sprintf('%s, Filter: XXXXXXXXX %s should be in Downtime', $label, $issue->getNiceUuid()));
+                        // $this->logger->notice(sprintf(
+                        //     '%s, Filter: XXXXXXXXX %s should be in Downtime',
+                        //     $label,
+                        //     $issue->getNiceUuid()
+                        // ));
                     } else {
-                        // $this->logger->notice(sprintf('%s, Filter: XXXXXXXXX %s should NOT be in Downtime', $label, $issue->getNiceUuid()));
+                        // $this->logger->notice(sprintf(
+                        //     '%s, Filter: XXXXXXXXX %s should NOT be in Downtime',
+                        //     $label,
+                        //     $issue->getNiceUuid()
+                        // ));
                     }
                 } elseif ($hostListUuid = $rule->get('host_list_uuid')) {
                     if ($list = $this->getHostList($hostListUuid)) {
                         $hostName = $issue->get('host_name');
                         if ($hostName !== null && $list->hasHost($hostName)) {
-                            $this->logger->notice(sprintf('%s, Host list: XXXXXXXXX %s should be in Downtime', $label, $issue->getNiceUuid()));
+                            $this->logger->notice(sprintf(
+                                '%s, Host list: XXXXXXXXX %s should be in Downtime',
+                                $label,
+                                $issue->getNiceUuid()
+                            ));
                             $issue->set('status', 'in_downtime');
                             $issue->storeToDb($this->db);
                             /*
                             $this->db->insert('downtime_affected_issue', [
                                 'calculation_uuid' => , // Calculation UUID?
                                 'issue_uuid' => $issue->get('issue_uuid'),
-                                'ts_triggered' => 'y', // VERGESSEN. Vielleicht besser beim Starten der Downtime gleich reinsetzen? Also in "affected"`?
+                                'ts_triggered' => 'y', // VERGESSEN. Vielleicht besser beim Starten der Downtime gleich
+                                                       //   reinsetzen? Also in "affected"`?
                                 'ts_scheduled_end' => ,// Calculation-> ts_scheduled_end ??? (hab nicht nachgeschaut)
                                 'assignment' => 'rule',
                                 'assigned_by' => null,
@@ -139,13 +152,23 @@ class DowntimeRunner implements EventEmitterInterface, DbBasedComponent
                             ]);
                             */
                         } else {
-                            // $this->logger->notice(sprintf('%s, Host list: XXXXXXXXX %s should NOT be in Downtime', $label, $issue->getNiceUuid()));
+                            // $this->logger->notice(sprintf(
+                            //     '%s, Host list: XXXXXXXXX %s should NOT be in Downtime',
+                            //     $label,
+                            //     $issue->getNiceUuid()
+                            // ));
                         }
                     } else {
-                        // $this->logger->notice('Host list missing (or hostname === null): ' . Uuid::fromBytes($hostListUuid)->toString());
+                        // $this->logger->notice(
+                        //     'Host list missing (or hostname === null): ' . Uuid::fromBytes($hostListUuid)->toString()
+                        // );
                     }
                 } else {
-                    // $this->logger->notice(sprintf('%s All hosts? XXXXXXXXX %s should be in Downtime', $label, $issue->getNiceUuid()));
+                    // $this->logger->notice(sprintf(
+                    //     '%s All hosts? XXXXXXXXX %s should be in Downtime',
+                    //     $label,
+                    //     $issue->getNiceUuid()
+                    // ));
                 }
             }
         }
@@ -214,14 +237,14 @@ class DowntimeRunner implements EventEmitterInterface, DbBasedComponent
                 $this->activeDowntimes = [];
                 $this->activeDowntimes[$ruleConfigUuid] = $active[$ruleConfigUuid]
                     ?? DowntimeRule::loadByConfigUuid($ruleConfigUuid, $this->db);
-                // $this->logger->notice('Next: ' . Uuid::fromBytes($n->get('rule_config_uuid'))->toString() . print_r($n->getProperties(), 1));
+                // $this->logger->notice('Next: ' . Uuid::fromBytes($n->get('rule_config_uuid'))->toString()
+                //     . print_r($n->getProperties(), 1));
                 $this->db->update(DowntimeCalculated::TABLE_NAME, [
                         'is_active' => 'y',
                         'ts_started' => $this->currentTime
                     ], $this->db->quoteInto('rule_config_uuid = ?', $ruleConfigUuid));
             }
             $this->reTriggerIssuesFromFinishedDowntimes($finishedIssues);
-
         } catch (\Throwable $e) {
             $this->logger->error($e->getMessage());
             $this->emit(self::ON_ERROR, [$e]);

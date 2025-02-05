@@ -28,5 +28,4 @@ class SoapConnection
         $loader = new WsdlLoader($cacheDir, $this->logger, $this->serverInfo, $this->curl);
         return $loader->fetchInitialWsdlFile($this->loop);
     }
-
 }

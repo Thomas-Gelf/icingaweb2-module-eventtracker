@@ -16,8 +16,8 @@ class RestrictionHelper
                 foreach (preg_split('/\s*,\s*/', $restriction) as $value) {
                     $query->where(
                         '(i.input_uuid IS NULL OR i.input_uuid != ?)',
-                        new Expr('0x' . bin2hex(Uuid::fromString($value)->getBytes())))
-                    ;
+                        new Expr('0x' . bin2hex(Uuid::fromString($value)->getBytes()))
+                    );
                 }
             }
         }

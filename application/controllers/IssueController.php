@@ -88,9 +88,11 @@ class IssueController extends Controller
             }
 
             if ($upload) {
-                $this->actions()->add(Link::create($this->translate('Hide upload form'), $this->url()->without('upload'), null, [
-                    'class' => 'icon-left-big',
-                ]));
+                $this->actions()->add(
+                    Link::create($this->translate('Hide upload form'), $this->url()->without('upload'), null, [
+                        'class' => 'icon-left-big',
+                    ])
+                );
                 $form = new FileUploadForm($issues->getUuidObjects(), $db);
                 $form->on($form::ON_SUCCESS, function () {
                     $this->redirectNow($this->url()->without('upload'));
@@ -98,9 +100,11 @@ class IssueController extends Controller
                 $form->handleRequest($this->getServerRequest());
                 $this->content()->prepend($form);
             } else {
-                $this->actions()->add(Link::create($this->translate('Upload'), $this->url()->with('upload', true), null, [
-                    'class' => 'icon-upload',
-                ]));
+                $this->actions()->add(
+                    Link::create($this->translate('Upload'), $this->url()->with('upload', true), null, [
+                        'class' => 'icon-upload',
+                    ])
+                );
             }
 
             /** @var EventActionsHook $impl */

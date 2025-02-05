@@ -80,8 +80,8 @@ EOT
                         'label'       => $this->translate('Icinga ACK Message'),
                         'description' => Html::sprintf(
                             $this->translate(
-                                'If defined, the related issue will be acknowledged, once the SOAP action has been triggered.'
-                                . ' Available placeholders / properties of %s: %s'
+                                'If defined, the related issue will be acknowledged, once the SOAP action has been'
+                                . ' triggered. Available placeholders / properties of %s: %s'
                             ),
                             $parser->getReturnType($methodName)->name,
                             Html::tag('strong', implode(', ', array_map(function (SoapParamMeta $param) {

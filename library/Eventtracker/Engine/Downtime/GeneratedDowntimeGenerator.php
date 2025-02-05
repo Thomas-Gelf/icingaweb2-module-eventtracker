@@ -286,7 +286,8 @@ class GeneratedDowntimeGenerator implements DbBasedComponent
     protected function getNextCalculatedBinaryUuid(DowntimeRule $rule): ?string
     {
         $db = $this->dbStore->getDb();
-        $nextUuid = $db->fetchOne($db->select()
+        $nextUuid = $db->fetchOne(
+            $db->select()
             ->from(['dc' => self::TABLE], 'uuid')
             ->where('dc.rule_config_uuid = ?', $rule->get('config_uuid'))
             ->order('ts_expected_start')

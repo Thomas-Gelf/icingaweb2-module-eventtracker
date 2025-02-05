@@ -394,9 +394,12 @@ class IssueHeader extends BaseHtmlElement
         }
         if ($showUpload) {
             if ($this->requestedUrl->getParam('upload')) {
-                $main[] = Link::create($this->translate('Hide upload form'), $this->requestedUrl->without('upload'), null, [
-                    'class' => 'icon-left-big',
-                ]);
+                $main[] = Link::create(
+                    $this->translate('Hide upload form'),
+                    $this->requestedUrl->without('upload'),
+                    null,
+                    ['class' => 'icon-left-big']
+                );
                 $main[] = "\n";
                 $form = new FileUploadForm([Uuid::fromBytes($this->issue->get('issue_uuid'))], $this->db);
                 $form->on($form::ON_SUCCESS, function () {
@@ -420,9 +423,8 @@ class IssueHeader extends BaseHtmlElement
                     'uuid'              => $issue->getNiceUuid(),
                     'checksum'          => bin2hex($file->get('checksum')),
                     'filename_checksum' => sha1($file->get('filename'))
-                ], [
-                'target' => '_blank'
-                ]
+                ],
+                ['target' => '_blank']
             );
             $main[] = sprintf(' (%s)', Format::bytes($file->get('size')));
         }

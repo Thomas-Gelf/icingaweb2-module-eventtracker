@@ -14,8 +14,15 @@ use function React\Promise\all;
 
 class ActionHelper
 {
-    public static function processIssue(array $actions, Issue $issue, Adapter $db, LoggerInterface $logger): ExtendedPromiseInterface
-    {
+    /** @var array<string, string>|null */
+    protected static $problemHandling = null;
+
+    public static function processIssue(
+        array $actions,
+        Issue $issue,
+        Adapter $db,
+        LoggerInterface $logger
+    ): ExtendedPromiseInterface {
         $promises = [];
         $loggingSuffix =  ' for issue ' . $issue->getNiceUuid();
         /** @var Action $action */

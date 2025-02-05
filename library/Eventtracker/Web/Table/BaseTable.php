@@ -386,5 +386,4 @@ abstract class BaseTable extends ZfQueryBasedTable
 
         return $this->timeFormatter;
     }
-
 }
