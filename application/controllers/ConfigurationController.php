@@ -2,6 +2,7 @@
 
 namespace Icinga\Module\Eventtracker\Controllers;
 
+use Exception;
 use gipfl\IcingaWeb2\Link;
 use gipfl\IcingaWeb2\Url;
 use gipfl\Json\JsonDecodeException;
@@ -24,6 +25,7 @@ use Icinga\Module\Eventtracker\Web\Table\DowntimeScheduleTable;
 use Icinga\Module\Eventtracker\Web\Table\HostListMemberTable;
 use Icinga\Module\Eventtracker\Web\WebAction;
 use Icinga\Module\Eventtracker\Web\WebActions;
+use Icinga\Web\Notification;
 use ipl\Html\Html;
 use ipl\Html\Table;
 use Ramsey\Uuid\Uuid;
@@ -248,7 +250,14 @@ class ConfigurationController extends Controller
         $this->addObjectTab($action);
         /** @var DowntimeForm $form */
         $form = $this->getForm($action, function () {
-            $this->syncRpcCall('config.reloadDowntimeRules');
+            try {
+                $this->syncRpcCall('config.reloadDowntimeRules');
+            } catch (Exception $e) {
+                Notification::warning(sprintf(
+                    $this->translate('Failed to notify Eventtracker daemon: %s'),
+                    $e->getMessage()
+                ));
+            }
         });
         $this->content()->add($form);
         if ($form->hasObject()) {
