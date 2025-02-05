@@ -100,6 +100,10 @@ class ConfigHelper
      */
     public static function fillPlaceholders($string, $issue, callable $callback = null, bool $missingIsNull = false)
     {
+        if ($string === null) {
+            return null;
+        }
+
         $replace = function ($match) use ($issue, $missingIsNull) {
             $property = \trim($match[1], '{}');
             list($property, $modifier) = static::extractPropertyModifier($property);
