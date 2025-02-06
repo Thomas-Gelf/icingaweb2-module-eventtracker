@@ -17,6 +17,7 @@ use Icinga\Module\Eventtracker\Web\Table\RawEventHistoryTable;
 use Icinga\Module\Eventtracker\Web\WebActions;
 use Icinga\Module\Eventtracker\Web\Widget\AdditionalTableActions;
 use Icinga\Module\Eventtracker\Web\Widget\ConfigHistoryDetails;
+use ipl\Html\Html;
 
 class HistoryController extends Controller
 {
@@ -111,11 +112,11 @@ class HistoryController extends Controller
         $d = new LocalDateFormat();
 
         $this->content()->add([
-            $configDetails . ' ' . sprintf(
+            Html::tag('p', $configDetails . ' ' . sprintf(
                 $this->translate('on %s at %s'),
                 $d->getFullDay(floor($ts / 1000)),
                 $t->getShortTime(floor($ts / 1000))
-            ),
+            )),
             $diff
         ]);
     }
