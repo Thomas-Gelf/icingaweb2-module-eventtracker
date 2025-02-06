@@ -3,6 +3,7 @@
 namespace Icinga\Module\Eventtracker\Engine\Input;
 
 use Evenement\EventEmitterTrait;
+use gipfl\Json\JsonString;
 use gipfl\Translation\StaticTranslator;
 use Icinga\Module\Eventtracker\Engine\FormExtension;
 use Icinga\Module\Eventtracker\Engine\Input;
@@ -12,7 +13,6 @@ use Icinga\Module\Eventtracker\Engine\SimpleTaskConstructor;
 use Icinga\Module\Eventtracker\Modifier\Settings;
 use Icinga\Module\Eventtracker\Web\Form\Input\KafkaFormExtension;
 use Icinga\Module\Eventtracker\Stream\BufferedReader;
-use Icinga\Util\Json;
 use React\ChildProcess\Process;
 use React\EventLoop\LoopInterface;
 use RuntimeException;
@@ -167,9 +167,9 @@ class KafkaInput extends SimpleTaskConstructor implements Input
         }
 
         try {
-            $this->emit(InputRunner::ON_EVENT, [Json::decode($line)]);
+            $this->emit(InputRunner::ON_EVENT, [JsonString::decode($line)]);
         } catch (\Exception $e) {
-            $this->logger->error("Failed to process '$line': " . $e->getMessage());
+            $this->logger->error(sprintf("Kafka Input failed with %s, processing: %s", $e->getMessage(), $line));
         }
     }
 
