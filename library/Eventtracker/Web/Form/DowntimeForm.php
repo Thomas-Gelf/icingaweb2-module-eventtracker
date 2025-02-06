@@ -316,13 +316,13 @@ EOT
             ),
             Html::tag('strong', 'Crontab/cron expression'),
             $this->inlinePre(
-                "\n# .---------------- minute (0 - 59)\n"
-                . "# |  .------------- hour (0 - 23)\n"
-                . "# |  |  .---------- day of month (1 - 31)\n"
-                . "# |  |  |  .------- month (1 - 12) OR jan,feb,mar,apr ...\n"
-                . "# |  |  |  |  .---- day of week (0 - 6) (Sunday=0 or 7) OR sun,mon,tue,...\n"
-                . "# |  |  |  |  |\n"
-                . "# *  *  *  *  *\n"
+                "\n .---------------- minute (0 - 59)\n"
+                . " |  .------------- hour (0 - 23)\n"
+                . " |  |  .---------- day of month (1 - 31)\n"
+                . " |  |  |  .------- month (1 - 12) OR jan,feb,mar,apr ...\n"
+                . " |  |  |  |  .---- day of week (0 - 6) (Sunday=0 or 7) OR sun,mon,tue,...\n"
+                . " |  |  |  |  |\n"
+                . " *  *  *  *  *\n"
             )
         )));
 
