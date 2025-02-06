@@ -134,8 +134,9 @@ class KafkaInput extends SimpleTaskConstructor implements Input
                 } else {
                     $this->logger->error($this->command . ' terminated with signal ' . $term);
                 }
-                $this->logger->info('Scheduling reconnection in 10s');
-                $this->loop->addTimer(10, function () {
+                $reconnectTimeout = 30;
+                $this->logger->info("Scheduling reconnection in {$reconnectTimeout}s");
+                $this->loop->addTimer($reconnectTimeout, function () {
                     $this->start();
                 });
             }
