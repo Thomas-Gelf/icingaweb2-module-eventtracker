@@ -92,6 +92,9 @@ class SyslogInput extends SimpleTaskConstructor implements Input
             $this->server->close();
             $this->server = null;
         }
+        if (file_exists($this->socket)) {
+            unlink($this->socket);
+        }
     }
 
     public function pause()
