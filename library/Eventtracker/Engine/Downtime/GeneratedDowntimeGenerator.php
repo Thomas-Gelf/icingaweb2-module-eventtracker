@@ -8,6 +8,7 @@ use Exception;
 use gipfl\ZfDb\Select;
 use Icinga\Module\Eventtracker\Daemon\DbBasedComponent;
 use Icinga\Module\Eventtracker\Daemon\SimpleDbBasedComponent;
+use Icinga\Module\Eventtracker\Time;
 use Psr\Log\LoggerInterface;
 use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\UuidInterface;
@@ -112,14 +113,35 @@ class GeneratedDowntimeGenerator implements DbBasedComponent
         }
 
         $this->lastRules = $rules;
-        $this->scheduleNextCalculation(60);
+        $this->scheduleNextCalculation();
     }
 
-    private function scheduleNextCalculation(int $timeout)
+    private function scheduleNextCalculation()
     {
+        $default = 60;
+        $timeout = min($this->timeToNextPossibleChange() ?: $default, $default);
+        // $this->logger->notice(sprintf('Scheduled next calculation in %ds', $timeout));
         Loop::get()->addTimer($timeout, function () {
             $this->triggerCalculation($this->lastRules);
         });
+    }
+
+    protected function timeToNextPossibleChange(): ?int
+    {
+        $start = Time::dateTimeToTimestampMs($this->firstPossibleTimestamp);
+        $next = $this->db->fetchOne(
+            $this->db->select()->from(['u' => $this->db->select()->union([
+                'a' => $this->selectCalculatedDowntimes(['ts' => 'MIN(ts_expected_start)'])
+                    ->where('ts_expected_start > ?', $start),
+                'b' => $this->selectCalculatedDowntimes(['ts' => 'MIN(ts_expected_end)'])
+                    ->where('ts_expected_end > ?', $start),
+            ])], 'MIN(ts)')
+        );
+        if ($next === null) {
+            return null;
+        }
+
+        return (int) max(1, ceil(($next - $start) / 1000));
     }
 
     /**

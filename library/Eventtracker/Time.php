@@ -53,4 +53,9 @@ class Time
     {
         return (int) floor(microtime(true) * 1000);
     }
+
+    public static function dateTimeToTimestampMs(\DateTimeInterface $dateTime): int
+    {
+        return (int) floor((int) $dateTime->format('Uu') / 1000);
+    }
 }
