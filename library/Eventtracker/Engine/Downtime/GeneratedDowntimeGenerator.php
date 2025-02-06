@@ -15,7 +15,6 @@ use React\EventLoop\Loop;
 
 use function max;
 use function min;
-use function React\Promise\resolve;
 
 /**
  * Logik:
@@ -62,7 +61,7 @@ class GeneratedDowntimeGenerator implements DbBasedComponent
      * in the DB. However, that implementation is currently only being triggered once it got
      * a DB connection
      *
-     * @param DowntimeRule[]
+     * @param DowntimeRule[] $rules
      * @return void
      */
     public function triggerCalculation(array $rules)
@@ -85,20 +84,31 @@ class GeneratedDowntimeGenerator implements DbBasedComponent
         $this->firstPossibleTimestamp = $this->tsToDateTime($now);
         // For recurring Downtimes, schedule no instance after this timestamp
         $this->lastPossibleTimestamp = $this->tsToDateTime($horizon);
+        $rulesDisabled = [];
+        foreach ($rules as $rule) {
+            if (!$rule->isEnabled()) {
+                $calculatedUuid = $rule->get('rule_config_uuid');
+                if ($calculatedUuid !== null) {
+                    $rulesDisabled[] = $calculatedUuid;
+                }
+            }
+        }
+
+        if (! empty($rulesDisabled)) {
+            // TODO: doing this on start and on "lost" rules only would be more efficient
+            $this->db->delete(self::TABLE, $this->db->quoteInto('rule_config_uuid IN (?)', $rulesDisabled));
+        }
+
 
         $affectedOutdated = $this->wipeOutdatedCalculations();
         $affectedOrphaned = $this->deleteOrphanedCalculations();
-        // foreach outdated, orphaned: loop over affected issues, back to problem unless they are affected
-        // by other downtimes
+        // TODO: foreach outdated, orphaned: loop over affected issues, back to problem unless they are affected
+        // by other downtimes. Figure out whether they should better be closed?
         foreach ($rules as $rule) {
             if ($rule->isEnabled()) {
                 // echo JsonString::encode($rule, JSON_PRETTY_PRINT);
                 $this->generateForRule($rule);
             }
-            // else {
-            //     Not here, this should happen when figuring out that it has been removed / disabled
-            //     $this->cleanupForRule($rule);
-            // }
         }
 
         $this->lastRules = $rules;
@@ -115,15 +125,16 @@ class GeneratedDowntimeGenerator implements DbBasedComponent
     /**
      * Removes outdated calculated downtimes, returns affected issue UUIDs
      *
+     * Outdated are calculated downtimes with an expected end in the past
+     *
      * @return UuidInterface[]
      */
     public function wipeOutdatedCalculations(): array
     {
         $timestamp = $this->firstPossibleTimestamp->getTimestamp() * 1000;
         $where = 'ts_expected_end < ?';
-        $query = $this->selectAffectedIssues()->where($where, $timestamp);
 
-        $uuids = $this->fetchUuids($query);
+        $uuids = $this->fetchUuids($this->selectAffectedIssues()->where($where, $timestamp));
         $this->db->delete(self::TABLE, $this->db->quoteInto($where, $timestamp));
 
         return $uuids;
@@ -132,18 +143,19 @@ class GeneratedDowntimeGenerator implements DbBasedComponent
     /**
      * Removes calculated downtimes for former rule configurations, returns affected issue UUIDs
      *
+     * Orphaned are Downtime Calculations related to former Downtime Rule configurations
+     *
      * @return UuidInterface[]
      */
     public function deleteOrphanedCalculations(): array
     {
         $where = 'rule_config_uuid IS NULL';
-        $query = $this->selectAffectedIssues()->where($where);
         $this->db->delete(self::TABLE, $where);
 
-        return $this->fetchUuids($query);
+        return $this->fetchUuids($this->selectAffectedIssues()->where($where));
     }
 
-    protected function selectAffectedIssues()
+    protected function selectAffectedIssues(): Select
     {
         return $this->selectCalculatedDowntimes()
             ->join(['dai' => 'downtime_affected_issue'], 'dc.uuid = dai.calculation_uuid', 'issue_uuid');
