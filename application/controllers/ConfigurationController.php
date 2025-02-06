@@ -282,7 +282,9 @@ class ConfigurationController extends Controller
         $action = $this->actions->get('hostlists');
         $this->addObjectTab($action);
         $this->content()->add($this->getForm($action));
-        $this->content()->add(new HostListMemberTable($this->db(), $this->getUuid()));
+        if ($uuid = $this->getUuid()) {
+            $this->content()->add(new HostListMemberTable($this->db(), $uuid));
+        }
     }
 
     protected function showRules(UuidInterface $uuid, $rules)
