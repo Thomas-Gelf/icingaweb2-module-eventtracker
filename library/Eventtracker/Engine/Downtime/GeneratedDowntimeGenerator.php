@@ -294,8 +294,7 @@ class GeneratedDowntimeGenerator implements DbBasedComponent
     {
         $db = $this->dbStore->getDb();
         return (int) $db->fetchOne(
-            $db->select()
-                ->from(['dc' => self::TABLE], 'COUNT(*)')
+            $this->selectCalculatedDowntimes('COUNT(*)')
                 ->where('dc.rule_config_uuid = ?', $rule->get('config_uuid'))
         );
     }
@@ -304,8 +303,7 @@ class GeneratedDowntimeGenerator implements DbBasedComponent
     {
         $db = $this->dbStore->getDb();
         $nextUuid = $db->fetchOne(
-            $db->select()
-            ->from(['dc' => self::TABLE], 'uuid')
+            $this->selectCalculatedDowntimes('uuid')
             ->where('dc.rule_config_uuid = ?', $rule->get('config_uuid'))
             ->order('ts_expected_start')
             ->limit(1)
@@ -375,7 +373,7 @@ class GeneratedDowntimeGenerator implements DbBasedComponent
     protected function fetchTsLastCalculation(DowntimeRule $rule): ?DateTimeInterface
     {
         $db = $this->dbStore->getDb();
-        $value = $db->fetchOne($db->select()->from(['dc' => self::TABLE], [
+        $value = $db->fetchOne($this->selectCalculatedDowntimes([
             'ts' => 'MAX(dc.ts_expected_start)'
         ])->where('dc.rule_config_uuid = ?', $rule->get('config_uuid')));
 
