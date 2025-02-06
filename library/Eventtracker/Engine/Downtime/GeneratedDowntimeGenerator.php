@@ -43,15 +43,29 @@ class GeneratedDowntimeGenerator implements DbBasedComponent
     /** @var LoggerInterface */
     protected $logger;
 
-    /** @var ?array */
+    /** @var DowntimeRule[]|null */
     protected $lastRules = null;
 
+    /**
+     * Nothing happens here. We're a DbBasedComponent, which means that we cannot
+     * rely on having a $db.
+     */
     public function __construct(LoggerInterface $logger)
     {
         $this->logger = $logger;
     }
 
-    public function triggerCalculation($rules)
+    /**
+     * Triggers calculation for the given rules
+     *
+     * This is currently being called by the "RunningConfig" implementation, watching rules
+     * in the DB. However, that implementation is currently only being triggered once it got
+     * a DB connection
+     *
+     * @param DowntimeRule[]
+     * @return void
+     */
+    public function triggerCalculation(array $rules)
     {
         if ($this->db === null) {
             $this->logger->notice(__CLASS__ . ': Ignoring rules, have no DB' . var_export($this->db, 1));
@@ -131,7 +145,7 @@ class GeneratedDowntimeGenerator implements DbBasedComponent
 
     protected function selectAffectedIssues()
     {
-        return $this->newSelect()
+        return $this->selectCalculatedDowntimes()
             ->join(['dai' => 'downtime_affected_issue'], 'dc.uuid = dai.calculation_uuid', 'issue_uuid');
     }
 
@@ -154,7 +168,10 @@ class GeneratedDowntimeGenerator implements DbBasedComponent
     {
     }
 
-    protected function generateForRule(DowntimeRule $rule)
+    /**
+     * Decides which calculation strategy to pick for the given rule
+     */
+    protected function generateForRule(DowntimeRule $rule): void
     {
         $label = $rule->get('label');
         try {
@@ -172,7 +189,7 @@ class GeneratedDowntimeGenerator implements DbBasedComponent
         }
     }
 
-    protected function generateForRuleWithoutTimeDefinition(DowntimeRule $rule)
+    protected function generateForRuleWithoutTimeDefinition(DowntimeRule $rule): void
     {
         $start = $this->getTsStart($rule);
         $end = $this->getTsEnd($rule);
@@ -370,7 +387,7 @@ class GeneratedDowntimeGenerator implements DbBasedComponent
         return null;
     }
 
-    protected function newSelect($columns = []): Select
+    protected function selectCalculatedDowntimes($columns = []): Select
     {
         return $this->db->select()->from(['dc' => self::TABLE], $columns);
     }
