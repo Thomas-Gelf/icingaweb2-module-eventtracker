@@ -43,8 +43,8 @@ class GeneratedDowntimeGenerator implements DbBasedComponent
     /** @var LoggerInterface */
     protected $logger;
 
-    /** @var DowntimeRule[]|null */
-    protected $lastRules = null;
+    /** @var DowntimeRule[] */
+    protected $lastRules = [];
 
     /**
      * Nothing happens here. We're a DbBasedComponent, which means that we cannot
