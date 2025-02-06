@@ -260,7 +260,7 @@ class IssueHeader extends BaseHtmlElement
         foreach ($attributes as $name => $value) {
             $name = preg_replace('/^[A-Za-z]+_([A-Za-z])/', '\1', $name);
             $name = str_replace('_', ' ', $name);
-            if (preg_match('#^https?://[^ ]+$#', $value)) {
+            if (is_string($value) && preg_match('#^https?://[^ ]+$#', $value)) {
                 if (false !== ($pos = strrpos($value, '='))) {
                     $label = substr($value, $pos + 1);
                 } else {
