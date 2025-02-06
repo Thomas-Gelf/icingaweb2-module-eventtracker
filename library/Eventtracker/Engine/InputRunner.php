@@ -108,8 +108,8 @@ class InputRunner implements LoggerAwareInterface
     {
         foreach ($this->inputs as $input) {
             $this->loop->futureTick(function () use ($input) {
-                $input->on(self::ON_ERROR, function ($error) {
-                    echo $error->getMessage() . "\n";
+                $input->on(self::ON_ERROR, function ($error) use ($input) {
+                    $this->logger->error($input->getName() . ' failed: ' . $error->getMessage());
                     // TODO: log error, detach and restart input
                 });
                 $input->run($this->loop);
