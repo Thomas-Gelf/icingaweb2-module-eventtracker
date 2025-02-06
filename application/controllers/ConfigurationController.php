@@ -14,6 +14,7 @@ use gipfl\ZfDbStore\ZfDbStore;
 use Icinga\Module\Eventtracker\Db\ConfigStore;
 use Icinga\Module\Eventtracker\Engine\Downtime\DowntimeRule;
 use Icinga\Module\Eventtracker\Engine\Input\KafkaInput;
+use Icinga\Module\Eventtracker\Engine\Input\RestApiInput;
 use Icinga\Module\Eventtracker\Modifier\ModifierChain;
 use Icinga\Module\Eventtracker\Modifier\Settings;
 use Icinga\Module\Eventtracker\Web\Dashboard\ConfigurationDashboard;
@@ -28,27 +29,31 @@ use Icinga\Module\Eventtracker\Web\WebActions;
 use Icinga\Web\Notification;
 use ipl\Html\Html;
 use ipl\Html\Table;
+use Psr\Log\NullLogger;
 use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\UuidInterface;
 
 class ConfigurationController extends Controller
 {
     use AsyncControllerHelper;
-
+    use RestApiMethods;
     /** @var ConfigStore */
     protected $store;
-
+    protected $requiresAuthentication = false;
     /** @var WebActions */
     protected $actions;
 
     public function init()
     {
-        $this->assertPermission('eventtracker/admin');
+        if (! $this->getRequest()->isApiRequest()) {
+            $this->assertPermission('eventtracker/admin');
+        }
         $this->actions = new WebActions();
     }
 
     public function indexAction()
     {
+        $this->notForApi();
         $this->setTitle($this->translate('Configuration'));
         $this->addSingleTab($this->translate('Configuration'));
         $this->content()->add(new ConfigurationDashboard($this->actions));
@@ -274,7 +279,36 @@ class ConfigurationController extends Controller
 
     public function hostlistsAction()
     {
-        $this->showList($this->actions->get('hostlists'));
+        $action = $this->actions->get('hostlists');
+        if ($this->getRequest()->isApiRequest()) {
+            $table = $this->prepareTableForList($action);
+            $this->sendJsonResponse(self::cleanRows($table->db()->fetchAll($table->getQuery())));
+        }
+        $this->showList($action);
+    }
+
+    protected static function cleanRows($rows)
+    {
+        foreach ($rows as &$row) {
+            $row = self::cleanRow($row);
+        }
+
+        return $rows;
+    }
+
+    protected static function cleanRow($row)
+    {
+        $row = (array)$row;
+        foreach ($row as $k => &$v) {
+            if ($v === null) {
+                continue;
+            }
+            if (strpos($k, 'uuid') !== false) {
+                $v = Uuid::fromBytes($v)->toString();
+            }
+        }
+
+        return (object) $row;
     }
 
     public function hostlistAction()
@@ -285,6 +319,14 @@ class ConfigurationController extends Controller
         if ($uuid = $this->getUuid()) {
             $this->content()->add(new HostListMemberTable($this->db(), $uuid));
         }
+        $this->create();
+
+
+    }
+
+    public function hostlistmembersAction()
+    {
+        $action = $this->actions->get('hostlistmembers');
     }
 
     protected function showRules(UuidInterface $uuid, $rules)
@@ -310,9 +352,7 @@ class ConfigurationController extends Controller
         $this->tabForList($action);
         $this->actions()->add([$this->linkBack(), $this->linkAdd($action)]);
 
-        $class = $action->tableClass;
-        /** @var BaseTable $table */
-        $table = new $class($this->db(), $action);
+        $table = $this->prepareTableForList($action);
         if ($table->count() > 0) {
             $this->addCompactDashboard($table);
         } else {
@@ -321,6 +361,13 @@ class ConfigurationController extends Controller
                 $action->singular
             )));
         }
+    }
+
+    protected function prepareTableForList(WebAction $action)
+    {
+        $class = $action->tableClass;
+        /** @var BaseTable $table */
+        return new $class($this->db(), $action);
     }
 
     protected function linkBack(): Link
@@ -498,5 +545,45 @@ class ConfigurationController extends Controller
             }
             unset($object->settings);
         }
+    }
+
+    protected function create()
+    {
+        $token = null;
+        foreach ($this->getServerRequest()->getHeader('Authorization') as $line) {
+            if (preg_match('/^Bearer\s+([A-z0-9-]+)$/', $line, $match)) {
+                $token = $match[1];
+            }
+        }
+        if ($token === null) {
+            $this->sendJsonError('Bearer token is required', 401);
+            return;
+
+        }
+
+        $store = new ConfigStore($this->db(), new NullLogger());
+        $input = $this->findInputForToken($store, $token);
+        if ($input === null) {
+            $this->sendJsonError('Bearer token is not valid', 403);
+            return;
+        }
+        $body = (string) $this->getServerRequest()->getBody();
+    }
+
+    protected function findInputForToken(ConfigStore $store, $token)
+    {
+        $input = null;
+
+        $inputs = $store->loadInputs([
+            'implementation' => 'restApi',
+        ]);
+
+        foreach ($inputs as $possibleInput) {
+            if ($possibleInput instanceof RestApiInput && $possibleInput->getSettings()->get('token') === $token) {
+                $input = $possibleInput;
+            }
+        }
+
+        return $input;
     }
 }
