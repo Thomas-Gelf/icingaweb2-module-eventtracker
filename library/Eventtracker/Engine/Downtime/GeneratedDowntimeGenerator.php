@@ -162,17 +162,17 @@ class GeneratedDowntimeGenerator implements DbBasedComponent
                 if (substr($definition, 0, 1) === '@') { // simple recurrence
                     $this->logger->notice("Skipping simple recurrence: $label");
                 } else {
-                    $this->generateForRuleWithDefinition($rule, $definition);
+                    $this->generateForRuleWithTimeDefinition($rule, $definition);
                 }
             } else {
-                $this->generateForRuleWithoutDefinition($rule);
+                $this->generateForRuleWithoutTimeDefinition($rule);
             }
         } catch (Exception $e) {
             $this->logger->error("Downtime generator failed for $label: " . $e->getMessage());
         }
     }
 
-    protected function generateForRuleWithoutDefinition(DowntimeRule $rule)
+    protected function generateForRuleWithoutTimeDefinition(DowntimeRule $rule)
     {
         $start = $this->getTsStart($rule);
         $end = $this->getTsEnd($rule);
@@ -200,7 +200,7 @@ class GeneratedDowntimeGenerator implements DbBasedComponent
     /**
      * @throws Exception
      */
-    protected function generateForRuleWithDefinition(DowntimeRule $rule, string $definition)
+    protected function generateForRuleWithTimeDefinition(DowntimeRule $rule, string $definition)
     {
         $start = $this->getTsStart($rule);
         $end = $this->getTsEnd($rule);
