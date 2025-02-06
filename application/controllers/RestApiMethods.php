@@ -30,6 +30,9 @@ trait RestApiMethods
         }
     }
 
+    /**
+     * @return never-returns
+     */
     protected function notForApi()
     {
         if ($this->getRequest()->isApiRequest()) {
@@ -39,33 +42,44 @@ trait RestApiMethods
 
     /**
      * @param \Throwable|string $error
-     * @param int $code
      */
-    protected function sendJsonError($error, $code = 500)
+    protected function sendJsonError($error, int $code = 500)
     {
         $data = [
             'success' => false,
         ];
 
-        if ($error instanceof \Exception) {
-            $message = $error->getMessage();
-            $data['trace'] = iconv('UTF-8', 'UTF-8//IGNORE', $error->getTraceAsString());
+        if ($error instanceof \Throwable) {
+            $message = self::utf8Only($error->getMessage());
+            $data['trace'] = self::utf8Only($error->getTraceAsString());
         } else {
             $message = (string) $error;
         }
 
-        $data['error'] = iconv('UTF-8', 'UTF-8//IGNORE', $message);
+        $data['error'] = self::utf8Only($message);
 
         $this->sendJsonResponse($data, $code);
+    }
+
+    protected static function utf8Only(?string $string): string
+    {
+        if ($string === null) {
+            return '(null)';
+        }
+
+        return iconv('UTF-8', 'UTF-8//IGNORE', $string);
     }
 
     protected function sendJsonResponse($object, $code = 200)
     {
         /** @var $this CompatController */
-        $this->getResponse()->setHttpResponseCode($code);
-        $this->getResponse()->setHeader('Content-Type', 'application/json', true);
+        $response = $this->getResponse();
+        $response->setHttpResponseCode($code);
+        $response->setHeader('Content-Type', 'application/json', true);
         try {
+            $response->sendHeaders();
             echo JsonString::encode($object, JSON_PRETTY_PRINT) . "\n";
+            $this->getViewRenderer()->disable();
         } catch (JsonEncodeException $e) {
             $this->sendJsonError($e);
         }
