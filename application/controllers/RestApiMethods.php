@@ -19,6 +19,9 @@ use Ramsey\Uuid\UuidInterface;
 
 trait RestApiMethods
 {
+    /**
+     * @return never-returns
+     */
     protected function runForApi($callback)
     {
         try {
@@ -41,7 +44,7 @@ trait RestApiMethods
     }
 
     /**
-     * @param \Throwable|string $error
+     * @return never-returns
      */
     protected function sendJsonError($error, int $code = 500)
     {
@@ -70,6 +73,9 @@ trait RestApiMethods
         return iconv('UTF-8', 'UTF-8//IGNORE', $string);
     }
 
+    /**
+     * @return never-returns
+     */
     protected function sendJsonResponse($object, $code = 200)
     {
         /** @var $this CompatController */
