@@ -14,7 +14,6 @@ use gipfl\ZfDbStore\ZfDbStore;
 use Icinga\Module\Eventtracker\Db\ConfigStore;
 use Icinga\Module\Eventtracker\Engine\Downtime\DowntimeRule;
 use Icinga\Module\Eventtracker\Engine\Input\KafkaInput;
-use Icinga\Module\Eventtracker\Engine\Input\RestApiInput;
 use Icinga\Module\Eventtracker\Modifier\ModifierChain;
 use Icinga\Module\Eventtracker\Modifier\Settings;
 use Icinga\Module\Eventtracker\Web\Dashboard\ConfigurationDashboard;
@@ -29,7 +28,6 @@ use Icinga\Module\Eventtracker\Web\WebActions;
 use Icinga\Web\Notification;
 use ipl\Html\Html;
 use ipl\Html\Table;
-use Psr\Log\NullLogger;
 use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\UuidInterface;
 
@@ -46,6 +44,9 @@ class ConfigurationController extends Controller
     public function init()
     {
         if (! $this->getRequest()->isApiRequest()) {
+            if (! $this->Auth()->isAuthenticated()) {
+                $this->redirectToLogin(Url::fromRequest());
+            }
             $this->assertPermission('eventtracker/admin');
         }
         $this->actions = new WebActions();
@@ -61,11 +62,13 @@ class ConfigurationController extends Controller
 
     public function listenersAction()
     {
+        $this->notForApi();
         $this->showList($this->actions->get('listeners'));
     }
 
     public function listenerAction()
     {
+        $this->notForApi();
         $action = $this->actions->get('listeners');
         $this->addObjectTab($action);
         $this->content()->add($this->getForm($action));
@@ -98,6 +101,7 @@ class ConfigurationController extends Controller
 
     public function syncsAction()
     {
+        $this->notForApi();
         $action = $this->actions->get('syncs');
         $this->tabForList($action);
         $this->addTitle($action->plural);
@@ -116,11 +120,13 @@ class ConfigurationController extends Controller
 
     public function apitokensAction()
     {
+        $this->notForApi();
         $this->showList($this->actions->get('apitokens'));
     }
 
     public function apitokenAction()
     {
+        $this->notForApi();
         $action = $this->actions->get('apitokens');
         $this->addObjectTab($action);
         $this->content()->add($this->getForm($action));
@@ -128,11 +134,13 @@ class ConfigurationController extends Controller
 
     public function channelsAction()
     {
+        $this->notForApi();
         $this->showList($this->actions->get('channels'));
     }
 
     public function channelAction()
     {
+        $this->notForApi();
         $action = $this->actions->get('channels');
         if ($this->getUuid()) {
             $this->channelTabs()->activate('channel');
@@ -144,6 +152,7 @@ class ConfigurationController extends Controller
 
     public function channelrulesAction()
     {
+        $this->notForApi();
         $action = $this->actions->get('channels');
         $this->channelTabs()->activate('rules');
         $this->actions()->add(Link::create($this->translate('Edit'), 'TODO', [
@@ -159,6 +168,7 @@ class ConfigurationController extends Controller
 
     public function channelruleAction()
     {
+        $this->notForApi();
         $action = $this->actions->get('channels');
         $modifierPosition = $this->params->get('modifier');
         if (null === $modifierPosition) {
@@ -176,6 +186,7 @@ class ConfigurationController extends Controller
 
     protected function channelTabs()
     {
+        $this->notForApi();
         $params = [
             'uuid' => $this->requireUuid()->toString()
         ];
@@ -192,11 +203,13 @@ class ConfigurationController extends Controller
 
     public function problemhandlingsAction()
     {
+        $this->notForApi();
         $this->showList($this->actions->get('problemhandling'));
     }
 
     public function problemhandlingAction()
     {
+        $this->notForApi();
         $action = $this->actions->get('problemhandling');
         $this->addObjectTab($action);
         $form = $this->getForm($action);
@@ -210,11 +223,13 @@ class ConfigurationController extends Controller
 
     public function actionsAction()
     {
+        $this->notForApi();
         $this->showList($this->actions->get('actions'));
     }
 
     public function actionAction()
     {
+        $this->notForApi();
         $action = $this->actions->get('actions');
         $this->addObjectTab($action);
         $this->content()->add($this->getForm($action));
@@ -222,11 +237,13 @@ class ConfigurationController extends Controller
 
     public function bucketsAction()
     {
+        $this->notForApi();
         $this->showList($this->actions->get('buckets'));
     }
 
     public function bucketAction()
     {
+        $this->notForApi();
         $action = $this->actions->get('buckets');
         $this->addObjectTab($action);
         $this->content()->add($this->getForm($action));
@@ -234,11 +251,13 @@ class ConfigurationController extends Controller
 
     public function mapsAction()
     {
+        $this->notForApi();
         $this->showList($this->actions->get('maps'));
     }
 
     public function mapAction()
     {
+        $this->notForApi();
         $action = $this->actions->get('maps');
         $this->addObjectTab($action);
         $this->content()->add($this->getForm($action));
@@ -246,11 +265,13 @@ class ConfigurationController extends Controller
 
     public function downtimesAction()
     {
+        $this->notForApi();
         $this->showList($this->actions->get('downtimes'));
     }
 
     public function downtimeAction()
     {
+        $this->notForApi();
         $action = $this->actions->get('downtimes');
         $this->addObjectTab($action);
         /** @var DowntimeForm $form */
@@ -279,54 +300,254 @@ class ConfigurationController extends Controller
 
     public function hostlistsAction()
     {
-        $action = $this->actions->get('hostlists');
+
         if ($this->getRequest()->isApiRequest()) {
-            $table = $this->prepareTableForList($action);
-            $this->sendJsonResponse(self::cleanRows($table->db()->fetchAll($table->getQuery())));
-        }
-        $this->showList($action);
-    }
-
-    protected static function cleanRows($rows)
-    {
-        foreach ($rows as &$row) {
-            $row = self::cleanRow($row);
-        }
-
-        return $rows;
-    }
-
-    protected static function cleanRow($row)
-    {
-        $row = (array)$row;
-        foreach ($row as $k => &$v) {
-            if ($v === null) {
-                continue;
+            switch ($this->getServerRequest()->getMethod()) {
+                case 'GET':
+                    $this->checkBearerToken('host_list/read');
+                    $this->runForApi(function () {
+                        $this->getHostLists();
+                    });
+                case 'POST':
+                    $this->checkBearerToken('host_list/write');
+                    $this->runForApi(function () {
+                        $this->postHostLists();
+                    });
             }
-            if (strpos($k, 'uuid') !== false) {
-                $v = Uuid::fromBytes($v)->toString();
-            }
-        }
 
-        return (object) $row;
+        } else {
+            $action = $this->actions->get('hostlists');
+            $this->showList($action);
+        }
+    }
+    protected function getHostLists()
+    {
+        $action = $this->actions->get('hostlists');
+
+        $table = $this->prepareTableForList($action);
+        $this->sendJsonResponse(self::cleanRows($table->db()->fetchAll($table->getQuery())));
+    }
+    protected function postHostLists()
+    {
+        $body = $this->requireJsonBody();
+        $cnt = 0;
+        $this->runAsTransaction(function () use ($body, &$cnt) {
+            foreach ($body as $hostlist) {
+                $cnt++;
+                $hostlist->uuid = Uuid::uuid4()->getBytes();
+                $this->db()->insert('host_list', (array) $hostlist);
+            }
+        });
+        $this->sendJsonSuccess(['message' => sprintf('added  %s hostlists', $cnt)]);
     }
 
     public function hostlistAction()
     {
-        $action = $this->actions->get('hostlists');
-        $this->addObjectTab($action);
-        $this->content()->add($this->getForm($action));
-        if ($uuid = $this->getUuid()) {
-            $this->content()->add(new HostListMemberTable($this->db(), $uuid));
+        if ($this->getRequest()->isApiRequest()) {
+            switch($this->getServerRequest()->getMethod()) {
+                case 'GET':
+                    $this->checkBearerToken('host_list/read');
+                    $this->getHostList();
+                        $this->runForApi(function () {
+                    });
+                case 'POST':
+                    $this->checkBearerToken('host_list/write');
+                    $this->runForApi(function () {
+                        $this->postHostList();
+                    });
+                case 'PUT':
+                    $this->checkBearerToken('host_list/write');
+                    break;
+                case 'DELETE':
+                    $this->checkBearerToken('host_list/write');
+                    break;
+            }
+        } else {
+            $action = $this->actions->get('hostlists');
+            $this->addObjectTab($action);
+            $this->content()->add($this->getForm($action));
+            if ($uuid = $this->getUuid()) {
+                $this->content()->add(new HostListMemberTable($this->db(), $uuid));
+            }
         }
-        $this->create();
+    }
 
+    protected function getHostList()
+    {
+        $uuid = Uuid::fromString($this->params->getRequired('listUuid'))->getBytes();
+        $this->sendJsonResponse(self::cleanRows(array($this->db()->fetchOne(
+            $this->db()
+                ->select()->from('host_list', ['label'])
+                ->where('uuid = ?', $uuid)
+        ))));
+    }
+
+    protected function postHostList()
+    {
+        $body = $this->requireJsonBody();
+        $this->db()->insert('host_list', [
+            'uuid'  => Uuid::uuid4()->getBytes(),
+            'label' => $body->label,
+        ]);
+        $this->sendJsonSuccess([
+            'message' => sprintf('added hostlist %s', $body->label)
+        ]);
+    }
+
+    public function hostlistMemberAction()
+    {
+        $this->showApiOnly();
+        switch ($this->getServerRequest()->getMethod()) {
+            case 'GET':
+                $this->checkBearerToken('host_list/read');
+                $this->runForApi(function () {
+                    $this->getHostListMember();
+                });
+            case 'POST':
+                $this->checkBearerToken('host_list/write');
+                $this->runForApi(function () {
+                    $this->postHostlistMember();
+                });
+            case 'DELETE':
+                $this->checkBearerToken('host_list/write');
+                $this->runForApi(function () {
+                    $this->deleteHostListMember();
+                });
+        }
+    }
+
+    protected function getHostListMember()
+    {
+        $uuid = Uuid::fromString($this->params->getRequired('listUuid'))->getBytes();
+        $hostname = $this->params->getRequired('hostname');
+        $this->sendJsonResponse(self::cleanRows(array($this->db()->fetchOne(
+            $this->db()
+                ->select()->from('host_list_member', ['hostname'])
+                ->where('list_uuid = ?', $uuid)
+                ->where('hostname = ?', $hostname))
+        )));
+    }
+
+    protected function postHostListMember()
+    {
+        $body = $this->requireJsonBody();
+        $uuid = Uuid::fromString($this->params->getRequired('listUuid'))->getBytes();
+        $hostListMember = [
+            'list_uuid' => $uuid,
+            'hostname ' => $body->hostname,
+        ];
+        $this->db()->insert('host_list_member', $hostListMember);
+        $hostlist = $this->db()->fetchOne(
+            $this->db()->select()
+                ->from('host_list', ['label'])
+                ->where('uuid = ?', $uuid)
+        );
+        $this->sendJsonSuccess(['message' => sprintf('added host %s to hostlist %s', $body->hostname, $hostlist)]);
+    }
+
+    protected function deleteHostListMember()
+    {
+        $listUuid = Uuid::fromString($this->params->getRequired('listUuid'));
+        $hostname = $this->params->getRequired('hostname');
+        $db = $this->db();
+
+        if ($db->delete(
+            'host_list_member',
+            $db->quoteInto('list_uuid = ?', $listUuid->getBytes())
+            . $db->quoteInto(' AND hostname = ?',  $hostname)
+        ) > 0) {
+            $this->sendJsonSuccess(['message' => sprintf('deleted host list member %s', $hostname)]);
+        } else {
+            $this->sendJsonSuccess(['message' => 'Nothing has been deleted']);
+
+        }
+    }
+
+    public function hostlistMembersAction()
+    {
+        $this->showApiOnly();
+        switch ($this->getServerRequest()->getMethod()) {
+            case "GET":
+                $this->checkBearerToken('host_list/read');
+                $this->runForApi(function () {
+                    $this->getHostListMembers();
+                });
+            case "POST":
+                $this->checkBearerToken('host_list/write');
+                $this->runForApi(function () {
+                    $this->postHostListMembers();
+                });
+            case 'PUT':
+                $this->checkBearerToken('host_list/write');
+                $this->runForApi(function () {
+                    $this->putHostListMembers();
+                });
+        }
+    }
+
+    protected function getHostListMembers()
+    {
+        $action = $this->actions->get('hostlistMembers');
+
+        $uuid = Uuid::fromString($this->params->getRequired('listUuid'));
+
+        $this->sendJsonResponse(self::cleanRows($this->db()->fetchAll(
+            $this->db()->select()->from($action->table, ['hostname'])->where('list_uuid = ?', $uuid->getBytes()))));
+    }
+    protected function postHostListMembers()
+    {
+        $uuid = Uuid::fromString($this->params->getRequired('listUuid'))->getBytes();
+        $body = $this->requireJsonBody();
+        $cnt = 0;
+        $db = $this->db();
+        $currentMembers = $db->fetchCol(
+            $db->select()->from('host_list_member', 'hostname')->where('list_uuid = ?', $uuid)
+        );
+        $this->runAsTransaction(function () use ($body, &$cnt, $uuid, $currentMembers) {
+            foreach ($body as $member) {
+                if (in_array($member->hostname, $currentMembers)) {
+                    continue;
+                }
+                $cnt++;
+                $member->list_uuid = $uuid;
+                $this->db()->insert('host_list_member', (array) $member);
+            }
+
+        });
+        $this->sendJsonSuccess(['message' => sprintf('added  %s hosts', $cnt)]);
 
     }
 
-    public function hostlistmembersAction()
+    protected function putHostListMembers()
     {
-        $action = $this->actions->get('hostlistmembers');
+        $uuid = Uuid::fromString($this->params->getRequired('listUuid'))->getBytes();
+        $body = $this->requireJsonBody();
+        $cnt = 0;
+        $db = $this->db();
+        $currentMembers = $db->fetchCol(
+            $db->select()->from('host_list_member', 'hostname')->where('list_uuid = ?', $uuid)
+        );
+        $membersRequested = [];
+        $this->runAsTransaction(function () use ($db, $body, &$cnt, $uuid, $currentMembers, $membersRequested) {
+            foreach ($body as $member) {
+                $membersRequested[] = $member->hostname;
+                if (in_array($member->hostname, $currentMembers)) {
+                    continue;
+                }
+                $cnt++;
+                $member->list_uuid = $uuid;
+                $this->db()->insert('host_list_member', (array) $member);
+            }
+            foreach ($currentMembers as $member) {
+                if (! in_array($member, $membersRequested)) {
+                    $db->delete('host_list_member', $db->quoteInto('list_uuid = ?', $uuid)
+                        . $db->quoteInto(' AND hostname = ?',  $member));
+                }
+            }
+        });
+
+        $this->sendJsonSuccess(['message' => sprintf('updated  %s hosts', $cnt)], 201);
+
     }
 
     protected function showRules(UuidInterface $uuid, $rules)
@@ -547,43 +768,60 @@ class ConfigurationController extends Controller
         }
     }
 
-    protected function create()
+    protected function runAsTransaction(callable $callback)
     {
-        $token = null;
-        foreach ($this->getServerRequest()->getHeader('Authorization') as $line) {
-            if (preg_match('/^Bearer\s+([A-z0-9-]+)$/', $line, $match)) {
-                $token = $match[1];
+        $db = $this->db();
+        $this->db()->beginTransaction();
+        try {
+            $callback();
+            $db->commit();
+        } catch (\Throwable $e) {
+            try {
+                $db->rollBack();
+            } catch (Exception $e) {
+                // ignore
             }
-        }
-        if ($token === null) {
-            $this->sendJsonError('Bearer token is required', 401);
-            return;
 
+            throw $e;
+        }
+    }
+    protected static function cleanRows($rows)
+    {
+        foreach ($rows as &$row) {
+            $row = self::cleanRow($row);
         }
 
-        $store = new ConfigStore($this->db(), new NullLogger());
-        $input = $this->findInputForToken($store, $token);
-        if ($input === null) {
-            $this->sendJsonError('Bearer token is not valid', 403);
-            return;
-        }
-        $body = (string) $this->getServerRequest()->getBody();
+        return $rows;
     }
 
-    protected function findInputForToken(ConfigStore $store, $token)
+    protected static function cleanRow($row)
     {
-        $input = null;
-
-        $inputs = $store->loadInputs([
-            'implementation' => 'restApi',
-        ]);
-
-        foreach ($inputs as $possibleInput) {
-            if ($possibleInput instanceof RestApiInput && $possibleInput->getSettings()->get('token') === $token) {
-                $input = $possibleInput;
+        $row = (array)$row;
+        foreach ($row as $k => &$v) {
+            if ($v === null) {
+                continue;
+            }
+            if (strpos($k, 'uuid') !== false) {
+                $v = Uuid::fromBytes($v)->toString();
             }
         }
 
-        return $input;
+        return (object) $row;
+    }
+    protected function requireJsonBody()
+    {
+        $body = (string) $this->getServerRequest()->getBody();
+        if (strlen($body) === 0) {
+            $this->sendJsonError('JSON body is required, 400');
+        }
+
+        return JsonString::decode($body);
+    }
+
+    protected function sendJsonSuccess(array $properties, $code = 200)
+    {
+        $this->sendJsonResponse([
+                'success' => 'true',
+            ] + $properties, $code);
     }
 }

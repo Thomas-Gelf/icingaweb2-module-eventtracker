@@ -231,6 +231,21 @@ class WebActions
                 'tableClass' => WebActionTable::class,
                 'formClass'  => HostListForm::class,
             ]),
+            'hostlistMembers' => WebAction::create([
+                'name'        => 'hostlistMembers',
+                'singular'    => $this->translate('Host list member'),
+                'plural'      => $this->translate('Host list members'),
+                'description' => $this->translate(
+                    'Host list members can be configured here, or synchronized from an external'
+                    . ' Source'
+                ),
+                'table'   => 'host_list_member',
+                'listUrl' => 'eventtracker/configuration/hostlist-members',
+                'url'     => 'eventtracker/configuration/hostlist-member',
+                'icon'    => 'th-list',
+                'tableClass' => WebActionTable::class,
+                'formClass'  => HostListForm::class,
+            ])
         ];
     }
 }
