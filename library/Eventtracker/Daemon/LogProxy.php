@@ -12,6 +12,9 @@ class LogProxy implements DbBasedComponent
 
     protected $prefix = '';
 
+    /** @var LoggerInterface */
+    protected $logger;
+
     public function __construct(LoggerInterface $logger)
     {
         $this->logger = $logger;
