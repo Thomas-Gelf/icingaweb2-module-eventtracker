@@ -79,17 +79,23 @@ trait RestApiMethods
     protected function sendJsonResponse($object, $code = 200)
     {
         /** @var $this CompatController */
-        $response = $this->getResponse();
-        $response->setHttpResponseCode($code);
-        $response->setHeader('Content-Type', 'application/json', true);
         try {
-            $response->sendHeaders();
+            $this->sendJsonResponseHeaders($code);
             echo JsonString::encode($object, JSON_PRETTY_PRINT) . "\n";
             $this->getViewRenderer()->disable();
         } catch (JsonEncodeException $e) {
             $this->sendJsonError($e);
         }
         exit; // TODO: shutdown
+    }
+
+    protected function sendJsonResponseHeaders($code = 200): void
+    {
+        /** @var $this CompatController */
+        $response = $this->getResponse();
+        $response->setHttpResponseCode($code);
+        $response->setHeader('Content-Type', 'application/json', true);
+        $response->sendHeaders();
     }
 
     protected function showApiOnly()
