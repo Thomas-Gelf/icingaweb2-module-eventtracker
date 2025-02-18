@@ -7,6 +7,7 @@ use gipfl\Json\JsonString;
 use gipfl\ZfDb\Adapter\Adapter;
 use gipfl\ZfDbStore\DbStorableInterface;
 use gipfl\ZfDbStore\ZfDbStore;
+use Icinga\Module\Eventtracker\Data\SerializationHelper;
 use Ramsey\Uuid\Uuid;
 use RuntimeException;
 
@@ -35,11 +36,6 @@ class DowntimeRule implements JsonSerialization, DbStorableInterface
         'ts_not_after'          => null,
         'duration'              => null,
         'max_single_problem_duration' => null,
-    ];
-
-    protected $integers = [
-        'duration',
-        'max_single_problem_duration',
     ];
 
     public static function loadByConfigUuid(string $uuid, Adapter $db): ?DowntimeRule
@@ -92,7 +88,7 @@ class DowntimeRule implements JsonSerialization, DbStorableInterface
         }
         return Uuid::uuid5(
             Uuid::fromBytes($uuid),
-            JsonString::encode($this->serializeProperties($properties))
+            JsonString::encode(SerializationHelper::serializeProperties($properties))
         )->getBytes();
     }
 

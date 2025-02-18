@@ -8,6 +8,7 @@ use gipfl\ZfDb\Adapter\Adapter as Db;
 use Icinga\Application\Hook;
 use Icinga\Authentication\Auth;
 use Icinga\Exception\NotFoundError;
+use Icinga\Module\Eventtracker\Data\SerializationHelper;
 use Icinga\Module\Eventtracker\Db\DbUtil;
 use Icinga\Module\Eventtracker\Engine\Downtime\UuidObjectHelper;
 use Icinga\Module\Eventtracker\Hook\IssueHook;
@@ -282,7 +283,7 @@ class Issue implements JsonSerialization
             $this->createdNow = true;
             return;
         }
-        $this->reallySet($property, $this->normalizeValue($property, $value));
+        $this->reallySet($property, SerializationHelper::normalizeValue($property, $value));
     }
 
     public function hasBeenCreatedNow()
