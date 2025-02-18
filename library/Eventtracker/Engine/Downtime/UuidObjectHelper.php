@@ -3,8 +3,7 @@
 namespace Icinga\Module\Eventtracker\Engine\Downtime;
 
 use gipfl\ZfDbStore\DbStorable;
-use Icinga\Module\Eventtracker\Issue;
-use Ramsey\Uuid\Uuid;
+use Icinga\Module\Eventtracker\Data\SerializationHelper;
 
 trait UuidObjectHelper
 {
@@ -22,70 +21,9 @@ trait UuidObjectHelper
         return $this->storedProperties[$key] !== $this->properties[$key];
     }
 
-    protected function isIntegerProperty($property): bool
-    {
-        if (preg_match('/^ts_/', $property)) {
-            return true;
-        }
-
-        if (property_exists($this, 'integers')) {
-            return in_array($property, $this->integers);
-        }
-
-        return false;
-    }
-
-    protected function isBinaryProperty($property): bool
-    {
-        return $property === 'checksum' || preg_match('/_checksum$/', $property);
-    }
-
-    protected function isUuidProperty($property): bool
-    {
-        return $property === 'uuid' || preg_match('/_uuid$/', $property);
-    }
-
-    protected function isBooleanProperty($property): bool
-    {
-        return $property === 'clear' || preg_match('/^(?:is|has)_/', $property);
-    }
-
     public function set($property, $value)
     {
-        $this->reallySet($property, $this->normalizeValue($property, $value));
-    }
-
-    protected function normalizeValue($property, $value)
-    {
-        if ($value === null) {
-            return null;
-        }
-
-        if ($this->isIntegerProperty($property)) {
-            return (int) $value;
-        }
-
-        if ($this->isBinaryProperty($property)) {
-            if (strlen($value) !== 20 && substr($value, 0, 2) === '0x') {
-                return hex2bin(substr($value, 2));
-            }
-        }
-
-        if ($this->isBooleanProperty($property)) {
-            if ($value === 'y' ||  $value === 'n') {
-                return $value;
-            }
-
-            return $value ? 'y' : 'n';
-        }
-
-        if ($this->isUuidProperty($property)) {
-            if (strlen($value) !== 16) {
-                return Uuid::fromString($value)->getBytes();
-            }
-        }
-
-        return $value;
+        $this->reallySet($property, SerializationHelper::normalizeValue($property, $value));
     }
 
     /**
@@ -96,7 +34,7 @@ trait UuidObjectHelper
      */
     public function setStoredProperty($property, $value)
     {
-        $this->reallySetStoredProperty($property, $this->normalizeValue($property, $value));
+        $this->reallySetStoredProperty($property, SerializationHelper::normalizeValue($property, $value));
     }
 
     public static function fromSerialization($any): self
@@ -106,31 +44,11 @@ trait UuidObjectHelper
 
     public function jsonSerialize(): object
     {
-        return $this->serializeProperties($this->getProperties() + $this->getNonDbProperties());
+        return SerializationHelper::serializeProperties($this->getProperties() + $this->getNonDbProperties());
     }
 
     protected function getNonDbProperties(): array
     {
         return [];
-    }
-
-    protected function serializeProperties(array $properties): object
-    {
-        foreach ($properties as $property => &$value) {
-            if ($this instanceof Issue) {
-                // var_dump("$property = $value");
-            }
-            if ($value !== null) {
-                if ($this->isUuidProperty($property)) {
-                    $value = Uuid::fromBytes($value)->toString();
-                } elseif ($this->isBinaryProperty($property)) {
-                    $value = '0x' . bin2hex($value);
-                } elseif ($this->isBooleanProperty($property)) {
-                    $value = $value === 'y';
-                }
-            }
-        }
-
-        return (object) $properties;
     }
 }
