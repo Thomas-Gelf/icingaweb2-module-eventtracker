@@ -21,8 +21,6 @@ use Icinga\Module\Eventtracker\Web\WebActions;
 use Icinga\Module\Eventtracker\Web\Widget\AdditionalTableActions;
 use Icinga\Module\Eventtracker\Web\Widget\ConfigHistoryDetails;
 use ipl\Html\Html;
-use ipl\Sql\Where;
-use function ipl\Stdlib\get_php_type;
 
 class HistoryController extends Controller
 {
@@ -46,6 +44,10 @@ class HistoryController extends Controller
 
     public function actionsAction()
     {
+        if ($this->getRequest()->isApiRequest()) {
+            $this->sendHistory('action_history', 'ts_done');
+            return;
+        }
         $this->addTitle('Action / Notification History');
         $this->historyTabs()->activate('actions');
         $this->setAutorefreshInterval(20);
@@ -63,6 +65,10 @@ class HistoryController extends Controller
 
     public function issuesAction()
     {
+        if ($this->getRequest()->isApiRequest()) {
+            $this->sendHistoricIssues('issue_history', 'ts_first_event');
+            return;
+        }
         $this->addTitle('Historic Issues');
         $this->historyTabs()->activate('issues');
         $this->setAutorefreshInterval(20);
@@ -77,6 +83,7 @@ class HistoryController extends Controller
 
     public function configurationAction()
     {
+        $this->notForApi();
         $this->addTitle('Configuration History');
         $this->historyTabs()->activate('configuration');
         $this->setAutorefreshInterval(20);
@@ -89,63 +96,71 @@ class HistoryController extends Controller
         $table->renderTo($this);
     }
 
-    public function issueHistoryAction()
+
+    protected function sendHistory(string $table, string $tsColumn)
     {
-        if ($this->getRequest()->isApiRequest()) {
-            if($this->getServerRequest()->getMethod() === 'GET') {
-                $this->checkBearerToken('history/read');
-                $this->runForApi(function () {
-                    $firstRow = true;
-
-                    $columns = $this->params->get('columns');
-                    $from = $this->params->get('fromTimestampMs');
-                    $to = $this->params->get('toTimestampMs');
-                    if ($columns !== null ) {
-                        $columns = explode(",", $columns);
-                    } else {
-                        $columns = array('*');
-                    }
-                    if ($from !== null && $to === null) {
-                        $query = $this->db()->select()
-                            ->from('issue_history', $columns)
-                            ->where('ts_first_event > ?', $from);
-                    } else if ($to !== null && $from === null) {
-                        $query = $this->db()->select()
-                            ->from('issue_history', $columns)
-                            ->where('ts_first_event < ?', $to);
-                    } else if ($from !== null && $to !== null) {
-                        $query = $this->db()->select()
-                            ->from('issue_history', $columns)
-                            ->where('ts_first_event > ?', $from)
-                            ->where('ts_first_event < ?', $to);
-                    } else {
-                        $query = $this->db()->select()
-                            ->from('issue_history', $columns);
-                    }
-
-                    $statement = $this->db()->query($query);
-                    while ($row = $statement->fetch()) {
-                        unset($row->activities);
-                        if ($firstRow) {
-                            $this->sendJsonResponseHeaders();
-                            echo '{ "objects": [';
-                            $firstRow = false;
-                        } else {
-                            echo ", ";
-                        }
-                        echo JsonString::encode(SerializationHelper::serializeProperties((array) $row), JSON_PRETTY_PRINT);
-                    }
-                    if ($firstRow) {
-                        $this->sendJsonResponseHeaders();
-                        echo '{ "objects": []}' . "\n";
-                    } else {
-                        echo "]}\n";
-                    }
-                    $this->getViewRenderer()->disable();
-                    exit;
-                });
-            }
+        if ($this->getServerRequest()->getMethod() === 'GET') {
+            $this->checkBearerToken('history/read');
+            $this->runForApi(function () use ($table, $tsColumn) {
+                $columns = $this->params->get('columns');
+                if ($columns !== null) {
+                    $columns = explode(",", $columns);
+                }
+                $from = $this->params->get('fromTimestampMs');
+                $to = $this->params->get('toTimestampMs');
+                $query = $this->prepareQueryString($table, $tsColumn, $columns, $from, $to);
+                $this->sendQueryResultAsResponse($query);
+            });
         }
+
+        $this->sendJsonError('Invalid method for this endpoint', 405);
+    }
+
+    protected function sendQueryResultAsResponse(Select $query)
+    {
+        $firstRow = true;
+        $statement = $this->db()->query($query);
+        while ($row = $statement->fetch()) {
+            unset($row->activities);
+            if ($firstRow) {
+                $this->sendJsonResponseHeaders();
+                echo '{ "objects": [';
+                $firstRow = false;
+            } else {
+                echo ", ";
+            }
+            echo JsonString::encode(SerializationHelper::serializeProperties((array) $row), JSON_PRETTY_PRINT);
+        }
+        if ($firstRow) {
+            $this->sendJsonResponseHeaders();
+            echo '{ "objects": []}' . "\n";
+        } else {
+            echo "]}\n";
+        }
+        $this->getViewRenderer()->disable();
+        exit;
+    }
+    protected function prepareQueryString(
+        string $table,
+        string $tsColumn,
+        array  $columns = null,
+        ?int   $from = null,
+        ?int   $to = null
+    ): Select
+    {
+        $test = $this->db()->select();
+//        var_dump($test->assemble());
+        $test = $this->db()->select()->from($table, $columns);
+        $query = $this->db()->select()->from($table, $columns ?? '*');
+        if ($from) {
+            $query->where("$tsColumn >= ?", $from);
+
+        }
+        if ($to) {
+            $query->where("$tsColumn <= ?", $to);
+        }
+
+        return $query;
     }
 
     protected static function renderForDiff($properties): string
@@ -195,6 +210,7 @@ class HistoryController extends Controller
 
     public function rawAction()
     {
+        $this->notForApi();
         $this->addTitle('Raw Event History');
         $this->historyTabs()->activate('raw');
         $this->setAutorefreshInterval(20);
