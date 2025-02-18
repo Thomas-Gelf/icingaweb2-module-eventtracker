@@ -61,6 +61,8 @@ class ApiTokenForm extends UuidObjectForm
                 'host_list/read' => $this->translate('Read permission for Host list'),
                 'host_list/write' => $this->translate('Write permission for Host list'),
                 'history/read' => $this->translate('Read permission for History'),
+                'problemhandling/read' => $this->translate('Read permission for problem handling'),
+                'problemhandling/write' => $this->translate('Write permission for problem handling'),
             ],
         ]);
         $this->addButtons();

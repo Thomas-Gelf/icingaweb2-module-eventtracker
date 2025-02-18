@@ -201,10 +201,34 @@ class ConfigurationController extends Controller
         ])*/;
     }
 
+
     public function problemhandlingsAction()
     {
-        $this->notForApi();
-        $this->showList($this->actions->get('problemhandling'));
+        if ($this->getRequest()->isApiRequest()) {
+            switch ($this->getServerRequest()->getMethod()) {
+                case 'GET':
+                    $this->checkBearerToken('problemhandling/read');
+                    $this->runForApi(function () {
+                        $this->getProblemHandlings();
+                    });
+                    break;
+                case 'POST':
+                    $this->checkBearerToken('problemhandling/write');
+                    $this->runForApi(function () {
+                    });
+                    break;
+            }
+        } else {
+            $this->showList($this->actions->get('problemhandling'));
+        }
+    }
+
+    protected function getProblemHandlings()
+    {
+        $action = $this->actions->get('problemhandling');
+
+        $table = $this->prepareTableForList($action);
+        $this->sendJsonResponse(self::cleanRows($table->db()->fetchAll($table->getQuery())));
     }
 
     public function problemhandlingAction()
