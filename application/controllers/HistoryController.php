@@ -96,7 +96,6 @@ class HistoryController extends Controller
         $table->renderTo($this);
     }
 
-
     protected function sendHistory(string $table, string $tsColumn)
     {
         if ($this->getServerRequest()->getMethod() === 'GET') {
@@ -146,15 +145,12 @@ class HistoryController extends Controller
         array  $columns = null,
         ?int   $from = null,
         ?int   $to = null
-    ): Select
-    {
+    ): Select {
         $test = $this->db()->select();
-//        var_dump($test->assemble());
         $test = $this->db()->select()->from($table, $columns);
         $query = $this->db()->select()->from($table, $columns ?? '*');
         if ($from) {
             $query->where("$tsColumn >= ?", $from);
-
         }
         if ($to) {
             $query->where("$tsColumn <= ?", $to);

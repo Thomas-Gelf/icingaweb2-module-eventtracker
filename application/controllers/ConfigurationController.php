@@ -308,13 +308,14 @@ class ConfigurationController extends Controller
                     $this->runForApi(function () {
                         $this->getHostLists();
                     });
+                    break;
                 case 'POST':
                     $this->checkBearerToken('host_list/write');
                     $this->runForApi(function () {
                         $this->postHostLists();
                     });
+                    break;
             }
-
         } else {
             $action = $this->actions->get('hostlists');
             $this->showList($action);
@@ -344,17 +345,19 @@ class ConfigurationController extends Controller
     public function hostlistAction()
     {
         if ($this->getRequest()->isApiRequest()) {
-            switch($this->getServerRequest()->getMethod()) {
+            switch ($this->getServerRequest()->getMethod()) {
                 case 'GET':
                     $this->checkBearerToken('host_list/read');
                     $this->getHostList();
                         $this->runForApi(function () {
-                    });
+                        });
+                    break;
                 case 'POST':
                     $this->checkBearerToken('host_list/write');
                     $this->runForApi(function () {
                         $this->postHostList();
                     });
+                    break;
                 case 'PUT':
                     $this->checkBearerToken('host_list/write');
                     break;
@@ -403,16 +406,19 @@ class ConfigurationController extends Controller
                 $this->runForApi(function () {
                     $this->getHostListMember();
                 });
+                break;
             case 'POST':
                 $this->checkBearerToken('host_list/write');
                 $this->runForApi(function () {
                     $this->postHostlistMember();
                 });
+                break;
             case 'DELETE':
                 $this->checkBearerToken('host_list/write');
                 $this->runForApi(function () {
                     $this->deleteHostListMember();
                 });
+                break;
         }
     }
 
@@ -424,8 +430,8 @@ class ConfigurationController extends Controller
             $this->db()
                 ->select()->from('host_list_member', ['hostname'])
                 ->where('list_uuid = ?', $uuid)
-                ->where('hostname = ?', $hostname))
-        )));
+                ->where('hostname = ?', $hostname)
+        ))));
     }
 
     protected function postHostListMember()
@@ -454,12 +460,11 @@ class ConfigurationController extends Controller
         if ($db->delete(
             'host_list_member',
             $db->quoteInto('list_uuid = ?', $listUuid->getBytes())
-            . $db->quoteInto(' AND hostname = ?',  $hostname)
+            . $db->quoteInto(' AND hostname = ?', $hostname)
         ) > 0) {
             $this->sendJsonSuccess(['message' => sprintf('deleted host list member %s', $hostname)]);
         } else {
             $this->sendJsonSuccess(['message' => 'Nothing has been deleted']);
-
         }
     }
 
@@ -472,16 +477,19 @@ class ConfigurationController extends Controller
                 $this->runForApi(function () {
                     $this->getHostListMembers();
                 });
+                break;
             case "POST":
                 $this->checkBearerToken('host_list/write');
                 $this->runForApi(function () {
                     $this->postHostListMembers();
                 });
+                break;
             case 'PUT':
                 $this->checkBearerToken('host_list/write');
                 $this->runForApi(function () {
                     $this->putHostListMembers();
                 });
+                break;
         }
     }
 
@@ -492,7 +500,8 @@ class ConfigurationController extends Controller
         $uuid = Uuid::fromString($this->params->getRequired('listUuid'));
 
         $this->sendJsonResponse(self::cleanRows($this->db()->fetchAll(
-            $this->db()->select()->from($action->table, ['hostname'])->where('list_uuid = ?', $uuid->getBytes()))));
+            $this->db()->select()->from($action->table, ['hostname'])->where('list_uuid = ?', $uuid->getBytes())
+        )));
     }
     protected function postHostListMembers()
     {
@@ -512,10 +521,8 @@ class ConfigurationController extends Controller
                 $member->list_uuid = $uuid;
                 $this->db()->insert('host_list_member', (array) $member);
             }
-
         });
         $this->sendJsonSuccess(['message' => sprintf('added  %s hosts', $cnt)]);
-
     }
 
     protected function putHostListMembers()
@@ -541,13 +548,12 @@ class ConfigurationController extends Controller
             foreach ($currentMembers as $member) {
                 if (! in_array($member, $membersRequested)) {
                     $db->delete('host_list_member', $db->quoteInto('list_uuid = ?', $uuid)
-                        . $db->quoteInto(' AND hostname = ?',  $member));
+                        . $db->quoteInto(' AND hostname = ?', $member));
                 }
             }
         });
 
         $this->sendJsonSuccess(['message' => sprintf('updated  %s hosts', $cnt)], 201);
-
     }
 
     protected function showRules(UuidInterface $uuid, $rules)

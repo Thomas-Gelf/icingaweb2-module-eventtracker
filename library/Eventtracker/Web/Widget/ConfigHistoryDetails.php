@@ -45,6 +45,5 @@ class ConfigHistoryDetails extends HtmlDocument
         }
 
         $this->add($actionName);
-
     }
 }
