@@ -6,10 +6,13 @@ use gipfl\Diff\HtmlRenderer\SideBySideDiff;
 use gipfl\Diff\PhpDiff;
 use gipfl\Format\LocalDateFormat;
 use gipfl\Format\LocalTimeFormat;
+use gipfl\IcingaWeb2\Url;
 use gipfl\Json\JsonString;
+use gipfl\ZfDb\Select;
 use Icinga\Authentication\Auth;
 use Icinga\Module\Eventtracker\ConfigHistory;
 use Icinga\Module\Eventtracker\Data\PlainObjectRenderer;
+use Icinga\Module\Eventtracker\Data\SerializationHelper;
 use Icinga\Module\Eventtracker\Web\Table\ActionHistoryTable;
 use Icinga\Module\Eventtracker\Web\Table\ConfigurationHistoryTable;
 use Icinga\Module\Eventtracker\Web\Table\IssueHistoryTable;
@@ -18,16 +21,26 @@ use Icinga\Module\Eventtracker\Web\WebActions;
 use Icinga\Module\Eventtracker\Web\Widget\AdditionalTableActions;
 use Icinga\Module\Eventtracker\Web\Widget\ConfigHistoryDetails;
 use ipl\Html\Html;
+use ipl\Sql\Where;
+use function ipl\Stdlib\get_php_type;
 
 class HistoryController extends Controller
 {
     use IssuesFilterHelper;
+    use RestApiMethods;
+
+    protected $requiresAuthentication = false;
 
     /** @var WebActions */
     protected $actions;
 
     public function init()
     {
+        if (! $this->getRequest()->isApiRequest()) {
+            if (! $this->Auth()->isAuthenticated()) {
+                $this->redirectToLogin(Url::fromRequest());
+            }
+        }
         $this->actions = new WebActions();
     }
 
@@ -74,6 +87,65 @@ class HistoryController extends Controller
             ->appendTo($this->actions());
         $this->eventuallySendJson($table);
         $table->renderTo($this);
+    }
+
+    public function issueHistoryAction()
+    {
+        if ($this->getRequest()->isApiRequest()) {
+            if($this->getServerRequest()->getMethod() === 'GET') {
+                $this->checkBearerToken('history/read');
+                $this->runForApi(function () {
+                    $firstRow = true;
+
+                    $columns = $this->params->get('columns');
+                    $from = $this->params->get('fromTimestampMs');
+                    $to = $this->params->get('toTimestampMs');
+                    if ($columns !== null ) {
+                        $columns = explode(",", $columns);
+                    } else {
+                        $columns = array('*');
+                    }
+                    if ($from !== null && $to === null) {
+                        $query = $this->db()->select()
+                            ->from('issue_history', $columns)
+                            ->where('ts_first_event > ?', $from);
+                    } else if ($to !== null && $from === null) {
+                        $query = $this->db()->select()
+                            ->from('issue_history', $columns)
+                            ->where('ts_first_event < ?', $to);
+                    } else if ($from !== null && $to !== null) {
+                        $query = $this->db()->select()
+                            ->from('issue_history', $columns)
+                            ->where('ts_first_event > ?', $from)
+                            ->where('ts_first_event < ?', $to);
+                    } else {
+                        $query = $this->db()->select()
+                            ->from('issue_history', $columns);
+                    }
+
+                    $statement = $this->db()->query($query);
+                    while ($row = $statement->fetch()) {
+                        unset($row->activities);
+                        if ($firstRow) {
+                            $this->sendJsonResponseHeaders();
+                            echo '{ "objects": [';
+                            $firstRow = false;
+                        } else {
+                            echo ", ";
+                        }
+                        echo JsonString::encode(SerializationHelper::serializeProperties((array) $row), JSON_PRETTY_PRINT);
+                    }
+                    if ($firstRow) {
+                        $this->sendJsonResponseHeaders();
+                        echo '{ "objects": []}' . "\n";
+                    } else {
+                        echo "]}\n";
+                    }
+                    $this->getViewRenderer()->disable();
+                    exit;
+                });
+            }
+        }
     }
 
     protected static function renderForDiff($properties): string
