@@ -52,9 +52,9 @@ class SerializationHelper
     /**
      * @param array|stdClass $properties
      */
-    public static function serializeProperties($properties): object
+    public static function serializeProperties(array $properties): object
     {
-        foreach ((array) $properties as $property => &$value) {
+        foreach ($properties as $property => &$value) {
             if ($value !== null) {
                 if (self::isUuidProperty($property)) {
                     $value = Uuid::fromBytes($value)->toString();
