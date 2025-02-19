@@ -318,6 +318,7 @@ class Channel implements LoggerAwareInterface
             ['object_class', 'ShortenString', (object) ['max_length' => 128]],
             ['object_class', 'ClassInventoryLookup'],
             ['priority', 'FallbackValue', (object) ['value' => 'normal']],
+            ['severity', 'FallbackValue', (object) ['value' => 'notice']],
             ['input_uuid', 'SetValue', (object) ['value' => $inputUuid->toString()]],
             ['sender_id', 'SetValue', (object) ['value' => '99999']],
         ]);
