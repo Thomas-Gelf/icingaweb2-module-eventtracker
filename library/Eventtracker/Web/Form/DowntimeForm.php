@@ -47,6 +47,7 @@ class DowntimeForm extends UuidObjectForm
 
     protected ?DbStorableInterface $object = null;
     protected ?array $allowedSimpleFilterProperties = null;
+    private bool $complexFilterIsNotSimple = false;
 
     protected function assemble()
     {
@@ -135,11 +136,21 @@ class DowntimeForm extends UuidObjectForm
                 ]);
             }
         } elseif ($this->getValue('filter_type') === 'custom_filter') {
+            if ($this->complexFilterIsNotSimple) {
+                $errorPrefix = Html::tag('span', [
+                    'class' => 'error'
+                ], [Html::tag('strong', $this->translate('Error')), ': ', $this->translate(
+                    'This filter cannot be converted to a simple filter, please clear the field or remove'
+                    . ' unsupported properties, before switching to a simple filter.'
+                ), Html::tag('br')]);
+            } else {
+                $errorPrefix = '';
+            }
             $this->addElement('text', 'filter_definition', [
                 'label' => $this->translate('Custom filter'),
                 'required'    => true,
                 'description' => Html::sprintf(
-                    $this->translate(<<<'EOT'
+                    '%s' . $this->translate(<<<'EOT'
 Filter to restrict where this Rule should be applied.
 A filter consists of filter expressions in the format %s.
 %s can be any issue property,
@@ -149,6 +160,7 @@ Expressions can be combined via %s (and) and %s (or),
 and you can also use parentheses to group expressions.'
 EOT
                     ),
+                    $errorPrefix,
                     Html::tag('b', 'key=value'),
                     Html::tag('b', 'key'),
                     Html::tag('b', '*'),
@@ -539,14 +551,28 @@ EOT
         } else {
             $values['host_list_uuid'] = null;
         }
-
-        if ($hasFilter && $currentFilterType !== 'custom_filter') {
-            $filter = Filter::fromQueryString($currentFilter);
-            if ($filterArray = $this->getSimpleFilterFormValues($filter)) {
-                $values['filter_type'] = 'simple_filter';
-                $values += $filterArray;
-            } else {
-                $values['filter_type'] = 'custom_filter';
+        if ($hasFilter) {
+            if ($currentFilterType === 'simple_filter') {
+                $filter = Filter::fromQueryString($currentFilter);
+                if ($filterArray = $this->getSimpleFilterFormValues($filter)) {
+                    $values['filter_type'] = 'simple_filter';
+                    $values += $filterArray;
+                } else {
+                    $this->complexFilterIsNotSimple = true;
+                    $values['filter_type'] = 'custom_filter';
+                }
+            }
+        } elseif ($currentFilterType === 'custom_filter') {
+            $filter = Filter::matchAll();
+            foreach ($this->getAllowedSimpleFilterProperties() as $property => $label) {
+                $prefixed = self::FILTER_PREFIX . $property;
+                if (isset($values[$prefixed]) && $values[$prefixed] !== '') {
+                    $filter->addFilter(Filter::expression($property, '=', $values[$prefixed]));
+                    unset($values[$prefixed]);
+                }
+            }
+            if (! $filter->isEmpty()) {
+                $values['filter_definition'] = urldecode($filter->toQueryString());
             }
         }
 
