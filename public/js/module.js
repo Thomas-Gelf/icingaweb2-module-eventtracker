@@ -11,6 +11,8 @@
             this.module.on('mouseover', 'thead tr', this.checkForHeaderHref);
             this.module.on('rendered', this.rendered);
             this.module.on('click', 'td a.control-collapsible', this.toggleCollapsibleRow);
+            this.module.on('mouseover', 'td a.control-collapsible', this.hoverCollapsibleRow);
+            this.module.on('mouseout', 'td a.control-collapsible', this.unHoverCollapsibleRow);
         },
 
         checkForHeaderHref: function (ev) {
@@ -21,6 +23,28 @@
         toggleCollapsibleRow: function (ev) {
             $(ev.currentTarget).closest('td.collapsible-table-row').toggleClass('collapsed');
             $('#col1').removeData('icinga-actiontable-former-href');
+            ev.stopPropagation();
+            ev.stopImmediatePropagation();
+            ev.preventDefault();
+            return false;
+        },
+
+        hoverCollapsibleRow: function (ev) {
+            const $link = $(ev.currentTarget);
+            const $cell = $link.closest('td.collapsible-table-row');
+            if ($cell.hasClass('collapsed')) {
+                $cell.addClass('hovered');
+            }
+            ev.stopPropagation();
+            ev.stopImmediatePropagation();
+            ev.preventDefault();
+            return false;
+        },
+
+        unHoverCollapsibleRow: function (ev) {
+            const $link = $(ev.currentTarget);
+            const $cell = $link.closest('td.collapsible-table-row');
+            $cell.removeClass('hovered');
             ev.stopPropagation();
             ev.stopImmediatePropagation();
             ev.preventDefault();
