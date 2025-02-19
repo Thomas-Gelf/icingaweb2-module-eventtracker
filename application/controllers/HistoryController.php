@@ -66,7 +66,7 @@ class HistoryController extends Controller
     public function issuesAction()
     {
         if ($this->getRequest()->isApiRequest()) {
-            $this->sendHistoricIssues('issue_history', 'ts_first_event');
+            $this->sendHistory('issue_history', 'ts_first_event');
             return;
         }
         $this->addTitle('Historic Issues');
