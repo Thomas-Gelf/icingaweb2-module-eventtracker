@@ -186,7 +186,6 @@ class Channel implements LoggerAwareInterface
         $db = DbFactory::db();
         $receiver = new EventReceiver($db, ! $this->isDaemonized());
         $this->getEnforcedModifiers($inputUuid)->process($object);
-        // print_r($object);
         // $object->sender_event_id = Uuid::uuid4()->toString();
 
         $event = Event::create();
@@ -211,6 +210,7 @@ class Channel implements LoggerAwareInterface
             if ($bucket = $this->getOptionalBucketForEvent($object)) {
                 $event = $bucket->processEvent($event);
                 if ($event === null) {
+                    // We have no event after our bucket
                     return;
                 }
             }
@@ -218,6 +218,7 @@ class Channel implements LoggerAwareInterface
             $this->logger->error($e->getMessage());
         }
         if ($this->loop === null) {
+            // We are not in the main daemon
             $issue = $receiver->processEvent($event);
         } else {
             $issue = $this->storeProcessedEvent($db, $event);
