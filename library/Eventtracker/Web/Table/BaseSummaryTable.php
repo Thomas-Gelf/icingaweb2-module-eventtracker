@@ -9,7 +9,7 @@ use gipfl\Translation\TranslationHelper;
 use Icinga\Authentication\Auth;
 use Icinga\Module\Eventtracker\Auth\RestrictionHelper;
 use Icinga\Module\Eventtracker\Db\EventSummaryBySeverity;
-use Icinga\Module\Eventtracker\Web\Widget\SeverityFilter;
+use Icinga\Module\Eventtracker\Web\Widget\SeverityBadges;
 
 abstract class BaseSummaryTable extends BaseTable
 {
@@ -48,10 +48,9 @@ abstract class BaseSummaryTable extends BaseTable
             $this->createColumn('cnt', ' ', [
                 'cnt' => 'COUNT(*)',
             ])->setRenderer(function ($row) {
-                $url = Url::fromPath('eventtracker/issues');
-                $summary = new SeverityFilter($row, $url);
+                $summary = new SeverityBadges($row, $this->urlForRow($row));
 
-                return $this::td($summary->skipMissing(), [
+                return $this::td($summary, [
                     'align' => 'right'
                 ]);
             }),
@@ -74,7 +73,10 @@ abstract class BaseSummaryTable extends BaseTable
         $query = $this->db()
             ->select()
             ->from(['i' => 'issue'], $this->getRequiredDbColumns())
-            ->order('COUNT(*) DESC')
+            ->order('cnt_alert DESC')
+            ->order('cnt_critical DESC')
+            ->order('cnt_error DESC')
+            ->order('cnt_warning DESC')
             ->order("$order ASC")
             ->group($column);
         // TODO: Auth as param
@@ -96,7 +98,7 @@ abstract class BaseSummaryTable extends BaseTable
     protected static function zeroSplitLongStrings($label): string
     {
         $zeroSpace = \html_entity_decode('&#8203;');
-        $label = \wordwrap($label, 60, $zeroSpace, true);
+        $label = \wordwrap($label, 20, $zeroSpace, true);
         $parts = \preg_split('/\./', $label);
         foreach ($parts as & $part) {
             if (\strlen($part) > 64) {
