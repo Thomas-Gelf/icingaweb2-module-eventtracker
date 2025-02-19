@@ -20,7 +20,7 @@ use Ramsey\Uuid\UuidInterface;
 trait RestApiMethods
 {
     /**
-     * @return never-returns
+     * @return void|never-returns
      */
     protected function runForApi($callback)
     {
@@ -34,7 +34,7 @@ trait RestApiMethods
     }
 
     /**
-     * @return never-returns
+     * @return void|never-returns
      */
     protected function notForApi()
     {
