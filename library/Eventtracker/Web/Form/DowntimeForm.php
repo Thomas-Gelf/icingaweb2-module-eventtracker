@@ -311,13 +311,16 @@ EOT
             $this->translate(
                 '%s: %s'
             ),
-            Html::tag('strong', 'Crontab/cron expression'),
+            Html::tag('strong', $this->translate('Crontab/cron expression')),
             $this->inlinePre(
-                "\n .---------------- minute (0 - 59)\n"
-                . " |  .------------- hour (0 - 23)\n"
-                . " |  |  .---------- day of month (1 - 31)\n"
-                . " |  |  |  .------- month (1 - 12) OR jan,feb,mar,apr ...\n"
-                . " |  |  |  |  .---- day of week (0 - 6) (Sunday=0 or 7) OR sun,mon,tue,...\n"
+                sprintf("\n .---------------- %s\n", $this->translate('minute (0 - 59)'))
+                . sprintf(" |  .------------- %s\n", $this->translate('hour (0 - 23)'))
+                . sprintf(" |  |  .---------- %s\n", $this->translate('day of month (1 - 31)'))
+                . sprintf(" |  |  |  .------- %s\n", $this->translate('month (1 - 12) OR jan,feb,mar,apr ...'))
+                . sprintf(
+                    " |  |  |  |  .---- %s\n",
+                    $this->translate('day of week (0 - 6) (Sunday=0 or 7) OR sun,mon,tue,...')
+                )
                 . " |  |  |  |  |\n"
                 . " *  *  *  *  *\n"
             )
