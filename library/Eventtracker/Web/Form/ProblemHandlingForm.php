@@ -4,9 +4,8 @@ namespace Icinga\Module\Eventtracker\Web\Form;
 
 class ProblemHandlingForm extends UuidObjectForm
 {
-    protected $table = 'problem_handling';
-
-    protected $mainProperties = ['label', 'instruction_url', 'trigger_actions'];
+    protected string $table = 'problem_handling';
+    protected ?array $mainProperties = ['label', 'instruction_url', 'trigger_actions', 'enabled'];
 
     protected function assemble()
     {

@@ -8,9 +8,8 @@ use ipl\Html\Html;
 
 class ActionConfigForm extends UuidObjectForm
 {
-    protected $table = 'action';
-
-    protected $mainProperties = ['label', 'implementation', 'enabled', 'filter', 'description'];
+    protected string $table = 'action';
+    protected ?array $mainProperties = ['label', 'implementation', 'enabled', 'filter', 'description'];
 
     protected function assemble()
     {

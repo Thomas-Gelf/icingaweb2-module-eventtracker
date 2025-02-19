@@ -6,8 +6,8 @@ use Ramsey\Uuid\UuidInterface;
 
 class HostListForm extends UuidObjectForm
 {
-    protected $table = 'host_list';
-    protected $membersTable = 'host_list_member';
+    protected string $table = 'host_list';
+    protected string $membersTable = 'host_list_member';
 
     protected function assemble()
     {

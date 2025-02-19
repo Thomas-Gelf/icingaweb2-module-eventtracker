@@ -15,23 +15,13 @@ class UuidObjectForm extends Form
 {
     use TranslationHelper;
 
-    /** @var ConfigStore */
-    protected $store;
-
-    /** @var ?Registry */
-    protected $registry;
-
-    /** @var ?UuidInterface */
-    protected $uuid = null;
-
-    /** @var bool */
-    protected $deleted = false;
-
-    protected $table = 'NEEDS_TO_BE_OVERRIDDEN';
-
-    protected $mainProperties;
-
-    protected $multiSelectElements = [];
+    protected ConfigStore $store;
+    protected ?Registry $registry;
+    protected ?UuidInterface $uuid = null;
+    protected bool $deleted = false;
+    protected string $table = 'NEEDS_TO_BE_OVERRIDDEN';
+    protected ?array $mainProperties = null;
+    protected array $multiSelectElements = [];
 
     public function __construct(ConfigStore $store, ?Registry $registry = null)
     {

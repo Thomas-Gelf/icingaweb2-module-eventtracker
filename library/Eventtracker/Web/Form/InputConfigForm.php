@@ -7,8 +7,8 @@ use Icinga\Module\Eventtracker\Engine\Input;
 
 class InputConfigForm extends UuidObjectForm
 {
-    protected $table = 'input';
-    protected $mainProperties = ['label', 'implementation'];
+    protected string $table = 'input';
+    protected ?array $mainProperties = ['label', 'implementation'];
 
     protected function assemble()
     {

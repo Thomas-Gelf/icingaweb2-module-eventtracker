@@ -6,8 +6,8 @@ use Icinga\Module\Eventtracker\Web\Form\Validator\ModifierChainValidator;
 
 class ChannelConfigForm extends UuidObjectForm
 {
-    protected $table = 'channel';
-    protected $multiSelectElements = ['input_uuids'];
+    protected string $table = 'channel';
+    protected array $multiSelectElements = ['input_uuids'];
 
     protected function assemble()
     {

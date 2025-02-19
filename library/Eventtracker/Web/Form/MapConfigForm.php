@@ -2,13 +2,10 @@
 
 namespace Icinga\Module\Eventtracker\Web\Form;
 
-use Icinga\Module\Eventtracker\Engine\FormExtension;
-use Icinga\Module\Eventtracker\Engine\Input;
-
 class MapConfigForm extends UuidObjectForm
 {
-    protected $table = 'map';
-    protected $mainProperties = ['label', 'mappings'];
+    protected string $table = 'map';
+    protected ?array $mainProperties = ['label', 'mappings'];
 
     protected function assemble()
     {

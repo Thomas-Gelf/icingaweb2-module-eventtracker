@@ -7,8 +7,8 @@ use Icinga\Module\Eventtracker\Engine\Input;
 
 class BucketConfigForm extends UuidObjectForm
 {
-    protected $table = 'bucket';
-    protected $mainProperties = ['label', 'implementation'];
+    protected string $table = 'bucket';
+    protected ?array $mainProperties = ['label', 'implementation'];
 
     protected function assemble()
     {

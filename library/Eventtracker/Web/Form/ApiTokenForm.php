@@ -8,10 +8,10 @@ use ipl\Html\Html;
 
 class ApiTokenForm extends UuidObjectForm
 {
-    protected $table = 'api_token';
-    protected $mainProperties = ['label', 'permissions'];
-    protected $multiSelectElements = ['permissions'];
-    protected $storing = false;
+    protected string $table = 'api_token';
+    protected ?array $mainProperties = ['label', 'permissions'];
+    protected array $multiSelectElements = ['permissions'];
+    protected bool $storing = false;
 
     protected function assemble()
     {

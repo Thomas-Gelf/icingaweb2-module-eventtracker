@@ -9,7 +9,6 @@ use gipfl\Translation\TranslationHelper;
 use gipfl\Web\Form\Decorator\DdDtDecorator;
 use gipfl\Web\Form\Element\TextWithActionButton;
 use gipfl\Web\Widget\Hint;
-use gipfl\ZfDb\Adapter\Adapter as DbAdapter;
 use gipfl\ZfDbStore\DbStorableInterface;
 use gipfl\ZfDbStore\ZfDbStore;
 use Icinga\Authentication\Auth;
@@ -30,32 +29,24 @@ class DowntimeForm extends UuidObjectForm
 
     protected const FILTER_PREFIX = 'f_';
 
-    /** @var DbAdapter */
-    protected $db;
-
-    protected $table = 'downtime_rule';
-    protected $multiSelectElements = [
+    protected string $table = 'downtime_rule';
+    protected array $multiSelectElements = [
         'day_of_week',
         'month',
     ];
 
-    protected $tsCombinations = [
+    protected array $tsCombinations = [
         'ts_not_before',
         'ts_not_after',
     ];
 
-    protected $timeProperties = [
+    protected array $timeProperties = [
         'duration',
         'max_single_problem_duration',
     ];
 
-    /**
-     * @var DbStorableInterface
-     */
-    protected $object;
-
-    /** @var ?array */
-    protected $allowedSimpleFilterProperties = null;
+    protected ?DbStorableInterface $object = null;
+    protected ?array $allowedSimpleFilterProperties = null;
 
     protected function assemble()
     {
