@@ -1,0 +1,35 @@
+name: Create Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  create-release:
+    name: Create a release
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Check out Source Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install Build Tools
+        run: sudo apt-get -y install binutils file rpm composer
+
+      - name: Install Dependencies with Composer
+        run: composer install --ignore-platform-req=php+ --no-dev
+
+      - name: Build Package
+        id: build-package
+        run: |
+          rpmbuild -bb packaging/rh.spec
+          echo "rpm_file="$(find $HOME/rpmbuild/RPMS/ -type f -name '*.rpm') >> "$GITHUB_OUTPUT"
+          echo "rpm_filename="$(find $HOME/rpmbuild/RPMS/ -type f -name '*.rpm' -exec basename {} \;) >> "$GITHUB_OUTPUT"
+
+      - name: Upload artifact
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            ${{ steps.build-package.outputs.rpm_file }}
