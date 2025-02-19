@@ -2,7 +2,7 @@
 
 namespace Icinga\Module\Eventtracker\Modifier;
 
-use Icinga\Module\Eventtracker\Web\Form;
+use Icinga\Module\Eventtracker\Web\Form\ChannelRuleForm;
 use ipl\Html\Html;
 use ipl\Html\ValidHtml;
 
@@ -24,7 +24,7 @@ class SetValue extends BaseModifier
         );
     }
 
-    public static function extendSettingsForm(Form $form): void
+    public static function extendSettingsForm(ChannelRuleForm $form): void
     {
         $form->addElement('text', 'value', [
             'label'       => $form->translate('Value'),
