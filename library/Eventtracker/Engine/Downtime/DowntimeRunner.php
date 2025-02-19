@@ -47,7 +47,8 @@ class DowntimeRunner implements EventEmitterInterface, DbBasedComponent
     public function initDb(Adapter $db): void
     {
         $this->db = $db;
-        $this->scheduleNextCheck();
+        // Disabled for now
+        // $this->scheduleNextCheck();
     }
 
     protected function getHostList(string $binaryUuid): ?HostList

@@ -32,6 +32,9 @@ class RunningConfig implements DbBasedComponent
 
     public function reloadDowntimeRules(): ?bool
     {
+        // Disabled for now
+        return null;
+
         if ($this->db === null) {
             return null;
         }

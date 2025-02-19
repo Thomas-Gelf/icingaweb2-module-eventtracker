@@ -116,8 +116,9 @@ class BackgroundDaemon implements EventEmitterInterface
         );
         $this->runningConfig = new RunningConfig($this->logger);
         $this->runningConfig->watchRules(function ($rules) {
-            $this->generatedDowntimeGenerator->triggerCalculation($rules);
-            $this->downtimeRunner->setDowntimeRules($rules);
+            // Disabled for now
+            // $this->generatedDowntimeGenerator->triggerCalculation($rules);
+            // $this->downtimeRunner->setDowntimeRules($rules);
         });
         $this->daemonDb
             ->register($this->jobRunner)
