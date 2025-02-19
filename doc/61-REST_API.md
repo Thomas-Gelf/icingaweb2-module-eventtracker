@@ -176,7 +176,7 @@ syntax. The result for the above request might look as follows:
 To close an issue, please provide its UUID in an HTTP POST request. Example:
 
 ```http
-POST https://monitoring.example.com/icingaweb2/eventtracker/issue/close?uuid=0f9ab9e0-600a-4e05-8e13-e48b20b1d37e
+POST https://monitoring.example.com/icingaweb2/eventtracker/issue/close?uuid=0f9ab9e0-600a-4e05-8e13-e48b20b1d37e&closedBy=Username
 Authorization: Bearer e756ca41-875f-4f92-991c-706dc07af192
 Accept: application/json
 ```
@@ -186,7 +186,7 @@ and not all of them are able to track remote UUIDs and/or to ship them in a URL,
 we also support closing issues by ticket ID:
 
 ```http
-POST https://monitoring.example.com/icingaweb2/eventtracker/issue/close?ticket=43027
+POST https://monitoring.example.com/icingaweb2/eventtracker/issue/close?ticket=43027&closedBy=Some%20Application
 Authorization: Bearer e756ca41-875f-4f92-991c-706dc07af192
 Accept: application/json
 ```
@@ -194,10 +194,12 @@ Accept: application/json
 Same as above, we also support closing issues via `sender_event_id`:
 
 ```http
-POST https://icinga.example.com/icingaweb2/eventtracker/issue/close?sender_event_id=My%20Job%20Name
+POST https://icinga.example.com/icingaweb2/eventtracker/issue/close?sender_event_id=My%20Job%20Name&closedBy=me
 Authorization: Bearer e756ca41-875f-4f92-991c-706dc07af192
 Accept: application/json
 ```
+
+The `closedBy` parameter is required for all `close` variants.
 
 #### Sample Responses
 
