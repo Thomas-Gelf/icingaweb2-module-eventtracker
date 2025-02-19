@@ -7,7 +7,7 @@ use ipl\Html\ValidHtml;
 
 class SetValue extends BaseModifier
 {
-    protected static $name = 'Set a specific value';
+    protected static ?string $name = 'Set a specific value';
 
     public function transform($object, string $propertyName)
     {

@@ -7,7 +7,7 @@ use InvalidArgumentException;
 
 class DownloadUrl extends BaseModifier
 {
-    protected static $name = 'Download a specific URL';
+    protected static ?string $name = 'Download a specific URL';
 
     protected function simpleTransform($value)
     {

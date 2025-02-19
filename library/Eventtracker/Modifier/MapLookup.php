@@ -10,7 +10,7 @@ use function property_exists;
 
 class MapLookup extends BaseModifier
 {
-    protected static $name = 'Lookup (and map) values';
+    protected static ?string $name = 'Lookup (and map) values';
 
     protected $map;
 

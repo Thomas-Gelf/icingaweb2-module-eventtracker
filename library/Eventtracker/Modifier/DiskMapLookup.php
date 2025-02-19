@@ -8,7 +8,7 @@ use RuntimeException;
 
 class DiskMapLookup extends MapLookup
 {
-    protected static $name = 'Lookup (and map) values on disk';
+    protected static ?string $name = 'Lookup (and map) values on disk';
 
     protected $map;
 

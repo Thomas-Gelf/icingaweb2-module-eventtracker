@@ -7,7 +7,7 @@ use ipl\Html\ValidHtml;
 
 class ConvertUtcTimeWithMsToTimestamp extends BaseModifier
 {
-    protected static $name = 'Convert UTC time with ms to timestamp';
+    protected static ?string $name = 'Convert UTC time with ms to timestamp';
 
     protected function simpleTransform($value)
     {

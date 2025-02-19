@@ -13,7 +13,7 @@ use RuntimeException;
  */
 class ConfiguredMapLookup extends MapLookup
 {
-    protected static $name = 'Lookup (and map) values via a configured Map';
+    protected static ?string $name = 'Lookup (and map) values via a configured Map';
 
     protected $map;
 

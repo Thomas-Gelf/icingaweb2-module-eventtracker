@@ -7,7 +7,7 @@ use Icinga\Module\Eventtracker\ObjectClassInventory;
 
 class ClassInventoryLookup extends BaseModifier
 {
-    protected static $name = 'Class Inventory Lookup';
+    protected static ?string $name = 'Class Inventory Lookup';
 
     protected $XXinstanceDescriptionPattern = 'Transforms...';
 

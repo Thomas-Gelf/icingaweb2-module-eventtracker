@@ -7,7 +7,7 @@ use ipl\Html\ValidHtml;
 
 class UnsetProperty extends BaseModifier
 {
-    protected static $name = 'Unset Property';
+    protected static ?string $name = 'Unset Property';
 
     public function transform($object, string $propertyName)
     {

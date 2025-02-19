@@ -8,7 +8,7 @@ use function property_exists;
 
 class PropertyMapper
 {
-    protected $map;
+    protected array $map;
 
     /**
      * @param array $map

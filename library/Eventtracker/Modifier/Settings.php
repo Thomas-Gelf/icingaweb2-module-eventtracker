@@ -13,7 +13,7 @@ use function is_scalar;
 
 class Settings implements JsonSerializable
 {
-    protected $settings = [];
+    protected array $settings = [];
 
     /**
      * @param stdClass|array $object

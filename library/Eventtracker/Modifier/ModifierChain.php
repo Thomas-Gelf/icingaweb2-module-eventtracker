@@ -7,12 +7,8 @@ use stdClass;
 
 class ModifierChain implements JsonSerializable
 {
-    protected $modifiers = [];
+    protected array $modifiers = [];
 
-    /**
-     * ModifierChain constructor.
-     * @param array $modifiers
-     */
     public function __construct(array $modifiers)
     {
         foreach ($modifiers as $pair) {

@@ -4,9 +4,8 @@ namespace Icinga\Module\Eventtracker\Modifier;
 
 class ModifierRegistry
 {
-    protected $modifiers = [];
-
-    protected $groupedModifiers = [];
+    protected array $modifiers = [];
+    protected array $groupedModifiers = [];
 
     public function register($className)
     {

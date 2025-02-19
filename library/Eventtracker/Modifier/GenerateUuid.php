@@ -6,7 +6,7 @@ use Ramsey\Uuid\Uuid;
 
 class GenerateUuid extends BaseModifier
 {
-    protected static $name = 'Generate a UUID';
+    protected static ?string $name = 'Generate a UUID';
 
     public function transform($object, string $propertyName)
     {

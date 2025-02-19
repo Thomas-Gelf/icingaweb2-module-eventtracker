@@ -4,7 +4,7 @@ namespace Icinga\Module\Eventtracker\Modifier;
 
 class DownloadFile extends DownloadUrl
 {
-    protected static $name = 'Download a file from a URL';
+    protected static ?string $name = 'Download a file from a URL';
 
     public function transform($object, string $propertyName)
     {

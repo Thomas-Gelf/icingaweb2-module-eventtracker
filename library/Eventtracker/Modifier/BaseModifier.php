@@ -10,12 +10,9 @@ use function preg_replace;
 
 abstract class BaseModifier implements Modifier
 {
-    /** @var Settings */
-    protected $settings;
+    protected Settings $settings;
 
-    protected static $name;
-
-    protected $instanceDescriptionPattern;
+    protected static ?string $name = null;
 
     public function __construct(Settings $settings)
     {

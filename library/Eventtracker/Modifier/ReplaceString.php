@@ -6,7 +6,7 @@ use InvalidArgumentException;
 
 class ReplaceString extends BaseModifier
 {
-    protected static $name = 'Replace String';
+    protected static ?string $name = 'Replace String';
 
     protected function simpleTransform($value)
     {

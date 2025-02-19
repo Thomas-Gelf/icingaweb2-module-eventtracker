@@ -8,7 +8,7 @@ use ipl\Html\ValidHtml;
 
 class RequireNamedSyslogSeverity extends BaseModifier
 {
-    protected static $name = 'Numeric Syslog Severity Map';
+    protected static ?string $name = 'Numeric Syslog Severity Map';
 
     protected function simpleTransform($value)
     {

@@ -4,7 +4,7 @@ namespace Icinga\Module\Eventtracker\Modifier;
 
 class CloneProperty extends BaseModifier
 {
-    protected static $name = 'Clone Property';
+    protected static ?string $name = 'Clone Property';
 
     public function transform($object, string $propertyName)
     {

@@ -3,12 +3,11 @@
 namespace Icinga\Module\Eventtracker\Modifier;
 
 use InvalidArgumentException;
+use ipl\Html\Html;
 
 class ShortenString extends BaseModifier
 {
-    protected static $name = 'Shorten String';
-
-    protected $instanceDescriptionPattern = 'Shorten String by {max_length} characters';
+    protected static ?string $name = 'Shorten String';
 
     protected function simpleTransform($value)
     {
@@ -30,5 +29,14 @@ class ShortenString extends BaseModifier
             default:
                 throw new InvalidArgumentException('strip="$strip" is not a valid setting');
         }
+    }
+
+    public function describe(string $propertyName)
+    {
+        return Html::sprintf(
+            'Shorten String in %s by %s characters',
+            Html::tag('strong', $propertyName),
+            $this->settings->getRequired('max_length')
+        );
     }
 }

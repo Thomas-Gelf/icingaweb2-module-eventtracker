@@ -4,7 +4,7 @@ namespace Icinga\Module\Eventtracker\Modifier;
 
 class FallbackValue extends BaseModifier
 {
-    protected static $name = 'Set a fallback value';
+    protected static ?string $name = 'Set a fallback value';
 
     public function transform($object, string $propertyName)
     {

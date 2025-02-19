@@ -4,7 +4,7 @@ namespace Icinga\Module\Eventtracker\Modifier;
 
 class SimpleNameValueParser extends BaseModifier
 {
-    protected static $name = 'Parse "key=value" strings';
+    protected static ?string $name = 'Parse "key=value" strings';
 
     protected function simpleTransform($value)
     {

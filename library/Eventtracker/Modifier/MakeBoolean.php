@@ -6,7 +6,7 @@ use InvalidArgumentException;
 
 class MakeBoolean extends BaseModifier
 {
-    protected static $validStrings = [
+    protected static array $validStrings = [
         '0'     => false,
         'false' => false,
         'n'     => false,
@@ -17,7 +17,7 @@ class MakeBoolean extends BaseModifier
         'yes'   => true,
     ];
 
-    protected static $name = 'Create a Boolean';
+    protected static ?string $name = 'Create a Boolean';
 
     protected function simpleTransform($value)
     {

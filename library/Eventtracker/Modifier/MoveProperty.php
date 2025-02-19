@@ -7,7 +7,7 @@ use ipl\Html\ValidHtml;
 
 class MoveProperty extends BaseModifier
 {
-    protected static $name = 'Move Property';
+    protected static ?string $name = 'Move Property';
 
     public function transform($object, string $propertyName)
     {
