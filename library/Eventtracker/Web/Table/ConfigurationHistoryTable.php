@@ -78,7 +78,7 @@ class ConfigurationHistoryTable extends BaseTable
     protected function linkToModification($ts)
     {
         $l = new LocalTimeFormat();
-        return Link::create($l->getShortTime($ts), 'eventtracker/history/configuration-change', [
+        return Link::create($l->getShortTime(floor($ts / 1000)), 'eventtracker/history/configuration-change', [
             'ts' => $ts
         ]);
     }
