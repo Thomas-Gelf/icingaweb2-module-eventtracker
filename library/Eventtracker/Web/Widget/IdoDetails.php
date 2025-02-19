@@ -186,7 +186,7 @@ class IdoDetails extends BaseHtmlElement
                 $preActions
             );
             $details->addAttributes([
-                'style' => 'width: 50%; display: inline-block'
+                'style' => 'width: 100%; display: inline-block'
             ]);
             $details->addNameValuePairs((array) $ci->vars);
         } else {
