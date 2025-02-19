@@ -2,6 +2,8 @@
 
 namespace Icinga\Module\Eventtracker;
 
+use DateTime;
+use DateTimeInterface;
 use gipfl\Format\LocalDateFormat;
 use gipfl\Format\LocalTimeFormat;
 use Icinga\Date\DateFormatter;
@@ -54,7 +56,12 @@ class Time
         return (int) floor(microtime(true) * 1000);
     }
 
-    public static function dateTimeToTimestampMs(\DateTimeInterface $dateTime): int
+    public static function timestampMsToDateTime(int $timestampMs): DateTimeInterface
+    {
+        return new DateTime('@' . floor($timestampMs / 1000));
+    }
+
+    public static function dateTimeToTimestampMs(DateTimeInterface $dateTime): int
     {
         return (int) floor((int) $dateTime->format('Uu') / 1000);
     }
