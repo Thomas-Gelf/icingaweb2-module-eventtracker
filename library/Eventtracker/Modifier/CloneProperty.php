@@ -2,6 +2,8 @@
 
 namespace Icinga\Module\Eventtracker\Modifier;
 
+use Icinga\Module\Eventtracker\Web\Form\ChannelRuleForm;
+
 class CloneProperty extends BaseModifier
 {
     protected static ?string $name = 'Clone Property';

@@ -2,7 +2,7 @@
 
 namespace Icinga\Module\Eventtracker\Modifier;
 
-use Icinga\Module\Eventtracker\Web\Form;
+use Icinga\Module\Eventtracker\Web\Form\ChannelRuleForm;
 use ipl\Html\ValidHtml;
 
 use function array_pop;
@@ -60,7 +60,7 @@ abstract class BaseModifier implements Modifier
         return $this->simpleTransform($value);
     }
 
-    public static function extendSettingsForm(Form $form): void
+    public static function extendSettingsForm(ChannelRuleForm $form): void
     {
     }
 
