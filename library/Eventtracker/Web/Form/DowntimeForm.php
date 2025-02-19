@@ -186,31 +186,37 @@ EOT
         $this->addElement('select', 'recurrence_type', [
             'label' => $this->translate('Recurrence'),
             'ignore' => true,
+            'required' => true,
             'class' => 'autosubmit',
             'options' => [
+                null       => $this->translate('- please choose -'),
                 'run_once' => $this->translate('run once'),
-                '@daily' => $this->translate('daily'),
-                '@weekly' => $this->translate('weekly'),
+                '@daily'   => $this->translate('daily'),
+                '@weekly'  => $this->translate('weekly'),
                 '@monthly' => $this->translate('monthly'),
-                '@yearly' => $this->translate('yearly'),
-                'custom' => $this->translate('based on custom rules'),
-                'cron' => $this->translate('write a cron expression'),
+                '@yearly'  => $this->translate('yearly'),
+                'custom'   => $this->translate('based on custom rules'),
+                'cron'     => $this->translate('write a cron expression'),
             ],
-            'value' => 'run_once',
         ]);
-        $this->addDurationElements();
         // time_definition
         switch ($this->getValue('recurrence_type')) {
             case 'run_once':
+                $this->addDurationElements();
 //                $this->removeTsCombination('ts_not_after');
                 break;
             case 'custom':
+                $this->addDurationElements();
                 $this->addCustomTimeDefinitionElements();
                 break;
             case 'cron':
+                $this->addDurationElements();
                 $this->addCronExpression();
                 break;
             default: // daily, weekly...
+                if ($this->getValue('recurrence_type') !== null) {
+                    $this->addDurationElements();
+                }
         }
     }
 
