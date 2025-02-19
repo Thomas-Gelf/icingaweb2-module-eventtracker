@@ -2,7 +2,7 @@
 
 namespace Icinga\Module\Eventtracker\Modifier;
 
-use Icinga\Module\Eventtracker\Web\Form;
+use Icinga\Module\Eventtracker\Web\Form\ChannelRuleForm;
 
 class CombineProperties extends BaseModifier
 {
@@ -13,7 +13,7 @@ class CombineProperties extends BaseModifier
         return ObjectUtils::fillVariables($this->settings->getRequired('pattern'), $object);
     }
 
-    public static function extendSettingsForm(Form $form): void
+    public static function extendSettingsForm(ChannelRuleForm $form): void
     {
         $form->addElement('text', 'pattern', [
             'label'       => $form->translate('Pattern'),

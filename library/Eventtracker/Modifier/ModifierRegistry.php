@@ -7,6 +7,7 @@ use ReflectionClass;
 class ModifierRegistry
 {
     protected static ?ModifierRegistry $instance = null;
+    /** @var array<string, class-string<Modifier>> */
     protected array $modifiers = [];
     protected array $groupedModifiers = [];
 
@@ -32,6 +33,9 @@ class ModifierRegistry
         return $self;
     }
 
+    /**
+     * @return array<string, class-string<Modifier>>
+     */
     public function listModifiers(): array
     {
         return $this->modifiers;
