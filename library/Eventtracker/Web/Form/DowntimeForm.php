@@ -182,6 +182,7 @@ EOT
             'options' => [
                 null       => $this->translate('- please choose -'),
                 'run_once' => $this->translate('run once'),
+                '@hourly'  => $this->translate('hourly'),
                 '@daily'   => $this->translate('daily'),
                 '@weekly'  => $this->translate('weekly'),
                 '@monthly' => $this->translate('monthly'),
