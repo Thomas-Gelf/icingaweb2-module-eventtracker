@@ -11,6 +11,16 @@
       "php": "7.4.20"
     }
   },
+  "autoload": {
+    "psr-4": {
+       "Icinga\\Module\\Eventtracker\\": "library/Eventtracker/"
+     }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "Icinga\\Tests\\Module\\Eventtracker\\": "tests/"
+    }
+  },
   "require": {
     "ext-json": "*",
     "ext-iconv": "*",
@@ -22,6 +32,8 @@
     "ext-soap": "*"
   },
   "require-dev": {
+    "php": "^7.4 || ^8.0",
+    "dragonmantank/cron-expression": "^3.4",
     "phpstan/phpstan": "^1.4",
     "phpunit/phpunit": "^10 || ^9.5",
     "squizlabs/php_codesniffer": "^3.6",
