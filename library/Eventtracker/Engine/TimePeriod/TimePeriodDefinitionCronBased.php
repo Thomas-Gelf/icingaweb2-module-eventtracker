@@ -10,7 +10,6 @@ class TimePeriodDefinitionCronBased extends TimePeriodDefinitionNonRecurring
 {
     protected CronExpression $cronExpression;
 
-    #[\Override]
     public function __construct(
         CronExpression $cronExpression,
         ?DateTimeInterface $notBefore,
