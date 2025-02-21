@@ -2,8 +2,9 @@
 
 namespace Icinga\Module\Eventtracker;
 
-use DateTime;
+use DateTimeImmutable;
 use DateTimeInterface;
+use DateTimeZone;
 use gipfl\Format\LocalDateFormat;
 use gipfl\Format\LocalTimeFormat;
 use Icinga\Date\DateFormatter;
@@ -56,9 +57,9 @@ class Time
         return (int) floor(microtime(true) * 1000);
     }
 
-    public static function timestampMsToDateTime(int $timestampMs): DateTimeInterface
+    public static function timestampMsToDateTime(int $timestampMs, ?DateTimeZone $timeZone = null): DateTimeImmutable
     {
-        return new DateTime('@' . floor($timestampMs / 1000));
+        return DateTimeImmutable::createFromFormat('u', $timestampMs . '000', $timeZone);
     }
 
     public static function dateTimeToTimestampMs(DateTimeInterface $dateTime): int
