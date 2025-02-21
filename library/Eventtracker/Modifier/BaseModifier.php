@@ -2,7 +2,9 @@
 
 namespace Icinga\Module\Eventtracker\Modifier;
 
+use Icinga\Module\Eventtracker\Web\Form;
 use ipl\Html\ValidHtml;
+
 use function array_pop;
 use function explode;
 use function get_called_class;
@@ -56,6 +58,10 @@ abstract class BaseModifier implements Modifier
         }
 
         return $this->simpleTransform($value);
+    }
+
+    public static function extendSettingsForm(Form $form): void
+    {
     }
 
     protected function simpleTransform($value)

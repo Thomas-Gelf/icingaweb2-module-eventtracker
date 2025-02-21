@@ -2,6 +2,7 @@
 
 namespace Icinga\Module\Eventtracker\Modifier;
 
+use Icinga\Module\Eventtracker\Web\Form;
 use ipl\Html\ValidHtml;
 
 interface Modifier
@@ -19,4 +20,6 @@ interface Modifier
      * @return string|ValidHtml
      */
     public function describe(string $propertyName);
+
+    public static function extendSettingsForm(Form $form): void;
 }
