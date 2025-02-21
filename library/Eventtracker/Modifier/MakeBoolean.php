@@ -21,7 +21,7 @@ class MakeBoolean extends BaseModifier
 
     protected function simpleTransform($value)
     {
-        if ($value === false || $value === true || $value === null) {
+        if ($value === false || $value === true) {
             return $value;
         }
 
