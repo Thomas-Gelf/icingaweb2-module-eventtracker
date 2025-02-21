@@ -2,12 +2,19 @@
 
 namespace Icinga\Module\Eventtracker\Modifier;
 
+use function ipl\Stdlib\get_php_type;
+
 class SimpleNameValueParser extends BaseModifier
 {
     protected static ?string $name = 'Parse "key=value" strings';
 
     protected function simpleTransform($value)
     {
+        if (! is_string($value)) {
+            throw new \InvalidArgumentException(
+                "SimpleNameValueParser Expected string, got " . get_php_type($value)
+            );
+        }
         $parts = explode(' ', $value);
         $properties = [];
         $key = null;

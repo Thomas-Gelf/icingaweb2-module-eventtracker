@@ -119,7 +119,7 @@ class UuidObjectForm extends Form
         return $this->uuid;
     }
 
-    protected function storeObject()
+    public function storeObject()
     {
         $values = $this->getValues();
 

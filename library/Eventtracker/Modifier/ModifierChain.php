@@ -2,6 +2,7 @@
 
 namespace Icinga\Module\Eventtracker\Modifier;
 
+use gipfl\Json\JsonString;
 use JsonSerializable;
 use stdClass;
 
@@ -65,6 +66,45 @@ class ModifierChain implements JsonSerializable
     public function addModifier(Modifier $modifier, $propertyName)
     {
         $this->modifiers[] = [$propertyName, $modifier];
+    }
+
+    public function removeModifier(int $row): ModifierChain
+    {
+        $modifiers = $this->modifiers;
+        unset($modifiers[$row]);
+        $this->modifiers = array_values($modifiers);
+
+        return $this;
+    }
+
+    public function moveUp(int $index): ModifierChain
+    {
+        $modifiers = $this->modifiers;
+        if ($index === 0) {
+            return $this;
+        }
+        $tempNext = $modifiers[$index - 1];
+        $temp = $modifiers[$index];
+        $modifiers[$index - 1] = $temp;
+        $modifiers[$index] = $tempNext;
+        $this->modifiers = $modifiers;
+
+        return $this;
+    }
+
+    public function moveDown(int $index): ModifierChain
+    {
+        $modifiers = $this->modifiers;
+        if (! isset($modifiers[$index + 1])) {
+            return $this;
+        }
+        $tempNext = $modifiers[$index + 1];
+        $temp = $modifiers[$index];
+        $modifiers[$index + 1] = $temp;
+        $modifiers[$index] = $tempNext;
+        $this->modifiers = $modifiers;
+
+        return $this;
     }
 
     #[\ReturnTypeWillChange]

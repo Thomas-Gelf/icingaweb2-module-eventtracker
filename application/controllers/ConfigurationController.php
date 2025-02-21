@@ -7,16 +7,22 @@ use gipfl\IcingaWeb2\Link;
 use gipfl\IcingaWeb2\Url;
 use gipfl\Json\JsonDecodeException;
 use gipfl\Json\JsonString;
+use gipfl\Web\InlineForm;
 use gipfl\Web\Widget\Hint;
 use gipfl\ZfDbStore\DbStorableInterface;
 use gipfl\ZfDbStore\NotFoundError;
 use gipfl\ZfDbStore\ZfDbStore;
+use Icinga\Chart\Inline\Inline;
+use Icinga\Module\Eventtracker\Data\PlainObjectRenderer;
 use Icinga\Module\Eventtracker\Db\ConfigStore;
 use Icinga\Module\Eventtracker\Engine\Downtime\DowntimeRule;
 use Icinga\Module\Eventtracker\Engine\Input\KafkaInput;
 use Icinga\Module\Eventtracker\Modifier\ModifierChain;
 use Icinga\Module\Eventtracker\Modifier\Settings;
+use Icinga\Module\Eventtracker\Syslog\SyslogParser;
 use Icinga\Module\Eventtracker\Web\Dashboard\ConfigurationDashboard;
+use Icinga\Module\Eventtracker\Web\Form\ChannelConfigForm;
+use Icinga\Module\Eventtracker\Web\Form\ChannelRuleForm;
 use Icinga\Module\Eventtracker\Web\Form\DowntimeForm;
 use Icinga\Module\Eventtracker\Web\Form\UuidObjectForm;
 use Icinga\Module\Eventtracker\Web\Table\BaseTable;
@@ -26,10 +32,14 @@ use Icinga\Module\Eventtracker\Web\Table\HostListMemberTable;
 use Icinga\Module\Eventtracker\Web\WebAction;
 use Icinga\Module\Eventtracker\Web\WebActions;
 use Icinga\Web\Notification;
+use Icinga\Web\Session\SessionNamespace;
+use ipl\Html\FormElement\SubmitButtonElement;
+use ipl\Html\FormElement\SubmitElement;
 use ipl\Html\Html;
 use ipl\Html\Table;
 use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\UuidInterface;
+use function ipl\Stdlib\get_php_type;
 
 class ConfigurationController extends Controller
 {
@@ -147,23 +157,47 @@ class ConfigurationController extends Controller
         } else {
             $this->addObjectTab($action);
         }
-        $this->content()->add($this->getForm($action));
+        $this->content()->add($this->getForm($action, function () {
+            $uuid = $this->requireUuid();
+            $ns = $this->Window()->getSessionNamespace('eventtracker');
+            $sessionKey = 'channelrules/' . $uuid->toString();
+            $ns->delete($sessionKey);
+        }));
     }
 
     public function channelrulesAction()
     {
         $this->notForApi();
+//        $this->add
         $action = $this->actions->get('channels');
         $this->channelTabs()->activate('rules');
-        $this->actions()->add(Link::create($this->translate('Edit'), 'TODO', [
-            'what' => 'ever'
-        ], [
-            'class' => 'icon-edit'
-        ]));
+        $this->actions()->add(Link::create($this->translate('Add Modifier'), Url::fromPath(
+            'eventtracker/configuration/channelRules/',
+            ['uuid' => $this->requireUuid(),
+            'action' => 'add']
+        )));
+//        $this->actions()->add(Link::create($this->translate('Edit'), 'TODO', [
+//            'what' => 'ever'
+//        ], [
+//            'class' => 'icon-edit'
+//        ]));
+        $uuid = $this->requireUuid();
+        $ns = $this->Window()->getSessionNamespace('eventtracker');
+
         $form = $this->getForm($action); // TODO: w/o form
-        if ($rules = $form->getElementValue('rules')) {
-            $this->showRules($this->requireUuid(), $rules);
+
+//        $form->addElement('submit', 'submit', ['label' => $this->translate('Save32')]);
+//        $this->addContent($form);
+        if ($this->params->get('action') === 'add') {
+            $ruleForm = new ChannelRuleForm();
+            $ruleForm->handleRequest($this->getServerRequest());
+
+            if ($ruleForm->hasBeenSubmitted()) {
+//                $form->getElementValue('')
+            }
+            $this->content()->add($ruleForm);
         }
+        $this->showRules($ns, $uuid, $form, $form->getElementValue('rules'));
     }
 
     public function channelruleAction()
@@ -580,21 +614,116 @@ class ConfigurationController extends Controller
         $this->sendJsonSuccess(['message' => sprintf('updated  %s hosts', $cnt)], 201);
     }
 
-    protected function showRules(UuidInterface $uuid, $rules)
+    protected function showRules(SessionNamespace $ns, UuidInterface $uuid, UuidObjectForm $form, ?string $rules = null)
     {
+        $sessionKey = 'channelrules/' . $uuid->toString();
+        $form->addElement('submit', 'add_modifier', []);
+        
+        if ($sessionRules = $ns->get($sessionKey)) {
+            if ($rules !== $sessionRules) {
+                $newForm = new InlineForm();
+                $newForm->handleRequest($this->getServerRequest());
+                $newForm->addElement('submit', 'submit', ['label' => $this->translate('Save')]);
+                $message = Hint::warning(
+                    'The order has been modified please safe if you want to preserver the new order'
+                );
+//                $form->addHtml(Hint::warning(
+//                    'The order has been modified please safe if you want to preserver the new order'
+//                ));
+                if ($newForm->hasBeenSubmitted()) {
+                    $form->populate(['rules' => $sessionRules]);
+                    $form->storeObject();
+                    $ns->delete($sessionKey);
+                    $this->redirectNow($this->url());
+                }
+                $this->content()->add([$message, $newForm]);
+            }
+            $rules = $sessionRules;
+        }
+        if ($rules === null) {
+            return;
+        }
         try {
             $modifiers = ModifierChain::fromSerialization(JsonString::decode($rules));
         } catch (JsonDecodeException $e) {
+            $this->content()->add(Hint::error(sprintf(
+                $this->translate('Configured rules are invalid: %s'),
+                $e->getMessage()
+            )));
             return;
         }
+//        $ns->set('channelrules/' . $uuid->toString(), 'test');
+//        $ns->get()
         $url = Url::fromPath('eventtracker/configuration/channelrule', [
             'uuid' => $uuid->toString()
         ]);
-        $info = new ChannelRulesTable($modifiers, $url, $this->getServerRequest());
+        try {
+            if ($sampleObject = $this->getSampleObject()) {
+                $this->content()->add([
+                    Html::tag('h3', "Original Event"),
+                    Html::tag('pre', [
+                        'class' => 'plain-object'
+                    ], PlainObjectRenderer::render($sampleObject)),
+                ]);
+            }
+            $info = new ChannelRulesTable($modifiers, $url, $this->getServerRequest(), $sampleObject);
+            if ($info->hasBeenModified()) {
+                $ns->set($sessionKey, JsonString::encode($info->getModifierChain(), JSON_PRETTY_PRINT));
+                $this->redirectNow($this->url());
+            }
+        } catch (\Throwable $e) {
+            $info = [
+                 Hint::error($e),
+                 Html::tag('pre', $rules),
+                 Html::tag('pre', JsonString::encode($modifiers, JSON_PRETTY_PRINT)),
+            ];
+        }
+
+
         $this->content()->add([
             Html::tag('h3', $this->translate('Configured Rules')),
             $info
         ]);
+    }
+
+    protected function getSampleObject()
+    {
+        return SyslogParser::parseLine(
+            'Jan 11 13:12:54 goj oem_syslog[2837832]: timestamp=2025-01-11T12:12:54.560Z'
+            . ' hostname=kri.example.com component=kri.example.com id=2837644 state=nok severity=2 oem_clear=false'
+            . ' oem_host_name=kri.example.com oem_incident_ack_by_owner=no url=https://ip.gelf.net oem_incident_id=4996'
+            . ' oem_incident_status=new'
+            . ' oem_issue_type=incident oem_target_name=kri.example.com oem_target_type=host msg=Alert; Value=7;'
+            . ' String <Returncode:> with values <> 0 found in /var/log/dbms/load_dbclone_for_oracle_mssql.log!'
+            . ' OEMIncidentID: 4996'
+        );
+        return SyslogParser::parseLine(
+            'Jan 11 13:12:54 goj oem_syslog[2837832]: timestamp=2025-01-11T12:12:54.560Z'
+            . ' hostname=kri.example.com component=kri.example.com id=2837644 state=nok severity=2 oem_clear=false'
+            . ' oem_host_name=kri.example.com oem_incident_ack_by_owner=no oem_incident_id=4996 oem_incident_status=new'
+            . ' oem_issue_type=incident oem_target_name=kri.example.com oem_target_type=host msg=Alert; Value=7;'
+            . ' String <Returncode:> with values <> 0 found in /var/log/dbms/dbclone_for_oracle_mssql.log!'
+            . ' OEMIncidentID: 4996'
+        );
+        return JsonString::decode(
+            '{' . "\n"
+            . '    "host_name": "goj",' . "\n"
+            . '    "object_name": "oem_syslog",' . "\n"
+            . '    "object_class": "user",' . "\n"
+            . '    "severity": "critical",' . "\n"
+            . '    "priority": null,' . "\n"
+            . '    "message": "timestamp=2025-02-02T13:24:30.276Z hostname=atb.example.com'
+            . ' component=DBMS03_SITE1.EXAMPLE id=125690 state=nok severity=1 oem_clear=false'
+            . ' oem_host_name=atb.example.com oem_incident_ack_by_owner=no oem_incident_id=144826'
+            . ' oem_incident_status=new oem_issue_type=incident oem_target_name=dbms03_site1.example'
+            . ' oem_target_type=oracle_pdb msg=The pluggable database DBMS03_SITE1.EXAMPLE is down.'
+            . ' OEMIncidentID: 144826",' . "\n"
+            . '    "attributes": {' . "\n"
+            . '        "syslog_sender_pid": 125795' . "\n"
+            . '    }' . "\n"
+            . '}' . "\n"
+        );
+        return null;
     }
 
     protected function showList(WebAction $action)

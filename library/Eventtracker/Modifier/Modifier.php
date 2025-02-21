@@ -2,7 +2,8 @@
 
 namespace Icinga\Module\Eventtracker\Modifier;
 
-use Icinga\Module\Eventtracker\Web\Form;
+use Icinga\Module\Eventtracker\Web\Form\ChannelRuleForm;
+use ipl\Html\Form;
 use ipl\Html\ValidHtml;
 
 interface Modifier
@@ -21,5 +22,5 @@ interface Modifier
      */
     public function describe(string $propertyName);
 
-    public static function extendSettingsForm(Form $form): void;
+    public static function extendSettingsForm(ChannelRuleForm $form): void;
 }
