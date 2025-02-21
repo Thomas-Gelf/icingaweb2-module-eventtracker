@@ -12,11 +12,8 @@ class HostList
     public const TABLE_NAME = 'host_list';
     public const MEMBER_TABLE_NAME = 'host_list_member';
 
-    /** @var UuidInterface */
-    protected $uuid;
-
-    /** @var ?array */
-    protected $hosts = null;
+    protected UuidInterface $uuid;
+    protected ?array $hosts = null;
 
     public function __construct(UuidInterface $uuid)
     {
