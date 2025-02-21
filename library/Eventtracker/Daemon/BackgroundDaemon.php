@@ -92,6 +92,7 @@ class BackgroundDaemon implements EventEmitterInterface
 
     protected function initialize()
     {
+        $this->logger->notice('Starting up');
         $this->registerSignalHandlers($this->loop);
         $this->processState = new DaemonProcessState(Application::PROCESS_NAME);
         $this->jobRunner = new JobRunner($this->loop, $this->logger);
@@ -130,6 +131,7 @@ class BackgroundDaemon implements EventEmitterInterface
             ->run($this->loop);
         $this->prepareApi($this->channelRunner, $this->loop, $this->logger);
         $this->setState('running');
+        $this->logger->notice('Daemon has been initialized');
     }
 
     /**
@@ -194,7 +196,9 @@ class BackgroundDaemon implements EventEmitterInterface
                 $startupSchema,
                 $dbSchema
             ));
-            $this->reload();
+            $this->loop->addTimer(0.3, function () {
+                $this->reload();
+            });
         });
 
         $db->setConfigWatch(
@@ -241,6 +245,7 @@ class BackgroundDaemon implements EventEmitterInterface
         }
         $this->reloading = true;
         $this->setState('reloading the main process');
+        $this->logger->notice('Going down for reload');
         $this->prepareShutdown()->then(function () {
             $this->loop->addTimer(0.1, function () {
                 $this->loop->stop();
