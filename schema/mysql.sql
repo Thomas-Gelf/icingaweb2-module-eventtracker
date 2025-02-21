@@ -347,29 +347,13 @@ CREATE TABLE downtime_rule (
   is_recurring ENUM('y', 'n') NOT NULL,
   ts_not_before BIGINT(20) UNSIGNED NULL DEFAULT NULL,
   ts_not_after BIGINT(20) UNSIGNED NULL DEFAULT NULL,
+  ts_triggered BIGINT(20) UNSIGNED DEFAULT NULL,
   duration INT(10) UNSIGNED NULL DEFAULT NULL,
   max_single_problem_duration INT(10) UNSIGNED NULL DEFAULT NULL,
+  on_recovery_issue_status ENUM('open', 'close') NOT NULL,
   PRIMARY KEY (uuid),
   UNIQUE INDEX idx_sort(label),
   UNIQUE INDEX config(config_uuid)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE utf8mb4_bin;
-
-CREATE TABLE downtime_calculated (
-  uuid VARBINARY(16) NOT NULL, -- uuid5(rule_config_uuid, ts_expected_start)
-  rule_uuid VARBINARY(16) NOT NULL, -- important for cleanup?
-  rule_config_uuid VARBINARY(16) NULL DEFAULT NULL,
-  ts_expected_start BIGINT(20) UNSIGNED NOT NULL,
-  ts_expected_end BIGINT(20) UNSIGNED NOT NULL,
-  is_active ENUM('y', 'n') NOT NULL,
-  ts_started BIGINT(20) UNSIGNED DEFAULT NULL,
-  ts_triggered BIGINT(20) UNSIGNED DEFAULT NULL, -- isn't this the same as ts_started????
-  PRIMARY KEY (uuid),
-  UNIQUE INDEX (rule_config_uuid, ts_expected_start),
-  CONSTRAINT downtime_calculated_rule_config
-    FOREIGN KEY rule_config (rule_config_uuid)
-      REFERENCES downtime_rule (config_uuid)
-      ON DELETE CASCADE
-      ON UPDATE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE utf8mb4_bin;
 
 ALTER TABLE downtime_rule
@@ -443,4 +427,4 @@ CREATE TABLE eventtracker_schema_migration (
 
 INSERT INTO eventtracker_schema_migration
   (schema_version, migration_time)
-VALUES (22, NOW());
+VALUES (23, NOW());
