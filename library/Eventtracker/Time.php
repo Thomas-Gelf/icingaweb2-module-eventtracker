@@ -12,6 +12,8 @@ use ipl\Html\Html;
 
 class Time
 {
+    protected static int $lastMilli = 0;
+
     public static function ago($ms)
     {
         return DateFormatter::timeAgo($ms / 1000);
@@ -54,7 +56,13 @@ class Time
 
     public static function unixMilli(): int
     {
-        return (int) floor(microtime(true) * 1000);
+        $milli = (int) floor(microtime(true) * 1000);
+        if ($milli === self::$lastMilli) {
+            $milli = self::$lastMilli + 1;
+        }
+        self::$lastMilli = $milli;
+
+        return $milli;
     }
 
     public static function timestampMsToDateTime(int $timestampMs, ?DateTimeZone $timeZone = null): DateTimeImmutable
