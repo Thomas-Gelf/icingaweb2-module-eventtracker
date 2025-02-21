@@ -379,27 +379,6 @@ ALTER TABLE downtime_rule
     ON DELETE SET NULL
        ON UPDATE RESTRICT;
 
-CREATE TABLE downtime_affected_issue (
-  calculation_uuid VARBINARY(16) NOT NULL,
-  issue_uuid VARBINARY(16) NOT NULL,
-  ts_triggered BIGINT(20) UNSIGNED NOT NULL,
-  ts_scheduled_end BIGINT(20) UNSIGNED NOT NULL, -- min(dr.ts_not_after, ts_triggered + dr.duration)
-  assignment ENUM('manual', 'rule') NOT NULL,
-  assigned_by VARCHAR(255) NULL DEFAULT NULL,
-  author VARCHAR(255) NULL DEFAULT NULL,
-  PRIMARY KEY (calculation_uuid, issue_uuid),
-  CONSTRAINT calculated_downtime_rule
-    FOREIGN KEY downtime_calculated_uuid (calculation_uuid)
-      REFERENCES downtime_calculated (uuid)
-      ON DELETE CASCADE
-      ON UPDATE CASCADE,
-  CONSTRAINT affected_issue_issue
-    FOREIGN KEY issue (issue_uuid)
-      REFERENCES downtime_calculated (uuid)
-      ON DELETE CASCADE
-      ON UPDATE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE utf8mb4_bin;
-
 CREATE TABLE config_history (
   ts_modification BIGINT UNSIGNED NOT NULL,
   action ENUM('create', 'modify', 'delete') NOT NULL,
@@ -455,4 +434,4 @@ CREATE TABLE eventtracker_schema_migration (
 
 INSERT INTO eventtracker_schema_migration
   (schema_version, migration_time)
-VALUES (20, NOW());
+VALUES (21, NOW());
