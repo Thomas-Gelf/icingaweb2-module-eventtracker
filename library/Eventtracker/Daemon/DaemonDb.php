@@ -12,6 +12,7 @@ use gipfl\ZfDb\Adapter\Pdo\Mysql;
 use Icinga\Application\Icinga;
 use Icinga\Module\Eventtracker\Db\ZfDbConnectionFactory;
 use Icinga\Module\Eventtracker\Modifier\Settings;
+use Psr\Log\LoggerInterface;
 use React\EventLoop\LoopInterface;
 use React\Promise\Deferred;
 use React\Promise\ExtendedPromiseInterface;
@@ -32,6 +33,7 @@ class DaemonDb
     public const ON_NO_SCHEMA = 'no schema';
     public const ON_SCHEMA_CHANGE = 'schemaChange';
     const TABLE_NAME = 'daemon_info';
+    protected LoggerInterface $logger;
 
     /** @var LoopInterface */
     private $loop;
@@ -66,10 +68,11 @@ class DaemonDb
     /** @var int */
     protected $startupSchemaVersion;
 
-    public function __construct(DaemonProcessDetails $details, $dbConfig = null)
+    public function __construct(DaemonProcessDetails $details, LoggerInterface $logger, $dbConfig = null)
     {
         $this->details = $details;
         $this->dbConfig = $dbConfig;
+        $this->logger = $logger;
     }
 
     public function register(DbBasedComponent $component)
@@ -116,9 +119,9 @@ class DaemonDb
     {
         if ($config === null) {
             if ($this->dbConfig === null) {
-                Logger::error('DB configuration is not valid');
+                $this->logger->error('DB configuration is not valid');
             } else {
-                Logger::error('DB configuration is no longer valid');
+                $this->logger->error('DB configuration is no longer valid');
             }
             $this->emitStatus(self::ON_NO_CONFIGURATION);
             $this->dbConfig = $config;
@@ -135,7 +138,7 @@ class DaemonDb
     protected function establishConnection($config)
     {
         if ($this->db !== null) {
-            Logger::error('Trying to establish a connection while being connected');
+            $this->logger->error('Trying to establish a connection while being connected');
             return reject();
         }
         $callback = function () use ($config) {
@@ -200,13 +203,13 @@ class DaemonDb
         }
         $migrations = $this->getMigrations($this->db);
         if ($migrations->hasPendingMigrations()) {
-            Logger::warning('Schema is outdated, applying migrations');
+            $this->logger->warning('Schema is outdated, applying migrations');
             $count = $migrations->countPendingMigrations();
             $migrations->applyPendingMigrations();
             if ($count === 1) {
-                Logger::info("A pending DB migration has been applied");
+                $this->logger->notice("A pending DB migration has been applied");
             } else {
-                Logger::info("$count pending DB migrations have been applied");
+                $this->logger->notice("$count pending DB migrations have been applied");
             }
         }
         if ($this->schemaIsOutdated()) {
@@ -241,7 +244,7 @@ class DaemonDb
     protected function onConnected()
     {
         $this->emitStatus(self::ON_CONNECTED);
-        Logger::info('Connected to the database');
+        $this->logger->notice('Connected to the database');
         foreach ($this->registeredComponents as $component) {
             $component->initDb($this->db);
         }
@@ -252,7 +255,7 @@ class DaemonDb
         $promise = $this->disconnect()->then(function () {
             return $this->connect();
         }, function (Exception $e) {
-            Logger::error('Disconnect failed. This should never happen: ' . $e->getMessage());
+            $this->logger->error('Disconnect failed. This should never happen: ' . $e->getMessage());
             exit(1);
         });
 
@@ -310,7 +313,7 @@ class DaemonDb
                 $this->db->closeConnection();
             }
         } catch (Exception $e) {
-            Logger::error('Failed to disconnect: ' . $e->getMessage());
+            $this->logger->error('Failed to disconnect: ' . $e->getMessage());
         }
 
         $pending = $this->pendingDisconnect->then(function () {
@@ -350,7 +353,7 @@ class DaemonDb
             )
         );
         if ($count > 1) {
-            Logger::error("Removed $count orphaned daemon instance(s) from DB");
+            $this->logger->warning("Removed $count orphaned daemon instance(s) from DB");
         }
     }
 
@@ -373,7 +376,7 @@ class DaemonDb
                 );
             }
         } catch (Exception $e) {
-            Logger::error($e->getMessage());
+            $this->logger->error($e->getMessage());
             $this->reconnect();
         }
     }
@@ -390,7 +393,7 @@ class DaemonDb
                 $this->db->quoteInto('instance_uuid_hex = ?', $this->details->getInstanceUuid())
             );
         } catch (Exception $e) {
-            Logger::error('Failed to update daemon info (setting ts_stopped): ' . $e->getMessage());
+            $this->logger->error('Failed to update daemon info (setting ts_stopped): ' . $e->getMessage());
         }
     }
 }

@@ -176,7 +176,7 @@ class BackgroundDaemon implements EventEmitterInterface
         DaemonProcessState $processState,
         $dbResourceName = null
     ) {
-        $db = new DaemonDb($processDetails);
+        $db = new DaemonDb($processDetails, $this->logger);
         $db->on('state', function ($state, $level = null) use ($processState) {
             // TODO: level is sent but not used
             $processState->setComponentState('db', $state);
