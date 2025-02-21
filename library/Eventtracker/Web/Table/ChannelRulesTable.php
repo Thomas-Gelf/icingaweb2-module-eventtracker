@@ -5,14 +5,16 @@ namespace Icinga\Module\Eventtracker\Web\Table;
 use gipfl\Diff\HtmlRenderer\SideBySideDiff;
 use gipfl\Diff\PhpDiff;
 use gipfl\IcingaWeb2\Icon;
+use gipfl\IcingaWeb2\IconHelper;
 use gipfl\IcingaWeb2\Link;
 use gipfl\IcingaWeb2\Url;
-use gipfl\Json\JsonString;
 use gipfl\Translation\TranslationHelper;
 use gipfl\Web\Form\Feature\NextConfirmCancel;
+use gipfl\Web\InlineForm;
+use gipfl\Web\Widget\Hint;
 use Icinga\Module\Eventtracker\Data\PlainObjectRenderer;
 use Icinga\Module\Eventtracker\Modifier\ModifierChain;
-use Icinga\Module\Eventtracker\Syslog\SyslogParser;
+use Icinga\Module\Eventtracker\Web\Form\ChannelConfigForm;
 use Icinga\Module\Eventtracker\Web\Form\InstanceInlineForm;
 use ipl\Html\Html;
 use ipl\Html\Table;
@@ -23,61 +25,70 @@ class ChannelRulesTable extends Table
     use TranslationHelper;
 
     protected $defaultAttributes = [
+        'id' => 'channel-rules-table',
         'class' => [
             'common-table',
-            'table-row-selectable',
+        //    'table-row-selectable',
         ]
     ];
 
-    /**
-     * @var ModifierChain
-     */
-    protected $modifierChain;
-    /**
-     * @var Url
-     */
-    protected $url;
-    /**
-     * @var ServerRequestInterface
-     */
-    protected $request;
+    protected ModifierChain $modifierChain;
+    protected Url $url;
+    protected ServerRequestInterface $request;
+    private ?object $sampleObject;
 
-    public function __construct(ModifierChain $modifierChain, Url $url, ServerRequestInterface $request)
+    public function getModifierChain(): ModifierChain
     {
+        return $this->modifierChain;
+    }
+    private ChannelConfigForm $form;
+    private bool $hasBeenModified = false;
+
+    public function __construct(
+        ModifierChain          $modifierChain,
+        Url                    $url,
+        ServerRequestInterface $request,
+        ?object                $sampleObject = null
+    ) {
         $this->modifierChain = $modifierChain;
         $this->url = $url;
         $this->request = $request;
+        $this->sampleObject = $sampleObject;
+    }
+
+    public function isHasBeenModified(): bool
+    {
+        return $this->hasBeenModified;
     }
 
     protected function assemble()
     {
         $row = -1;
-        if ($object = $this->getSampleObject()) {
+        if ($object = $this->sampleObject) {
             $old = PlainObjectRenderer::render($object);
-            $this->add($this::tr($this::td([
-                [
-                    Html::tag('h3', "Original Event"),
-                    Html::tag('pre', [
-                        'class' => 'plain-object'
-                    ], PlainObjectRenderer::render($object)),
-                ]
-            ], ['colspan' => 3])));
         } else {
             $old = null;
         }
         foreach ($this->modifierChain->getModifiers() as list($propertyName, $modifier)) {
             $row++;
-            if ($old === null) {
-                $show = null;
-            } else {
-                ModifierChain::applyModifier($modifier, $object, $propertyName);
-                $new = PlainObjectRenderer::render($object);
-                $show = Html::tag('div', new SideBySideDiff(new PhpDiff($old, $new)));
-                $old = $new;
+            $show = Html::tag('div', [
+                'class' => ['collapsible-diff']
+            ]);
+            if ($old) {
+                try {
+                    ModifierChain::applyModifier($modifier, $object, $propertyName);
+                    $new = PlainObjectRenderer::render($object);
+                    $show->add(new SideBySideDiff(new PhpDiff($old, $new)));
+                    $old = $new;
+                } catch (\InvalidArgumentException $e) {
+                    $show->add(Hint::error($e->getMessage()));
+                } catch (\Throwable $e) {
+                    $show->add(Hint::error($e));
+                }
             }
             $this->add($this::row([
                 $this::td([
-                    Link::create(
+                    $this->sampleObject ? Link::create(
                         [
                             Icon::create('right-dir'),
                             $modifier->describe($propertyName)
@@ -88,68 +99,36 @@ class ChannelRulesTable extends Table
                         ] + $this->url->getParams()->toArray(false))*/,
                         null,
                         ['class' => 'control-collapsible']
-                    ),
+                    ) : $modifier->describe($propertyName),
                     $show
                 ], [
                     'class' => ['collapsible-table-row', 'collapsed']
                 ]),
                 $this::td([
-                    $this->disableButton('X' . $row),
-                    $this->deleteButton('X' . $row),
-                    Icon::create('angle-down'),
-                    Icon::create('angle-up'),
-                ], [
-                    'style' => 'text-align: right; width: 14em'
+//                    $this->disableButton('X' . $row),
+                  $this->deleteButton($row),
+                    $this->moveUpButton($row),
+                    $this->moveDownButton($row),
+//                    Icon::create('angle-down'),
+//                    Icon::create('angle-up'),
                 ])
-            ]));
+            ], ['class' => 'sortable']));
         }
     }
 
-    protected function getSampleObject()
+    public function hasBeenModified(): bool
     {
-        return SyslogParser::parseLine(
-            'Jan 11 13:12:54 goj oem_syslog[2837832]: timestamp=2025-01-11T12:12:54.560Z'
-            . ' hostname=kri.example.com component=kri.example.com id=2837644 state=nok severity=2 oem_clear=false'
-            . ' oem_host_name=kri.example.com oem_incident_ack_by_owner=no url=https://ip.gelf.net oem_incident_id=4996'
-            . ' oem_incident_status=new'
-            . ' oem_issue_type=incident oem_target_name=kri.example.com oem_target_type=host msg=Alert; Value=7;'
-            . ' String <Returncode:> with values <> 0 found in /var/log/dbms/load_dbclone_for_oracle_mssql.log!'
-            . ' OEMIncidentID: 4996'
-        );
-        return SyslogParser::parseLine(
-            'Jan 11 13:12:54 goj oem_syslog[2837832]: timestamp=2025-01-11T12:12:54.560Z'
-            . ' hostname=kri.example.com component=kri.example.com id=2837644 state=nok severity=2 oem_clear=false'
-            . ' oem_host_name=kri.example.com oem_incident_ack_by_owner=no oem_incident_id=4996 oem_incident_status=new'
-            . ' oem_issue_type=incident oem_target_name=kri.example.com oem_target_type=host msg=Alert; Value=7;'
-            . ' String <Returncode:> with values <> 0 found in /var/log/dbms/dbclone_for_oracle_mssql.log!'
-            . ' OEMIncidentID: 4996'
-        );
-        return JsonString::decode(
-            '{' . "\n"
-            . '    "host_name": "goj",' . "\n"
-            . '    "object_name": "oem_syslog",' . "\n"
-            . '    "object_class": "user",' . "\n"
-            . '    "severity": "critical",' . "\n"
-            . '    "priority": null,' . "\n"
-            . '    "message": "timestamp=2025-02-02T13:24:30.276Z hostname=atb.example.com'
-            . ' component=DBMS03_SITE1.EXAMPLE id=125690 state=nok severity=1 oem_clear=false'
-            . ' oem_host_name=atb.example.com oem_incident_ack_by_owner=no oem_incident_id=144826'
-            . ' oem_incident_status=new oem_issue_type=incident oem_target_name=dbms03_site1.example'
-            . ' oem_target_type=oracle_pdb msg=The pluggable database DBMS03_SITE1.EXAMPLE is down.'
-            . ' OEMIncidentID: 144826",' . "\n"
-            . '    "attributes": {' . "\n"
-            . '        "syslog_sender_pid": 125795' . "\n"
-            . '    }' . "\n"
-            . '}' . "\n"
-        );
-        return null;
+        $this->ensureAssembled();
+        return $this->hasBeenModified;
     }
 
-    protected function deleteButton($key)
+    protected function deleteButton($key): InstanceInlineForm
     {
-        $form = new InstanceInlineForm($key);
+        $form = new InstanceInlineForm('DEL_' . $key);
         $confirm = new NextConfirmCancel(
-            NextConfirmCancel::buttonNext($this->translate('Delete')),
+            NextConfirmCancel::buttonNext($this->translate(IconHelper::instance()->iconCharacter('trash')), [
+                'class' => 'icon-button'
+            ]),
             $yes = NextConfirmCancel::buttonConfirm($this->translate('YES, really delete')),
             NextConfirmCancel::buttonCancel($this->translate('Cancel'), [
                 'formnovalidate' => true
@@ -158,9 +137,45 @@ class ChannelRulesTable extends Table
         $form->handleRequest($this->request);
         $confirm->addToForm($form);
         if ($yes->hasBeenPressed()) {
-            var_dump("KILL $key");
-        }
+//            var_dump($this->getValues);
+            $this->modifierChain->removeModifier($key);
+            $this->hasBeenModified = true;
 
+//            var_dump($this->modifierChain->getModifiers());
+//            var_dump("KILL $key");
+        }
+        return $form;
+    }
+
+    protected function moveUpButton($key): InlineForm
+    {
+        $form = new InstanceInlineForm($key);
+        $form->addAttributes(['class' => 'move-up-form']);
+        $form->handleRequest($this->request);
+        $form->addElement('submit', 'submit', [
+            'label' => IconHelper::instance()->iconCharacter('up-big'),
+            'class' => 'icon-button'
+        ]);
+        if ($form->hasBeenSubmitted()) {
+            $this->modifierChain->moveUp($key);
+            $this->hasBeenModified = true;
+        }
+        return $form;
+    }
+
+    protected function moveDownButton($key): InlineForm
+    {
+        $form = new InstanceInlineForm($key);
+        $form->addAttributes(['class' => 'move-down-form']);
+        $form->handleRequest($this->request);
+        $form->addElement('submit', 'submit', [
+            'label' => IconHelper::instance()->iconCharacter('down-big'),
+            'class' => 'icon-button'
+        ]);
+        if ($form->hasBeenSubmitted()) {
+            $this->modifierChain->moveDown($key);
+            $this->hasBeenModified = true;
+        }
         return $form;
     }
 
