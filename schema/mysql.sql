@@ -379,6 +379,15 @@ ALTER TABLE downtime_rule
     ON DELETE SET NULL
        ON UPDATE RESTRICT;
 
+CREATE TABLE issue_downtime_history (
+  ts_modification BIGINT UNSIGNED NOT NULL,
+  issue_uuid VARBINARY(16) NOT NULL,
+  rule_uuid VARBINARY(16) NULL DEFAULT NULL,
+  rule_config_uuid VARBINARY(16) NULL DEFAULT NULL,
+  action ENUM('activated', 'deactivated') NOT NULL,
+  PRIMARY KEY (ts_modification)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE utf8mb4_bin;
+
 CREATE TABLE config_history (
   ts_modification BIGINT UNSIGNED NOT NULL,
   action ENUM('create', 'modify', 'delete') NOT NULL,
@@ -434,4 +443,4 @@ CREATE TABLE eventtracker_schema_migration (
 
 INSERT INTO eventtracker_schema_migration
   (schema_version, migration_time)
-VALUES (21, NOW());
+VALUES (22, NOW());
