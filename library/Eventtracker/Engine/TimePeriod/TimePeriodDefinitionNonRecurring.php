@@ -102,7 +102,7 @@ class TimePeriodDefinitionNonRecurring implements TimePeriodDefinition
     protected function prepareTimeSlotForStart(DateTimeInterface $start): ?TimeSlot
     {
         if ($this->duration === null) {
-            $end = clone $this->notAfter;
+            $end = $this->notAfter ? clone $this->notAfter : null;
         } else {
             $end = clone $start;
             $end = $end->add($this->duration);
