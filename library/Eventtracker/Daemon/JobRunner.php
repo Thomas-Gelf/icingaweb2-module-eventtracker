@@ -12,37 +12,26 @@ use Icinga\Application\Icinga;
 use Psr\Log\LoggerInterface;
 use React\ChildProcess\Process;
 use React\EventLoop\LoopInterface;
+use React\EventLoop\TimerInterface;
 use React\Promise\ExtendedPromiseInterface;
 use React\Promise\Promise;
+
+use function array_shift;
 use function React\Promise\resolve;
 
 class JobRunner implements DbBasedComponent
 {
-    /** @var Db */
-    protected $db;
-
-    /** @var LoopInterface */
-    protected $loop;
-
-    /** @var array */
-    protected $scheduledTasks = [];
+    protected LoopInterface $loop;
+    protected ProcessList $running;
+    protected LoggerInterface $logger;
+    protected ?Db $db = null;
+    protected ?LogProxy $logProxy = null;
+    protected ?TimerInterface $timer = null;
 
     /** @var Promise[] */
-    protected $runningTasks = [];
-
-    protected $checkInterval = 10;
-
-    /** @var \React\EventLoop\TimerInterface */
-    protected $timer;
-
-    /** @var LogProxy */
-    protected $logProxy;
-
-    /** @var ProcessList */
-    protected $running;
-
-    /** @var LoggerInterface */
-    protected $logger;
+    protected array $runningTasks = [];
+    protected array $scheduledTasks = [];
+    protected int $checkInterval = 10;
 
     public function __construct(LoopInterface $loop, LoggerInterface $logger)
     {
@@ -51,11 +40,9 @@ class JobRunner implements DbBasedComponent
         $this->logger = $logger;
     }
 
-    public function forwardLog(LogProxy $logProxy)
+    public function forwardLog(LogProxy $logProxy): void
     {
         $this->logProxy = $logProxy;
-
-        return $this;
     }
 
     protected function getTaskList(): array
@@ -109,7 +96,7 @@ class JobRunner implements DbBasedComponent
         $this->timer = $this->loop->addPeriodicTimer($this->checkInterval, $check);
         $this->timer = $this->loop->addPeriodicTimer(7, $schedule);
 
-        return resolve();
+        return resolve(null);
     }
 
     public function stopDb(): ExtendedPromiseInterface
@@ -146,12 +133,9 @@ class JobRunner implements DbBasedComponent
         }
     }
 
-    /**
-     * @return bool
-     */
-    protected function runNextTask()
+    protected function runNextTask(): bool
     {
-        $name = \array_shift($this->scheduledTasks);
+        $name = array_shift($this->scheduledTasks);
         try {
             $this->runSync($name);
         } catch (\Exception $e) {
@@ -203,10 +187,7 @@ class JobRunner implements DbBasedComponent
         });
     }
 
-    /**
-     * @return ProcessList
-     */
-    public function getProcessList()
+    public function getProcessList(): ProcessList
     {
         return $this->running;
     }
@@ -220,6 +201,5 @@ class JobRunner implements DbBasedComponent
     {
         $this->stopDb();
         $this->logProxy = null;
-        $this->loop = null;
     }
 }
