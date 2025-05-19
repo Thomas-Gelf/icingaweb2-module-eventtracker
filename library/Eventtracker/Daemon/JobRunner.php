@@ -27,6 +27,7 @@ class JobRunner implements DbBasedComponent
     protected ?Db $db = null;
     protected ?LogProxy $logProxy = null;
     protected ?TimerInterface $timer = null;
+    protected ?TimerInterface $scheduleTimer = null;
 
     /** @var Promise[] */
     protected array $runningTasks = [];
@@ -93,8 +94,11 @@ class JobRunner implements DbBasedComponent
             $this->logger->info('Cancelling former timer');
             $this->loop->cancelTimer($this->timer);
         }
+        if ($this->scheduleTimer !== null) {
+            $this->loop->cancelTimer($this->scheduleTimer);
+        }
         $this->timer = $this->loop->addPeriodicTimer($this->checkInterval, $check);
-        $this->timer = $this->loop->addPeriodicTimer(7, $schedule);
+        $this->scheduleTimer = $this->loop->addPeriodicTimer(7, $schedule); // TODO: can this be combined?
 
         return resolve(null);
     }
@@ -105,6 +109,10 @@ class JobRunner implements DbBasedComponent
         if ($this->timer !== null) {
             $this->loop->cancelTimer($this->timer);
             $this->timer = null;
+        }
+        if ($this->scheduleTimer !== null) {
+            $this->loop->cancelTimer($this->scheduleTimer);
+            $this->scheduleTimer = null;
         }
         $terminateProcesses = ProcessKiller::terminateProcesses($this->running, $this->loop);
         foreach ($this->runningTasks as $id => $promise) {
