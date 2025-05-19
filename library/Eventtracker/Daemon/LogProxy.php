@@ -35,7 +35,7 @@ class LogProxy implements DbBasedComponent
     {
         $this->db = $db;
 
-        return resolve();
+        return resolve(null);
     }
 
     /**
@@ -45,7 +45,7 @@ class LogProxy implements DbBasedComponent
     {
         $this->db = null;
 
-        return resolve();
+        return resolve(null);
     }
 
     /**
