@@ -69,8 +69,7 @@ class TimePeriodDefinitionFactory
                 );
             }
         } else {
-            return new TimePeriodDefinitionCronBased(
-                new CronExpression($definition),
+            return new TimePeriodDefinitionNonRecurring(
                 $rule->getNotBefore(),
                 $rule->getNotAfter(),
                 $rule->getDuration()
