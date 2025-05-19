@@ -47,7 +47,7 @@ class InputAndChannelRunner implements DbBasedComponent
         $this->runner->setLogger($this->logger);
         $this->runner->start($this->loop);
 
-        return resolve();
+        return resolve(null);
     }
 
 
@@ -66,7 +66,7 @@ class InputAndChannelRunner implements DbBasedComponent
             $this->runner = null;
         }
 
-        return resolve();
+        return resolve(null);
     }
 
     public function __destruct()
