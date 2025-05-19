@@ -96,7 +96,7 @@ class BackgroundDaemon implements EventEmitterInterface
         $this->registerSignalHandlers($this->loop);
         $this->processState = new DaemonProcessState(Application::PROCESS_NAME);
         $this->jobRunner = new JobRunner($this->loop, $this->logger);
-        $this->systemd = $this->eventuallyInitializeSystemd();
+        $this->systemd = $this->optionallyInitializeSystemd();
         $this->processState->setSystemd($this->systemd);
         if ($this->systemd) {
             $this->systemd->setReady();
@@ -157,7 +157,10 @@ class BackgroundDaemon implements EventEmitterInterface
         return $processDetails;
     }
 
-    protected function eventuallyInitializeSystemd()
+    /**
+     * @return false|NotifySystemD
+     */
+    protected function optionallyInitializeSystemd()
     {
         $systemd = NotifySystemD::ifRequired($this->loop);
         if ($systemd) {
