@@ -562,6 +562,13 @@ class Issue implements JsonSerialization
         }
         $db->update(self::$tableName, $this->getModifiedProperties(), $where);
         unset($modifications['ts_expiration']);
+        if (isset($modifications['downtime_config_uuid'])) {
+            foreach ($modifications['downtime_config_uuid'] as &$value) {
+                if ($value !== null) {
+                    $value = Uuid::fromBytes($value)->toString();
+                }
+            }
+        }
         if (! empty($modifications)) {
             $db->insert('issue_activity', [
                 'activity_uuid' => Uuid::uuid4()->getBytes(),
