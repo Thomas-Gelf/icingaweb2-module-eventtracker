@@ -5,6 +5,7 @@ namespace Icinga\Module\Eventtracker\Engine\TimePeriod;
 use DateTimeImmutable as DTI;
 use DateTimeInterface as DT;
 use gipfl\Json\JsonSerialization;
+use stdClass;
 
 class TimeSlot implements JsonSerialization
 {
@@ -34,19 +35,19 @@ class TimeSlot implements JsonSerialization
         return true;
     }
 
-    public function jsonSerialize():\stdClass
+    public function jsonSerialize(): stdClass
     {
         return (object) [
             'start' => $this->start ? $this->start->format(DT::RFC3339_EXTENDED) : null,
-            'end' => $this->end ? $this->end->format(DT::RFC3339_EXTENDED) : null,
+            'end'   => $this->end ? $this->end->format(DT::RFC3339_EXTENDED) : null,
         ];
     }
 
-    public static function fromSerialization($any)
+    public static function fromSerialization($any): TimeSlot
     {
         return new TimeSlot(
             isset($any->start) ? DTI::createFromFormat(DT::RFC3339_EXTENDED, $any->start) : null,
-            isset($any->start) ? DTI::createFromFormat(DT::RFC3339_EXTENDED, $any->start) : null,
+            isset($any->end) ? DTI::createFromFormat(DT::RFC3339_EXTENDED, $any->end) : null,
         );
     }
 }
