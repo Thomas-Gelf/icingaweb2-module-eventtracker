@@ -350,18 +350,11 @@ CREATE TABLE downtime_rule (
   ts_triggered BIGINT(20) UNSIGNED DEFAULT NULL,
   duration INT(10) UNSIGNED NULL DEFAULT NULL,
   max_single_problem_duration INT(10) UNSIGNED NULL DEFAULT NULL,
-  on_recovery_issue_status ENUM('open', 'close') NOT NULL,
+  on_iteration_end_issue_status ENUM('open', 'closed') NOT NULL,
   PRIMARY KEY (uuid),
   UNIQUE INDEX idx_sort(label),
   UNIQUE INDEX config(config_uuid)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE utf8mb4_bin;
-
-ALTER TABLE downtime_rule
-  ADD CONSTRAINT downtime_rule_next_calculated
-    FOREIGN KEY calculated (next_calculated_uuid)
-    REFERENCES downtime_calculated (uuid)
-    ON DELETE SET NULL
-       ON UPDATE RESTRICT;
 
 CREATE TABLE issue_downtime_history (
   ts_modification BIGINT UNSIGNED NOT NULL,
@@ -427,4 +420,4 @@ CREATE TABLE eventtracker_schema_migration (
 
 INSERT INTO eventtracker_schema_migration
   (schema_version, migration_time)
-VALUES (23, NOW());
+VALUES (24, NOW());
