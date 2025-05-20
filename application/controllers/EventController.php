@@ -55,14 +55,12 @@ class EventController extends Controller
             $this->sendJsonError('JSON body is required', 400);
         }
 
-        $loop = $this->loop();
-        $client = new RemoteClient(Configuration::getSocketPath(), $loop);
+        $client = new RemoteClient(Configuration::getSocketPath());
         $accepted = block_await(
             $client->request('event.sendToInput', [
                 $input->getUuid(),
                 JsonString::decode($body)
-            ]),
-            $loop
+            ])
         );
         $response = [
             'success' => $accepted ? 'Event accepted' : 'Request valid, found no related Channel'

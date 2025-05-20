@@ -304,7 +304,7 @@ class IssueController extends Controller
             ]);
         }
         $result = [];
-        foreach (awaitAll($requests, $this->loop()) as $uuid => $success) {
+        foreach (awaitAll($requests) as $uuid => $success) {
             if ($success) {
                 $result[] = $uuid;
             }

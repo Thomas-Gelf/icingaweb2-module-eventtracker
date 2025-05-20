@@ -35,7 +35,7 @@ class DaemonController extends Controller
 
     protected function prepareLogSettings()
     {
-        $logLevelForm = new LogLevelForm($this->remoteClient(), $this->loop());
+        $logLevelForm = new LogLevelForm($this->remoteClient());
         $logLevelForm->on($logLevelForm::ON_SUCCESS, function () {
             $this->redirectNow($this->url());
         });
@@ -64,7 +64,7 @@ class DaemonController extends Controller
                     WebUtil::timeAgo($daemon->ts_last_update / 1000)
                 ));
             } else {
-                $restartForm = new RestartDaemonForm($this->remoteClient(), $this->loop());
+                $restartForm = new RestartDaemonForm($this->remoteClient());
                 $restartForm->on($restartForm::ON_SUCCESS, function () {
                     Notification::success('Daemon has been asked to restart');
                     $this->redirectNow($this->url());
