@@ -14,6 +14,7 @@ use Icinga\Module\Eventtracker\Engine\Counters;
 use Icinga\Module\Eventtracker\Engine\Downtime\DowntimeRunner;
 use Icinga\Module\Eventtracker\Event;
 use Icinga\Module\Eventtracker\Issue;
+use Icinga\Module\Eventtracker\Time;
 use Psr\Log\LoggerInterface;
 use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\UuidInterface;
@@ -154,8 +155,10 @@ class RpcNamespaceEvent implements EventEmitterInterface
             if ($issue->get('severity') === null) {
                 $issue->set('severity', 'notice');
             }
-            if ($this->downtimeRunner->issueShouldBeInDowntime($issue)) {
+            if ($rule = $this->downtimeRunner->getDowntimeRuleForIssueIfAny($issue)) {
                 $issue->set('status', 'in_downtime');
+                $issue->set('downtime_config_uuid', $rule->get('config_uuid'));
+                $issue->set('ts_downtime_triggered', Time::unixMilli());
             }
             $issue->storeToDb($this->db);
         } elseif ($issue) {
