@@ -6,23 +6,17 @@ use gipfl\Translation\TranslationHelper;
 use gipfl\Web\Form\Feature\NextConfirmCancel;
 use gipfl\Web\InlineForm;
 use Icinga\Module\Eventtracker\Daemon\RemoteClient;
-use React\EventLoop\LoopInterface;
 use function Clue\React\Block\await;
 
 class RestartDaemonForm extends InlineForm
 {
     use TranslationHelper;
 
-    /** @var RemoteClient */
-    protected $client;
+    protected RemoteClient $client;
 
-    /** @var LoopInterface */
-    protected $loop;
-
-    public function __construct(RemoteClient $client, LoopInterface $loop)
+    public function __construct(RemoteClient $client)
     {
         $this->client = $client;
-        $this->loop = $loop;
     }
 
     protected function assemble()
@@ -38,6 +32,6 @@ class RestartDaemonForm extends InlineForm
 
     protected function onSuccess()
     {
-        await($this->client->request('process.restart'), $this->loop);
+        await($this->client->request('process.restart'));
     }
 }
