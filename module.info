@@ -1,6 +1,9 @@
 Name: Event Tracker
 Version: 0.9.0
-Depends: reactbundle (>=0.6.0), ipl (>=0.5.0), incubator (>=0.19.0)
+Depends: incubator (>=0.19.0)
+Requires:
+  Libraries: icinga-php-library (>=0.13.1), icinga-php-thirdparty (>=0.12.0)
+
 Description: Event Tracker - Operator Dashboard, tracks Incidents
 
   This module allows Operators to track Incidents from various sources in a single
