@@ -74,7 +74,7 @@ class SyslogInput extends SimpleTaskConstructor implements Input
             return;
         }
 
-        $this->server = $this->createUnixSocket($this->socket, $this->loop);
+        $this->server = $this->createUnixSocket($this->socket);
         $this->initiateEventHandlers($this->server);
     }
 
