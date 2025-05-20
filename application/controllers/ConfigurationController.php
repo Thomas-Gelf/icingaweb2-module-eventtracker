@@ -21,6 +21,7 @@ use Icinga\Module\Eventtracker\Web\Form\DowntimeForm;
 use Icinga\Module\Eventtracker\Web\Form\UuidObjectForm;
 use Icinga\Module\Eventtracker\Web\Table\BaseTable;
 use Icinga\Module\Eventtracker\Web\Table\ChannelRulesTable;
+use Icinga\Module\Eventtracker\Web\Table\DowntimeRulesTable;
 use Icinga\Module\Eventtracker\Web\Table\DowntimeScheduleTable;
 use Icinga\Module\Eventtracker\Web\Table\HostListMemberTable;
 use Icinga\Module\Eventtracker\Web\WebAction;
@@ -301,7 +302,7 @@ class ConfigurationController extends Controller
         /** @var DowntimeForm $form */
         $form = $this->getForm($action, function () {
             try {
-                $this->syncRpcCall('config.reloadDowntimeRules');
+                $this->syncRpcCall('eventtracker.reloadDowntimeRules');
             } catch (Exception $e) {
                 Notification::warning(sprintf(
                     $this->translate('Failed to notify Eventtracker daemon: %s'),
@@ -311,7 +312,7 @@ class ConfigurationController extends Controller
         });
         $this->content()->add($form);
         if ($form->hasObject()) {
-            $table = new DowntimeScheduleTable($this->db(), $form->getObject());
+            $table = new DowntimeScheduleTable($form->getObject());
             if (count($table) === 0) {
                 $this->content()->add(
                     Hint::info($this->translate('Currently, no iteration has been scheduled for this downtime'))
@@ -604,6 +605,10 @@ class ConfigurationController extends Controller
         $this->actions()->add([$this->linkBack(), $this->linkAdd($action)]);
 
         $table = $this->prepareTableForList($action);
+        if ($table instanceof DowntimeRulesTable) {
+            $slots = $this->syncRpcCall('eventtracker.getActiveTimeSlots');
+            $table->setActiveTimeSlots((array) $slots);
+        }
         if ($table->count() > 0) {
             $this->addCompactDashboard($table);
         } else {
