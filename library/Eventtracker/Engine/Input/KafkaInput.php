@@ -14,7 +14,7 @@ use Icinga\Module\Eventtracker\Modifier\Settings;
 use Icinga\Module\Eventtracker\Web\Form\Input\KafkaFormExtension;
 use Icinga\Module\Eventtracker\Stream\BufferedReader;
 use React\ChildProcess\Process;
-use React\EventLoop\LoopInterface;
+use React\EventLoop\Loop;
 use RuntimeException;
 
 class KafkaInput extends SimpleTaskConstructor implements Input
@@ -22,25 +22,12 @@ class KafkaInput extends SimpleTaskConstructor implements Input
     use EventEmitterTrait;
     use SettingsProperty;
 
-    /** @var Process */
-    protected $process;
-
-    /** @var LoopInterface */
-    protected $loop;
-
-    /** @var string */
-    protected $topic;
-
-    /** @var string */
-    protected $servers;
-
-    /** @var string */
-    protected $command;
-
-    /** @var string Consumer Group ID */
-    protected $groupId;
-
-    protected $stopping = false;
+    protected ?Process $process = null;
+    protected ?string $topic = null;
+    protected ?string $servers = null;
+    protected ?string $command = null;
+    protected ?string $groupId; // Consumer Group ID
+    protected bool $stopping = false;
 
     public function applySettings(Settings $settings)
     {
@@ -69,14 +56,8 @@ class KafkaInput extends SimpleTaskConstructor implements Input
         );
     }
 
-    public function setCommand($command)
+    public function run()
     {
-        $this->command = $command;
-    }
-
-    public function run(LoopInterface $loop)
-    {
-        $this->loop = $loop;
         $this->start();
     }
 
@@ -86,8 +67,8 @@ class KafkaInput extends SimpleTaskConstructor implements Input
             return;
         }
 
-        $this->process = $this->runCommand($this->prepareCommandString(), $this->loop);
-        $this->initiateEventHandlers($this->process, $this->loop);
+        $this->process = $this->runCommand($this->prepareCommandString());
+        $this->initiateEventHandlers($this->process);
     }
 
     public function stop()
@@ -117,7 +98,7 @@ class KafkaInput extends SimpleTaskConstructor implements Input
         }
     }
 
-    protected function initiateEventHandlers(Process $process, LoopInterface $loop)
+    protected function initiateEventHandlers(Process $process)
     {
         $process->on('exit', function ($code, $term) {
             $this->process = null;
@@ -136,9 +117,7 @@ class KafkaInput extends SimpleTaskConstructor implements Input
                 }
                 $reconnectTimeout = 30;
                 $this->logger->info("Scheduling reconnection in {$reconnectTimeout}s");
-                $this->loop->addTimer($reconnectTimeout, function () {
-                    $this->start();
-                });
+                Loop::addTimer($reconnectTimeout, fn () => $this->start());
             }
         });
         $process->stderr->on('data', function ($line) {
@@ -148,7 +127,7 @@ class KafkaInput extends SimpleTaskConstructor implements Input
                 $this->logger->error("STDERR: $line");
             }
         });
-        $reader = new BufferedReader($loop);
+        $reader = new BufferedReader();
         $reader->on('line', function ($line) {
             if (substr($line, 0, 2) === '% ') {
                 $this->processSpecialLine(substr($line, 2));
@@ -185,16 +164,11 @@ class KafkaInput extends SimpleTaskConstructor implements Input
         }
     }
 
-    /**
-     * @param string $command
-     * @param LoopInterface $loop
-     * @return Process
-     */
-    protected function runCommand($command, LoopInterface $loop)
+    protected function runCommand(string $command): Process
     {
         $this->logger->info("Launching $command");
         $process = new Process("exec $command");
-        $process->start($loop);
+        $process->start();
 
         return $process;
     }

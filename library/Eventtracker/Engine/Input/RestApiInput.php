@@ -18,11 +18,7 @@ class RestApiInput extends SimpleTaskConstructor implements Input
     use EventEmitterTrait;
     use SettingsProperty;
 
-    /** @var LoopInterface */
-    protected $loop;
-
-    /** @var string */
-    protected $token;
+    protected ?string $token = null;
 
     public function applySettings(Settings $settings)
     {
@@ -53,9 +49,8 @@ class RestApiInput extends SimpleTaskConstructor implements Input
         $this->emit(InputRunner::ON_EVENT, [$object]);
     }
 
-    public function run(LoopInterface $loop)
+    public function run()
     {
-        $this->loop = $loop;
         $this->start();
     }
 

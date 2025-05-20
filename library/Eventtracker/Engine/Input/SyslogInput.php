@@ -15,7 +15,6 @@ use Icinga\Module\Eventtracker\Web\Form\Input\SyslogFormExtension;
 use Icinga\Module\Eventtracker\Stream\BufferedReader;
 use Icinga\Module\Eventtracker\Syslog\SyslogParser;
 use InvalidArgumentException;
-use React\EventLoop\LoopInterface;
 use React\Socket\ConnectionInterface;
 use React\Socket\UnixServer;
 
@@ -24,14 +23,8 @@ class SyslogInput extends SimpleTaskConstructor implements Input
     use EventEmitterTrait;
     use SettingsProperty;
 
-    /** @var string */
-    protected $socket;
-
-    /** @var UnixServer */
-    protected $server;
-
-    /** @var LoopInterface */
-    protected $loop;
+    protected ?string $socket = null;
+    protected ?UnixServer $server = null;
 
     public function applySettings(Settings $settings)
     {
@@ -70,9 +63,8 @@ class SyslogInput extends SimpleTaskConstructor implements Input
         );
     }
 
-    public function run(LoopInterface $loop)
+    public function run()
     {
-        $this->loop = $loop;
         $this->start();
     }
 
@@ -117,7 +109,7 @@ class SyslogInput extends SimpleTaskConstructor implements Input
     {
         $server->on('connection', function (ConnectionInterface $connection) {
             $this->logger->notice('Got a new connection on ' . $this->socket);
-            $buffer = new BufferedReader($this->loop);
+            $buffer = new BufferedReader();
             $buffer->on('line', function ($line) {
                 // echo "< $line";
                 if ($line === '') {
@@ -153,7 +145,7 @@ class SyslogInput extends SimpleTaskConstructor implements Input
         });
     }
 
-    protected function createUnixSocket($uri, $loop)
+    protected function createUnixSocket($uri): UnixServer
     {
         if (file_exists($uri)) {
             $this->logger->warning("Removing orphaned socket '$uri'");
@@ -161,7 +153,7 @@ class SyslogInput extends SimpleTaskConstructor implements Input
         }
 
         $old = umask(0000);
-        $socket = new UnixServer($uri, $loop);
+        $socket = new UnixServer($uri);
         $this->logger->notice("Listening on '$uri'");
         umask($old);
 
