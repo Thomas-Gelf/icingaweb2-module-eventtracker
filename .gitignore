@@ -1,6 +1,4 @@
-## Editors
 /.idea/
 .*.sw[op]
-
-## PHP vendor artifacts
+composer.lock
 /vendor/
