@@ -3,7 +3,6 @@
 namespace Icinga\Module\Eventtracker;
 
 use gipfl\Json\JsonSerialization;
-use gipfl\ZfDbStore\Storable;
 use Icinga\Module\Eventtracker\Engine\Downtime\UuidObjectHelper;
 use InvalidArgumentException;
 use gipfl\Json\JsonString;
@@ -16,7 +15,7 @@ class Event implements JsonSerialization
 {
     use UuidObjectHelper {
         set as setProperty;
-        Storable::create as reallyCreate;
+        create as reallyCreate;
     }
 
     /** @var string */
