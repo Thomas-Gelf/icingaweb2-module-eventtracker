@@ -12,8 +12,8 @@ use Icinga\Module\Eventtracker\Issue;
 use Icinga\Module\Eventtracker\Modifier\Settings;
 use Icinga\Module\Eventtracker\Soap\SoapClient;
 use Icinga\Module\Eventtracker\Web\Form\Action\SoapFormExtension;
-use React\EventLoop\LoopInterface;
 use React\Promise\PromiseInterface;
+
 use function React\Promise\reject;
 
 class SoapAction extends SimpleTaskConstructor implements Action
@@ -23,8 +23,6 @@ class SoapAction extends SimpleTaskConstructor implements Action
     use EventEmitterTrait;
     use SettingsProperty;
 
-    /** @var LoopInterface */
-    protected $loop;
     protected $paused = true;
 
     /** @var string */

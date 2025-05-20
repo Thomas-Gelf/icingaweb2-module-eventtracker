@@ -8,6 +8,7 @@ use Icinga\Module\Eventtracker\Engine\Action;
 use Icinga\Module\Eventtracker\Engine\EnrichmentHelper;
 use Icinga\Module\Eventtracker\Issue;
 use Psr\Log\LoggerInterface;
+use React\EventLoop\Loop;
 use React\Promise\ExtendedPromiseInterface;
 use Throwable;
 use function React\Promise\all;

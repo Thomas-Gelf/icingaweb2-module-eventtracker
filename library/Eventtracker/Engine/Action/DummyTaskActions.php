@@ -6,9 +6,8 @@ use React\EventLoop\LoopInterface;
 
 trait DummyTaskActions
 {
-    public function run(LoopInterface $loop)
+    public function run()
     {
-        $this->loop = $loop;
         $this->start();
     }
 

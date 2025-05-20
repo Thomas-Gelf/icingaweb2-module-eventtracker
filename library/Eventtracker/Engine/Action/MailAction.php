@@ -12,11 +12,11 @@ use Icinga\Module\Eventtracker\Engine\SimpleTaskConstructor;
 use Icinga\Module\Eventtracker\Issue;
 use Icinga\Module\Eventtracker\Modifier\Settings;
 use Icinga\Module\Eventtracker\Web\Form\Action\MailFormExtension;
-use React\EventLoop\LoopInterface;
 use React\Promise\PromiseInterface;
 use Throwable;
 use Zend_Mail;
 use Zend_Mail_Transport_Smtp as SmtpTransport;
+
 use function React\Promise\reject;
 use function React\Promise\resolve;
 
@@ -27,25 +27,12 @@ class MailAction extends SimpleTaskConstructor implements Action
     use EventEmitterTrait;
     use SettingsProperty;
 
-    /** @var LoopInterface */
-    protected $loop;
-
-    /** @var string */
-    protected $from;
-
-    /** @var string */
-    protected $to;
-
-    /** @var string */
-    protected $subject;
-
-    /** @var string */
-    protected $body;
-
-    /** @var bool */
-    protected $stripTags = false;
-
-    protected $paused = true;
+    protected ?string $from = null;
+    protected ?string $to = null;
+    protected ?string $subject = null;
+    protected ?string $body = null;
+    protected bool $stripTags = false;
+    protected bool $paused = true;
 
     public function applySettings(Settings $settings)
     {

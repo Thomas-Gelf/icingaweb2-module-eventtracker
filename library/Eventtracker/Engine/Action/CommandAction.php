@@ -16,7 +16,7 @@ use Icinga\Module\Eventtracker\Issue;
 use Icinga\Module\Eventtracker\Modifier\Settings;
 use Icinga\Module\Eventtracker\Web\Form\Action\CommandFormExtension;
 use React\ChildProcess\Process;
-use React\EventLoop\LoopInterface;
+use React\EventLoop\Loop;
 use React\Promise\CancellablePromiseInterface;
 use React\Promise\Deferred;
 use React\Promise\PromiseInterface;
@@ -29,16 +29,9 @@ class CommandAction extends SimpleTaskConstructor implements Action
     use EventEmitterTrait;
     use SettingsProperty;
 
-    /** @var LoopInterface */
-    protected $loop;
-
-    /** @var string */
-    protected $command;
-
-    /** @var SplObjectStorage */
-    protected $promises;
-
-    protected $paused = true;
+    protected ?string $command =  null;
+    protected ?SplObjectStorage $promises = null;
+    protected bool $paused = true;
 
     protected function initialize()
     {
@@ -69,9 +62,8 @@ class CommandAction extends SimpleTaskConstructor implements Action
         );
     }
 
-    public function run(LoopInterface $loop)
+    public function run()
     {
-        $this->loop = $loop;
         $this->start();
     }
 
@@ -83,10 +75,12 @@ class CommandAction extends SimpleTaskConstructor implements Action
     public function stop()
     {
         $this->pause();
-
-        /** @var CancellablePromiseInterface $promise */
-        foreach ($this->promises as $promise) {
-            $promise->cancel();
+        if ($this->promises !== null) {
+            /** @var CancellablePromiseInterface $promise */
+            foreach ($this->promises as $promise) {
+                $promise->cancel();
+            }
+            $this->promises = null;
         }
     }
 
@@ -110,13 +104,13 @@ class CommandAction extends SimpleTaskConstructor implements Action
         if ($this->paused) {
             $this->logger->info('Not executing command, action has been paused');
 
-            return resolve();
+            return resolve(null);
         }
 
         $process = new Process(ConfigHelper::fillPlaceholders($this->command, $issue, '\escapeshellarg'));
 
         $deferred = new Deferred(function () use ($process) {
-            ProcessKiller::terminateProcess($process, $this->loop);
+            ProcessKiller::terminateProcess($process, Loop::get());
         });
         $promise = $deferred->promise();
         $this->promises->attach($promise);
@@ -124,7 +118,7 @@ class CommandAction extends SimpleTaskConstructor implements Action
             $this->promises->detach($promise);
         });
 
-        $process->start($this->loop);
+        $process->start();
         $process->stdout->on('data', function ($chunk, $issue) {
             $this->logger->debug("{$issue->getUuid()}: {$this->command}: ($chunk)");
         });
