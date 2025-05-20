@@ -24,6 +24,7 @@ class Issue implements JsonSerialization
     const TABLE_NAME = 'issue';
 
     protected static $tableName = self::TABLE_NAME;
+    protected $keyProperty = 'issue_uuid';
 
     /** @var FrozenMemoryFile[] */
     protected $files = [];
@@ -304,11 +305,6 @@ class Issue implements JsonSerialization
     public function getStoredRepeatCount(): int
     {
         return (int) $this->get('cnt_events');
-    }
-
-    public function getUuid(): ?string
-    {
-        return $this->get('issue_uuid');
     }
 
     /**

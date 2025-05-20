@@ -4,12 +4,29 @@ namespace Icinga\Module\Eventtracker\Engine\Downtime;
 
 use gipfl\ZfDbStore\DbStorable;
 use Icinga\Module\Eventtracker\Data\SerializationHelper;
+use Ramsey\Uuid\Uuid;
+use Ramsey\Uuid\UuidInterface;
 
 trait UuidObjectHelper
 {
     use DbStorable {
         DbStorable::set as reallySet;
         DbStorable::setStoredProperty as reallySetStoredProperty;
+    }
+
+    public function getUuidObject(): ?UuidInterface
+    {
+        $uuid = $this->getUuid();
+        if ($uuid === null) {
+            return null;
+        }
+
+        return Uuid::fromBytes($uuid);
+    }
+
+    public function getUuid(): ?string
+    {
+        return $this->get($this->keyProperty ?? 'uuid');
     }
 
     public function hasModifiedProperty($key): bool
