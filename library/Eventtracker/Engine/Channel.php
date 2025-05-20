@@ -15,13 +15,13 @@ use Icinga\Module\Eventtracker\EventReceiver;
 use Icinga\Module\Eventtracker\Issue;
 use Icinga\Module\Eventtracker\Modifier\ModifierChain;
 use Icinga\Module\Eventtracker\Modifier\Settings;
+use Icinga\Module\Eventtracker\Time;
 use Psr\Log\LoggerAwareInterface;
 use Psr\Log\LoggerAwareTrait;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\UuidInterface;
-use React\EventLoop\LoopInterface;
 use stdClass;
 
 class Channel implements LoggerAwareInterface
@@ -43,51 +43,27 @@ class Channel implements LoggerAwareInterface
 
     public const ON_ISSUE = 'issue';
 
-    /** @var UuidInterface */
-    protected $uuid;
-
-    /** @var string */
-    protected $name;
-
-    /** @var ModifierChain */
-    protected $rules;
-
+    protected UuidInterface $uuid;
+    protected string $name;
+    protected ModifierChain $rules;
     /** @var UuidInterface[] */
-    protected $uuidFilter = [];
-
-    /** @var string */
-    protected $implementationFilter;
-
-    /** @var NullLogger */
-    protected $logger;
-
-    /** @var bool */
-    protected $daemonized = false;
-
-    /** @var ?LoopInterface */
-    protected $loop = null;
-
+    protected array $uuidFilter = [];
+    protected ?string $implementationFilter = null;
+    protected bool $daemonized = false;
     /** @var array<string, BucketInterface> indexed by name */
-    protected $buckets = [];
-
-    /** @var ?BucketInterface */
-    protected $bucket = null;
-
-    /** @var ?string */
-    protected $bucketName = null;
-
-    /** @var ?DowntimeRunner */
-    protected $downtimeRunner = null;
+    protected array $buckets = [];
+    protected ?BucketInterface $bucket = null;
+    protected ?string $bucketName = null;
+    protected ?DowntimeRunner $downtimeRunner = null;
 
     public function __construct(
         Settings $settings,
         UuidInterface $uuid,
-        $name,
+        string $name,
         ?UuidInterface $bucketUuid,
         ?string $bucketName,
         array $buckets = [],
-        ?LoggerInterface $logger = null,
-        ?LoopInterface $loop = null
+        ?LoggerInterface $logger = null
     ) {
         $this->uuid = $uuid;
         $this->name = $name;
@@ -96,7 +72,6 @@ class Channel implements LoggerAwareInterface
         } else {
             $this->logger = $logger;
         }
-        $this->loop = $loop;
         $this->buckets = [];
         foreach ($buckets as $bucket) {
             $this->buckets[$bucket->getName()] = $bucket;
@@ -189,10 +164,10 @@ class Channel implements LoggerAwareInterface
         // $object->sender_event_id = Uuid::uuid4()->toString();
 
         $event = Event::create();
-        if ($this->loop !== null) {
+        // if ($this->isDaemonized()) {
             // Temporarily disabled. Also: this is after modifiers, too late
             // $this->storeRawEvent($inputUuid, $db, $object, $event->get('uuid'));
-        }
+        // }
         if (isset($object->input_uuid)) {
             $object->input_uuid = Uuid::fromString($object->input_uuid)->getBytes(); // Why?
         }
@@ -217,11 +192,12 @@ class Channel implements LoggerAwareInterface
         } catch (\Throwable $e) {
             $this->logger->error($e->getMessage());
         }
-        if ($this->loop === null) {
+
+        if ($this->isDaemonized()) {
+            $issue = $this->storeProcessedEvent($db, $event);
+        } else {
             // We are not in the main daemon
             $issue = $receiver->processEvent($event);
-        } else {
-            $issue = $this->storeProcessedEvent($db, $event);
         }
         if ($issue) {
             $this->logger->info("Issue " . $issue->getNiceUuid());
@@ -294,8 +270,15 @@ class Channel implements LoggerAwareInterface
             if ($this->downtimeRunner === null) {
                 $this->logger->notice('DowntimeRunner is missing in channel');
             } else {
-                if ($this->downtimeRunner->issueShouldBeInDowntime($issue)) {
-                    $issue->set('status', 'in_downtime');
+                if ($rule = $this->downtimeRunner->getDowntimeRuleForIssueIfAny($issue)) {
+                    $this->logger->debug('Setting Downtime for new issue');
+                    try {
+                        $issue->set('status', 'in_downtime');
+                        $issue->set('downtime_config_uuid', $rule->get('config_uuid')); // TODO: db col name
+                        $issue->set('ts_downtime_triggered', Time::unixMilli());
+                    } catch (\Throwable $e) {
+                        $this->logger->error('Failed to put into downtime: ' . $e->getMessage());
+                    }
                 }
             }
             $issue->storeToDb($db);
