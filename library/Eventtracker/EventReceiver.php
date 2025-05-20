@@ -3,7 +3,8 @@
 namespace Icinga\Module\Eventtracker;
 
 use Icinga\Module\Eventtracker\Daemon\RemoteClient;
-use React\EventLoop\Factory;
+use React\EventLoop\Loop;
+
 use function Clue\React\Block\await as block_await;
 
 /**
@@ -11,11 +12,7 @@ use function Clue\React\Block\await as block_await;
  */
 class EventReceiver
 {
-    /** @var ?RemoteClient */
-    protected $remoteClient;
-
-    /** @var \React\EventLoop\LoopInterface */
-    protected $loop;
+    protected ?RemoteClient $remoteClient = null;
 
     /**
      * Hint: this is a compatibility layer for other modules. DB is no longer required,
@@ -27,8 +24,8 @@ class EventReceiver
 
     public function processEvent(Event $event): ?Issue
     {
-        $issue = block_await($this->remoteClient()->request('event.receive', [$event]), $this->loop());
-        $this->loop()->stop();
+        $issue = block_await($this->remoteClient()->request('event.receive', [$event]), Loop::get());
+        Loop::stop();
         if ($issue) {
             return Issue::fromSerialization($issue);
         }
@@ -36,19 +33,10 @@ class EventReceiver
         return null;
     }
 
-    protected function loop()
-    {
-        if ($this->loop === null) {
-            $this->loop = Factory::create();
-        }
-
-        return $this->loop;
-    }
-
     protected function remoteClient(): RemoteClient
     {
         if ($this->remoteClient === null) {
-            $this->remoteClient =  new RemoteClient(Configuration::getSocketPath(), $this->loop());
+            $this->remoteClient =  new RemoteClient(Configuration::getSocketPath());
         }
 
         return $this->remoteClient;
