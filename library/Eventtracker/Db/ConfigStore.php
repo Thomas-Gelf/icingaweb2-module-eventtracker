@@ -21,7 +21,6 @@ use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\UuidInterface;
-use React\EventLoop\LoopInterface;
 use RuntimeException;
 
 class ConfigStore
