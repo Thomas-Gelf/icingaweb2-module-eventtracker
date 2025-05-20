@@ -100,7 +100,10 @@ class IssueHeader extends BaseHtmlElement
                 )));
             } else {
                 try {
-                    $downtime = DowntimeRule::loadWithConfigUuid($this->db, Uuid::fromBytes($issue->get('downtime_config_uuid')));
+                    $downtime = DowntimeRule::loadWithConfigUuid(
+                        $this->db,
+                        Uuid::fromBytes($issue->get('downtime_config_uuid'))
+                    );
                     $this->add(Hint::info([$this->translate(
                         'Alert silenced by Downtime: '
                     ), Html::tag('strong', $downtime->get('label'))]));

@@ -231,7 +231,7 @@ class BackgroundDaemon implements EventEmitterInterface
         }, function (Exception $e) {
             $this->logger->error('Problem on shutdown: ' . $e->getMessage());
             Loop::addTimer(0.1, fn () => Loop::stop());
-       });
+        });
     }
 
     protected function prepareShutdown()

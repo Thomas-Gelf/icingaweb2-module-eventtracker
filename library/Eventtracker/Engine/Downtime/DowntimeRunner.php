@@ -157,8 +157,7 @@ class DowntimeRunner implements DbBasedComponent
 
     protected function getFilterForDefinition(?string $definition): ?Filter
     {
-        if (
-            $definition === null    // no filter defined
+        if ($definition === null    // no filter defined
             || $definition === ''   // just to be safe, not allowed by form
             || $definition === '[]' // no longer required, compat for legacy DB entries
         ) {
