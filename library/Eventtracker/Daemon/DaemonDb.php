@@ -14,13 +14,12 @@ use Icinga\Module\Eventtracker\Db\ZfDbConnectionFactory;
 use Icinga\Module\Eventtracker\Modifier\Settings;
 use Psr\Log\LoggerInterface;
 use React\EventLoop\Loop;
-use React\EventLoop\LoopInterface;
 use React\EventLoop\TimerInterface;
 use React\Promise\Deferred;
 use React\Promise\ExtendedPromiseInterface;
-use React\Promise\PromiseInterface;
 use RuntimeException;
 use SplObjectStorage;
+
 use function React\Promise\reject;
 use function React\Promise\resolve;
 
@@ -115,7 +114,7 @@ class DaemonDb
         }
     }
 
-    protected function establishConnection($config): PromiseInterface
+    protected function establishConnection($config): ExtendedPromiseInterface
     {
         if ($this->db !== null) {
             $this->logger->error('Trying to establish a connection while being connected');
@@ -123,8 +122,6 @@ class DaemonDb
         }
         $callback = function () use ($config) {
             $this->reallyEstablishConnection($config);
-        };
-        $onSuccess = function () {
             $this->pendingReconnection = null;
             $this->onConnected();
         };
@@ -134,15 +131,14 @@ class DaemonDb
         }
         $this->emitStatus(self::ON_CONNECTING);
 
-        return $this->pendingReconnection = RetryUnless::succeeding($callback)
+        $this->pendingReconnection = RetryUnless::succeeding($callback)
             ->setInterval(0.2)
-            ->slowDownAfter(10, 10)
-            ->run($this->loop)
-            ->then($onSuccess)
-            ;
+            ->slowDownAfter(10, 10);
+
+        return $this->pendingReconnection->run(Loop::get());
     }
 
-    protected function getMigrations(Mysql $db)
+    protected function getMigrations(Mysql $db): Migrations
     {
         return new Migrations($db, Icinga::app()->getModuleManager()->getModuleDir(
             'eventtracker',
@@ -169,9 +165,7 @@ class DaemonDb
         $this->details->set('schema_version', $this->startupSchemaVersion);
 
         $this->db = $db;
-        Loop::futureTick(function () {
-            $this->refreshMyState();
-        });
+        Loop::futureTick(fn ()  => $this->refreshMyState());
 
         return $db;
     }
