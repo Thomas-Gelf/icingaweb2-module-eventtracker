@@ -29,6 +29,10 @@ class ActionHelper
         /** @var Action $action */
         foreach ($actions as $action) {
             $filter = $action->getFilter();
+            if (self::isSkippedByProblemHandling($issue, $db)) {
+                $logger->debug('Action skipped because of problem handling: ' . $action->getName() . $loggingSuffix);
+                continue;
+            }
             $object = EnrichmentHelper::enrichIssueForFilter($issue, $db);
             if ($filter !== null && ! $filter->matches($object)) {
                 $logger->debug('Action filter ignores ' . $action->getName() . $loggingSuffix);
@@ -44,5 +48,46 @@ class ActionHelper
         }
 
         return all($promises);
+    }
+
+    protected static function isSkippedByProblemHandling(Issue $issue, Adapter $db): bool
+    {
+        $problemIdentifier = $issue->get('problem_identifier');
+        if ($problemIdentifier === null) {
+            return false;
+        }
+
+
+        return isset(self::getProblemHandling($db)[$problemIdentifier]);
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    protected static function getProblemHandling(Adapter $db): array
+    {
+        if (self::$problemHandling === null) {
+            self::loadProblemHandling($db);
+            Loop::addTimer(300, function () {
+                self::forgetProblemHandling();
+            });
+        }
+
+        return self::$problemHandling;
+    }
+
+    protected static function forgetProblemHandling()
+    {
+        self::$problemHandling = null;
+    }
+
+    protected static function loadProblemHandling(Adapter $db): void
+    {
+        self::$problemHandling = $db->fetchPairs(
+            $db->select()
+                ->from('problem_handling', ['label', 'instruction_url'])
+                ->where('trigger_actions = ?', 'n')
+                ->where('enabled = ?', 'y')
+        );
     }
 }
