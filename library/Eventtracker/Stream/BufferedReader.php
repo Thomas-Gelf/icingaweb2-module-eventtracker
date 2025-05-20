@@ -3,7 +3,7 @@
 namespace Icinga\Module\Eventtracker\Stream;
 
 use Evenement\EventEmitterTrait;
-use React\EventLoop\LoopInterface;
+use React\EventLoop\Loop;
 use React\Stream\WritableStreamInterface;
 
 class BufferedReader implements WritableStreamInterface
@@ -12,17 +12,8 @@ class BufferedReader implements WritableStreamInterface
 
     const NEWLINE = PHP_EOL;
 
-    /** @var LoopInterface */
-    protected $loop;
-
-    protected $buffer = '';
-
-    protected $writable = true;
-
-    public function __construct(LoopInterface $loop)
-    {
-        $this->loop = $loop;
-    }
+    protected string $buffer = '';
+    protected bool $writable = true;
 
     public function processBuffer()
     {
@@ -40,11 +31,11 @@ class BufferedReader implements WritableStreamInterface
     {
         $this->buffer .= $string;
         if (strpos($string, self::NEWLINE) !== false) {
-            $this->loop->futureTick([$this, 'processBuffer']);
+            Loop::futureTick([$this, 'processBuffer']);
         }
     }
 
-    public function isWritable()
+    public function isWritable(): bool
     {
         return $this->writable;
     }
