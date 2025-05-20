@@ -159,10 +159,4 @@ class SyslogInput extends SimpleTaskConstructor implements Input
 
         return $socket;
     }
-
-    protected function log($message)
-    {
-        // TODO.
-        echo "$message\n";
-    }
 }
