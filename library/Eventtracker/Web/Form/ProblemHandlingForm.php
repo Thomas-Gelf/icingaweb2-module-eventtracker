@@ -22,15 +22,11 @@ class ProblemHandlingForm extends UuidObjectForm
         ]);
         /*
         // Disabled for now
-        $this->addElement('select', 'trigger_actions', [
+        $this->addElement('boolean', 'trigger_actions', [
             'label'       => $this->translate('Trigger Actions'),
             'description' => $this->translate(
                 'Whether configured actions should be triggered for this problem'
             ),
-            'options'     => [
-                'y' => $this->translate('yes'),
-                'n' => $this->translate('no')
-            ],
             'required'    => true,
             'value'       => 'y'
         ]);
