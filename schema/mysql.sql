@@ -213,6 +213,7 @@ CREATE TABLE issue (
   cnt_events INT(10) NOT NULL,
   owner VARCHAR(64) COLLATE utf8mb4_general_ci NULL DEFAULT NULL,
   ticket_ref VARCHAR(64) COLLATE utf8mb4_general_ci NULL DEFAULT NULL,
+  downtime_rule_uuid VARBINARY(16) NULL DEFAULT NULL,
   downtime_config_uuid VARBINARY(16) NULL DEFAULT NULL,
   ts_downtime_triggered BIGINT(20) NULL DEFAULT NULL,
   ts_downtime_expired BIGINT(20) NULL DEFAULT NULL,
@@ -319,6 +320,7 @@ CREATE TABLE issue_history (
   cnt_events INT(10) NOT NULL,
   owner VARCHAR(64) COLLATE utf8mb4_general_ci NULL DEFAULT NULL,
   ticket_ref VARCHAR(64) COLLATE utf8mb4_general_ci NULL DEFAULT NULL,
+  downtime_rule_uuid VARBINARY(16) NULL DEFAULT NULL,
   downtime_config_uuid VARBINARY(16) NULL DEFAULT NULL,
   ts_downtime_triggered BIGINT(20) NULL DEFAULT NULL,
   ts_downtime_expired BIGINT(20) NULL DEFAULT NULL,
@@ -435,4 +437,4 @@ CREATE TABLE eventtracker_schema_migration (
 
 INSERT INTO eventtracker_schema_migration
   (schema_version, migration_time)
-VALUES (29, NOW());
+VALUES (31, NOW());
