@@ -47,7 +47,7 @@ class EnrichmentHelper
     public static function getPlainIssue(Issue $issue, $flat = false): object
     {
         $object = (object) $issue->getProperties();
-        foreach (['issue_uuid', 'input_uuid'] as $key) {
+        foreach (['issue_uuid', 'input_uuid', 'downtime_config_uuid', 'downtime_rule_uuid'] as $key) {
             if ($object->$key !== null) {
                 $object->$key = Uuid::fromBytes($object->$key)->toString();
             }
