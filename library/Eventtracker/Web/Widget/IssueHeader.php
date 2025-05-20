@@ -6,10 +6,13 @@ use gipfl\IcingaWeb2\Icon;
 use gipfl\IcingaWeb2\Link;
 use gipfl\IcingaWeb2\Url;
 use gipfl\Translation\TranslationHelper;
+use gipfl\Web\Widget\Hint;
 use gipfl\ZfDb\Adapter\Adapter as Db;
+use gipfl\ZfDbStore\NotFoundError;
 use Icinga\Application\Hook;
 use Icinga\Authentication\Auth;
 use Icinga\Date\DateFormatter;
+use Icinga\Module\Eventtracker\Engine\Downtime\DowntimeRule;
 use Icinga\Module\Eventtracker\Input;
 use Icinga\Module\Eventtracker\File;
 use Icinga\Module\Eventtracker\Hook\EventActionsHook;
@@ -88,6 +91,27 @@ class IssueHeader extends BaseHtmlElement
         if ($issue->get('status') !== 'open') {
             $classes[] = 'ack';
         }
+
+        if ($issue->get('status') === 'in_downtime') {
+            $configUuid = $issue->get('downtime_config_uuid');
+            if ($configUuid === null) {
+                $this->add(Hint::warning($this->translate(
+                    'Alert silenced by a Downtime, but the related Downtime configuration does not exist'
+                )));
+            } else {
+                try {
+                    $downtime = DowntimeRule::loadWithConfigUuid($this->db, Uuid::fromBytes($issue->get('downtime_config_uuid')));
+                    $this->add(Hint::info([$this->translate(
+                        'Alert silenced by Downtime: '
+                    ), Html::tag('strong', $downtime->get('label'))]));
+                } catch (NotFoundError $e) {
+                    $this->add(Hint::warning($this->translate(
+                        'Alert silenced by a Downtime, but the related Downtime configuration does not exist'
+                    )));
+                }
+            }
+        }
+
         $this->add([
             Html::tag('div', ['class' => $classes], [
                 Html::tag('h2', $issue->get('severity')),
