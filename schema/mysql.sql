@@ -203,6 +203,9 @@ CREATE TABLE issue (
   cnt_events INT(10) NOT NULL,
   owner VARCHAR(64) COLLATE utf8mb4_general_ci NULL DEFAULT NULL,
   ticket_ref VARCHAR(64) COLLATE utf8mb4_general_ci NULL DEFAULT NULL,
+  downtime_config_uuid VARBINARY(16) NULL DEFAULT NULL,
+  ts_downtime_triggered BIGINT(20) NULL DEFAULT NULL,
+  ts_downtime_expired BIGINT(20) NULL DEFAULT NULL,
   message TEXT COLLATE utf8mb4_general_ci NOT NULL,
   attributes TEXT COLLATE utf8mb4_general_ci NOT NULL,
   PRIMARY KEY (issue_uuid),
@@ -420,4 +423,4 @@ CREATE TABLE eventtracker_schema_migration (
 
 INSERT INTO eventtracker_schema_migration
   (schema_version, migration_time)
-VALUES (24, NOW());
+VALUES (25, NOW());
