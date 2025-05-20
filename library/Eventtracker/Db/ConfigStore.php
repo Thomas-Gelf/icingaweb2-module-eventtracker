@@ -81,7 +81,7 @@ class ConfigStore
      * @return Channel[]
      * @throws JsonDecodeException
      */
-    public function loadChannels(LoopInterface $loop, DowntimeRunner $downtimeRunner, array $buckets): array
+    public function loadChannels(DowntimeRunner $downtimeRunner, array $buckets): array
     {
         $channels = [];
         foreach ($this->fetchObjects('channel') as $row) {
@@ -91,7 +91,7 @@ class ConfigStore
                 'rules'          => JsonString::decode($row->rules),
                 'implementation' => $row->input_implementation,
                 'inputs'         => $row->input_uuids,
-            ]), $uuid, $row->label, $bucketUuid, $row->bucket_name, $buckets, $this->logger, $loop);
+            ]), $uuid, $row->label, $bucketUuid, $row->bucket_name, $buckets, $this->logger);
             $channel->setDowntimeRunner($downtimeRunner);
             $channels[$uuid->toString()] = $channel;
         }
@@ -102,7 +102,7 @@ class ConfigStore
     /**
      * @return BucketInterface[]
      */
-    public function loadBuckets(LoopInterface $loop): array
+    public function loadBuckets(): array
     {
         $buckets = [];
         foreach ($this->fetchObjects('bucket') as $row) {
@@ -113,7 +113,6 @@ class ConfigStore
                 BucketInterface::class
             );
             assert($bucket instanceof BucketInterface);
-            $bucket->setLoop($loop);
             $buckets[$row->uuid->toString()] = $bucket;
         }
 
