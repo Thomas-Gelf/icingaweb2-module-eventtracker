@@ -518,8 +518,12 @@ div.output {
 }
 
 div.activities {
-  height: 10em;
+  max-height: 30em;
   overflow: auto;
+  del {
+    color: @color-critical;
+    text-decoration: none;
+  }
 }
 
 pre a {
