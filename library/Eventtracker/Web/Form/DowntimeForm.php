@@ -59,6 +59,9 @@ class DowntimeForm extends UuidObjectForm
         $this->addHtml(Html::tag('h3', $this->translate('Time constraints')));
         $this->addTimeConstraints();
 
+        $this->addHtml(Html::tag('h3', $this->translate('Issue handling')));
+        $this->addIssueHandlingSettings();
+
         $this->addButtons();
     }
 
@@ -224,6 +227,38 @@ EOT
         }
     }
 
+    protected function addIssueHandlingSettings(): void
+    {
+        $subject = $this->runsOnce()
+            ? $this->translate('this Downtime')
+            : $this->translate('every iteration of this Downtime');
+        $this->addElement('time', 'max_single_problem_duration', [
+            'label'       => $this->translate('Problem duration limit'),
+            'description' => sprintf($this->translate(
+                'When configured, this allows for every affected (uniquely identified)'
+                . ' problem to occur only once during %s (value is hours:minutes)'
+            ), $subject),
+        ]);
+        $subject = $this->runsOnce()
+            ? $this->translate('this Downtime')
+            : $this->translate('an iteration of this Downtime');
+        $this->addElement('select', 'on_iteration_end_issue_status', [
+            'label' => $this->translate('When finished'),
+            'options' => [
+                null => $this->translate('- please choose -'),
+                'open'  => $this->translate('The issue should be re-opened'),
+                'closed' => $this->translate('The issue should be closed'),
+            ],
+            'description' => sprintf(
+                $this->translate(
+                    'What should happen with affected issues, once %s ends,'
+                    . ' or when the problem duration limit has been exceeded'
+                ),
+                $subject
+            )
+        ]);
+    }
+
     protected function runsOnce(): bool
     {
         return $this->getValue('recurrence_type') ===  'run_once';
@@ -256,13 +291,6 @@ EOT
         $this->addElement('time', 'duration', [
             'label' => $this->translate('Duration'),
             'description' => sprintf($this->translate('How long should %s last? (value is hours:minutes)'), $subject),
-        ]);
-        $this->addElement('time', 'max_single_problem_duration', [
-            'label'       => $this->translate('Problem duration limit'),
-            'description' => sprintf($this->translate(
-                'When configured, this allows for every affected (uniquely identified)'
-                . ' problem to occur only once during %s (value is hours:minutes)'
-            ), $subject),
         ]);
     }
 
