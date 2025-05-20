@@ -10,6 +10,36 @@ use Ramsey\Uuid\Uuid;
 
 class EnrichmentHelper
 {
+    /** @var array<string, string>|null */
+    protected static $problemHandling = null;
+
+    public static function forgetProblemHandling()
+    {
+        self::$problemHandling = null;
+    }
+
+    protected static function loadProblemHandling(Adapter $db): void
+    {
+        self::$problemHandling = $db->fetchPairs(
+            $db->select()
+                ->from('problem_handling', ['label', 'instruction_url'])
+                ->where('trigger_actions IS NULL OR trigger_actions = ?', 'n')
+                ->where('trigger_actions != ?', 'y')
+                ->where('enabled IS NULL OR enabled = ?', 'y')
+        );
+    }
+
+    protected static function isSkippedByProblemHandling(Issue $issue, Adapter $db): bool
+    {
+        $problemIdentifier = $issue->get('problem_identifier');
+        if (self::$problemHandling === null) {
+            self::loadProblemHandling($db);
+        }
+        if (! isset(self::$problemHandling[$problemIdentifier])) {
+            return false;
+        }
+    }
+
     public static function enrichIssue(Issue $issue, Adapter $db): object
     {
         $details = new IdoDetails($issue, $db);
