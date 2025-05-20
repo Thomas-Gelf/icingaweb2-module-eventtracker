@@ -36,7 +36,6 @@ class DowntimeRule implements JsonSerialization, DbStorableInterface
         'timezone'              => null,
         'config_uuid'           => null,
         'host_list_uuid'        => null,
-        'next_calculated_uuid'  => null,
         'is_enabled'            => null,
         'is_recurring'          => null,
         'ts_not_before'         => null,

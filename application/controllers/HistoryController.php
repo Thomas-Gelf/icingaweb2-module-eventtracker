@@ -168,7 +168,7 @@ class HistoryController extends Controller
         if ($object === null) {
             return '';
         }
-        $ignoredProperties = ['config_uuid', 'next_calculated_uuid'];
+        $ignoredProperties = ['config_uuid'];
         foreach ($ignoredProperties as $ignoredProperty) {
             unset($object->$ignoredProperty);
         }

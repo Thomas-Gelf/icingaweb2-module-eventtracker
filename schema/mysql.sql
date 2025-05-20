@@ -358,7 +358,6 @@ CREATE TABLE downtime_rule (
   timezone VARCHAR(64) NOT NULL,
   config_uuid VARBINARY(16) NOT NULL, -- uuid5(uuid, json(downtime_rule))
   host_list_uuid VARBINARY(16) DEFAULT NULL,
-  next_calculated_uuid VARBINARY(16) NULL DEFAULT NULL,
   is_enabled ENUM('y', 'n') NOT NULL,
   is_recurring ENUM('y', 'n') NOT NULL,
   ts_not_before BIGINT(20) UNSIGNED NULL DEFAULT NULL,
@@ -436,4 +435,4 @@ CREATE TABLE eventtracker_schema_migration (
 
 INSERT INTO eventtracker_schema_migration
   (schema_version, migration_time)
-VALUES (27, NOW());
+VALUES (28, NOW());
