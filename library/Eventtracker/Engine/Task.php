@@ -6,7 +6,6 @@ use Evenement\EventEmitterInterface;
 use Icinga\Module\Eventtracker\Modifier\Settings;
 use Psr\Log\LoggerAwareInterface;
 use Ramsey\Uuid\UuidInterface;
-use React\EventLoop\LoopInterface;
 
 interface Task extends EventEmitterInterface, LoggerAwareInterface
 {
@@ -20,7 +19,7 @@ interface Task extends EventEmitterInterface, LoggerAwareInterface
 
     public function applySettings(Settings $settings);
 
-    public function run(LoopInterface $loop);
+    public function run();
 
     public function start();
     public function stop();

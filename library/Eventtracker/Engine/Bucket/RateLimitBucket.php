@@ -11,7 +11,7 @@ use Icinga\Module\Eventtracker\Engine\SimpleTaskConstructor;
 use Icinga\Module\Eventtracker\Event;
 use Icinga\Module\Eventtracker\Modifier\Settings;
 use Icinga\Module\Eventtracker\Web\Form\Bucket\RateLimitFormExtension;
-use React\EventLoop\LoopInterface;
+use React\EventLoop\Loop;
 use React\EventLoop\TimerInterface;
 
 class RateLimitBucket extends SimpleTaskConstructor implements BucketInterface
@@ -21,18 +21,10 @@ class RateLimitBucket extends SimpleTaskConstructor implements BucketInterface
     use SettingsProperty;
 
     /** @var RateLimitingBucketSlot[] */
-    protected $slots = [];
+    protected array $slots = [];
 
-    /** @var ?TimerInterface */
-    protected $timers = [];
-
-    /** @var LoopInterface */
-    protected $loop;
-
-    public function setLoop(LoopInterface $loop): void
-    {
-        $this->loop = $loop;
-    }
+    /** @var TimerInterface[] */
+    protected array $timers = [];
 
     public function applySettings(Settings $settings)
     {
@@ -45,7 +37,7 @@ class RateLimitBucket extends SimpleTaskConstructor implements BucketInterface
         if (!isset($this->slots[$slot])) {
             $window = (int) $this->settings->getRequired('windowDuration');
             $this->slots[$slot] = new RateLimitingBucketSlot($this->settings);
-            $this->timers[$slot] = $this->loop->addTimer($window, function () use ($slot) {
+            $this->timers[$slot] = Loop::addTimer($window, function () use ($slot) {
                 unset($this->slots[$slot]);
                 unset($this->timers[$slot]);
             });
