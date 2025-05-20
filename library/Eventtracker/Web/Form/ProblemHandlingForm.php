@@ -32,6 +32,17 @@ class ProblemHandlingForm extends UuidObjectForm
         ]);
         */
         $this->addHidden('trigger_actions', 'y');
+        /*
+        $this->addElement('boolean', 'enabled', [
+            'label'       => $this->translate('Enabled'),
+            'description' => $this->translate(
+                'Whether configured actions should be triggered for this problem'
+            ),
+            'required'    => true,
+            'value'       => 'y'
+        ]);
+        */
+        $this->addHidden('enabled', 'y');
         $this->addButtons();
     }
 }

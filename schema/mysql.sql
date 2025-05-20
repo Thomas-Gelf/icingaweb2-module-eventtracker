@@ -83,8 +83,8 @@ CREATE TABLE problem_handling (
   uuid VARBINARY(16) NOT NULL,
   label VARCHAR(64) NOT NULL,
   instruction_url TEXT DEFAULT NULL,
-  trigger_actions ENUM('y', 'n'),
-  enabled ENUM('y', 'n'),
+  trigger_actions ENUM('y', 'n') NOT NULL,
+  enabled ENUM('y', 'n') NOT NULL,
   PRIMARY KEY (uuid),
   UNIQUE INDEX(label)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE utf8mb4_bin;
@@ -435,4 +435,4 @@ CREATE TABLE eventtracker_schema_migration (
 
 INSERT INTO eventtracker_schema_migration
   (schema_version, migration_time)
-VALUES (28, NOW());
+VALUES (29, NOW());
