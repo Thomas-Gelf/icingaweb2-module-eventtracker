@@ -10,6 +10,7 @@ use Icinga\Module\Eventtracker\Issue;
 use Icinga\Module\Eventtracker\Issues;
 use Icinga\Module\Eventtracker\Scom\ScomSync;
 use React\Promise\ExtendedPromiseInterface;
+
 use function React\Promise\resolve;
 
 class SyncCommand extends Command
@@ -103,7 +104,7 @@ class SyncCommand extends Command
         }
         $sync->sync();
 
-        return resolve();
+        return resolve(null);
     }
 
     /**
@@ -116,7 +117,7 @@ class SyncCommand extends Command
         $sync = new IcingaStateSync(DbFactory::db(), $ido);
         $sync->sync();
 
-        return resolve();
+        return resolve(null);
     }
 
     public function runExpirations(): ExtendedPromiseInterface
@@ -132,7 +133,7 @@ class SyncCommand extends Command
             $this->logger->info(sprintf('Expired %d outdated issues', $count));
         }
 
-        return resolve();
+        return resolve(null);
     }
 
     public function runHostlists(): ExtendedPromiseInterface

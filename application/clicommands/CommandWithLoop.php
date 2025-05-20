@@ -14,23 +14,15 @@ use gipfl\Protocol\JsonRpc\JsonRpcConnection;
 use gipfl\Protocol\NetString\StreamWrapper;
 use gipfl\SystemD\systemd;
 use Icinga\Module\Eventtracker\Daemon\Application;
-use React\EventLoop\Factory as Loop;
-use React\EventLoop\LoopInterface;
+use React\EventLoop\Loop;
 use React\Promise\ExtendedPromiseInterface;
 use React\Stream\ReadableResourceStream;
 use React\Stream\WritableResourceStream;
 
 trait CommandWithLoop
 {
-    /** @var LoopInterface */
-    private $loop;
-
-    private $loopStarted = false;
-
-    protected $logger;
-
-    /** @var JsonRpcConnection|null */
-    protected $rpc;
+    protected ?Logger $logger = null;
+    protected ?JsonRpcConnection $rpc = null;
 
     public function init()
     {
@@ -42,48 +34,23 @@ trait CommandWithLoop
         }
     }
 
-    protected function loop()
-    {
-        if ($this->loop === null) {
-            $this->loop = Loop::create();
-        }
-
-        return $this->loop;
-    }
-
-    protected function eventuallyStartMainLoop()
-    {
-        if (! $this->loopStarted) {
-            $this->loopStarted = true;
-            $this->loop()->run();
-        }
-    }
-
-    protected function stopMainLoop()
-    {
-        if ($this->loopStarted) {
-            $this->loopStarted = false;
-            $this->loop()->stop();
-        }
-    }
-
     protected function enableRpc()
     {
         $handler = new NamespacedPacketHandler();
         // in case we provide Methods:
         // $handler->registerNamespace('eventtracker', new DbRunner($this->logger, $this->loop()));
-        $this->rpc = $this->prepareJsonRpc($this->loop(), $handler);
+        $this->rpc = $this->prepareJsonRpc($handler);
         $this->logger->addWriter(new JsonRpcConnectionWriter($this->rpc));
     }
 
     /**
      * Prepares a JSON-RPC Connection on STDIN/STDOUT
      */
-    protected function prepareJsonRpc(LoopInterface $loop, $handler): JsonRpcConnection
+    protected function prepareJsonRpc($handler): JsonRpcConnection
     {
         return new JsonRpcConnection(new StreamWrapper(
-            new ReadableResourceStream(STDIN, $loop),
-            new WritableResourceStream(STDOUT, $loop)
+            new ReadableResourceStream(STDIN),
+            new WritableResourceStream(STDOUT)
         ), $handler);
     }
 
@@ -96,15 +63,14 @@ trait CommandWithLoop
             // Writer will be added later
             return;
         }
-        $loop = $this->loop();
         if (systemd::startedThisProcess()) {
             if (@file_exists(JournaldLogger::JOURNALD_SOCKET)) {
                 $logger->addWriter((new JournaldLogger())->setIdentifier(Application::LOG_NAME));
             } else {
-                $logger->addWriter(new SystemdStdoutWriter($loop));
+                $logger->addWriter(new SystemdStdoutWriter(Loop::get()));
             }
         } else {
-            $logger->addWriter(new WritableStreamWriter(new WritableResourceStream(STDERR, $loop)));
+            $logger->addWriter(new WritableStreamWriter(new WritableResourceStream(STDERR)));
         }
     }
 
@@ -141,12 +107,12 @@ trait CommandWithLoop
 
     protected function runWithLoop($callable)
     {
-        $this->loop->futureTick(function () use ($callable) {
+        Loop::futureTick(function () use ($callable) {
             try {
                 $result = $callable();
                 if ($result instanceof ExtendedPromiseInterface) {
                     $result->then(function () {
-                        $this->loop->stop();
+                        Loop::stop();
                     }, function ($error) {
                         if ($error instanceof \Exception) {
                             $this->failNice($error->getMessage());
@@ -155,13 +121,13 @@ trait CommandWithLoop
                         }
                     });
                 } else {
-                    $this->loop->stop();
+                    Loop::stop();
                 }
             } catch (\Exception $e) {
                 $this->failNice($e->getMessage());
             }
         });
-        $this->loop->run();
+        Loop::run();
     }
 
     public function failNice($msg)
@@ -172,8 +138,8 @@ trait CommandWithLoop
             \printf("%s: %s\n", $this->screen->colorize('ERROR', 'red'), $msg);
         }
 
-        $this->loop->futureTick(function () {
-            $this->loop->stop();
+        Loop::futureTick(function () {
+            Loop::stop();
             exit(1);
         });
     }
