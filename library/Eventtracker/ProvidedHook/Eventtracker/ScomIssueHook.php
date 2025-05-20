@@ -6,8 +6,9 @@ use Icinga\Application\Config;
 use Icinga\Module\Eventtracker\ConfigHelper;
 use Icinga\Module\Eventtracker\Hook\IssueHook;
 use Icinga\Module\Eventtracker\Issue;
+use Ramsey\Uuid\Uuid;
 use React\ChildProcess\Process;
-use React\EventLoop\Factory;
+use React\EventLoop\Loop;
 
 class ScomIssueHook extends IssueHook
 {
@@ -52,21 +53,24 @@ class ScomIssueHook extends IssueHook
     {
         $cmd = Config::module('eventtracker')->get('scom', $cmdConfigName);
         if ($cmd === null) {
+            // Allow config section per Input, to have an issue hook there too
+            $cmd = Config::module('eventtracker')->get('scom', Uuid::fromBytes($issue->get('input_uuid')));
+        }
+        if ($cmd === null) {
             return null;
         }
         $cmd = ConfigHelper::fillPlaceholders($cmd, $issue);
-        $loop = Factory::create();
         $succeeded = null;
-        $loop->futureTick(function () use ($loop, $issue, $cmd, &$succeeded) {
+        Loop::futureTick(function () use ($issue, $cmd, &$succeeded) {
             $cmd = ConfigHelper::fillPlaceholders($cmd, $issue);
             $process = new Process($cmd);
-            $process->start($loop);
-            $process->on('exit', function ($code, $term) use ($loop, &$succeeded) {
+            $process->start();
+            $process->on('exit', function ($code, $term) use (&$succeeded) {
                 $succeeded = ($term === null && $code === 0);
-                $loop->stop();
+                Loop::stop();
             });
         });
-        $loop->run();
+        Loop::run();
 
         return $succeeded;
     }
