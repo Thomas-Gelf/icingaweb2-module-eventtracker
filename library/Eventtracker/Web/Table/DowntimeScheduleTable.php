@@ -2,69 +2,43 @@
 
 namespace Icinga\Module\Eventtracker\Web\Table;
 
+use gipfl\IcingaWeb2\Table\QueryBasedTable;
 use gipfl\Translation\TranslationHelper;
+use Icinga\Module\Eventtracker\Db\SelectPaginationAdapter;
 use Icinga\Module\Eventtracker\Engine\Downtime\DowntimeRule;
+use Icinga\Data\DataArray\ArrayDatasource;
 
-class DowntimeScheduleTable extends BaseTable
+class DowntimeScheduleTable extends QueryBasedTable
 {
     use TranslationHelper;
 
-    protected $db;
+    protected DowntimeRule $rule;
+    protected ?string $currentDateString = null;
+    protected ?SelectPaginationAdapter $paginationAdapter = null;
 
-    /** @var DowntimeRule */
-    protected $rule;
-
-    /** @var ?string */
-    protected $currentDateString = null;
-
-    public function __construct($db, DowntimeRule $rule)
+    public function __construct(DowntimeRule $rule)
     {
-        parent::__construct($db);
-        $this->db = $db;
         $this->rule = $rule;
     }
 
-    protected function initialize()
+    public function getQuery()
     {
-        $this->addAvailableColumns([
-            $this->createColumn('ts_expected_start', $this->translate('Expected Start'), 'ts_expected_start')
-                ->setRenderer(function ($row) {
-                    return $this->niceTsFormat($row->ts_expected_start);
-                }),
-            $this->createColumn('ts_expected_end', $this->translate('Expected End'), 'ts_expected_end')
-                ->setRenderer(function ($row) {
-                    return $this->niceTsFormat($row->ts_expected_end);
-                }),
-            $this->createColumn('ts_started', $this->translate('Started'), 'ts_started')
-                ->setRenderer(function ($row) {
-                    return $this->niceTsFormat($row->ts_started);
-                }),
-        ]);
-    }
-
-    protected function niceTsFormat(?int $ts): string
-    {
-        if ($ts === null) {
-            return '-';
-        }
-        $ts = $ts / 1000;
-        // return date('Y-m-d H:i', $ts);
-        $date = $this->getDateFormatter()->getFullDay($ts);
-        $time = $this->getTimeFormatter()->getShortTime($ts);
-        if ($date === $this->currentDateString) {
-            return $time;
-        }
-        $this->currentDateString = $date;
-
-        return  "$date $time";
+        return $this->query ??= $this->prepareQuery();
     }
 
     public function prepareQuery()
     {
-        return $this->db()
-            ->select()
-            ->from(['dc' => 'downtime_calculated'], $this->getRequiredDbColumns())
-            ->where('dc.rule_config_uuid = ?', $this->rule->get('config_uuid'))
-            ->order('ts_expected_start');
+        $ds = new ArrayDatasource([]);
+        return $ds->select();
+    }
+
+    protected function getPaginationAdapter()
+    {
+        return $this->paginationAdapter ??=new SelectPaginationAdapter($this->getQuery());
+    }
+
+    protected function fetchQueryRows()
+    {
+        return $this->getQuery()->fetchAll();
     }
 }
