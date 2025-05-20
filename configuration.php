@@ -1,7 +1,5 @@
 <?php
 
-use Icinga\Module\Eventtracker\ProvidedHook\Eventtracker\ScomIssueHook;
-
 /** @var \Icinga\Application\Modules\Module $this */
 if ($this->getConfig()->get('ui', 'disabled', 'no') === 'yes') {
     return;
