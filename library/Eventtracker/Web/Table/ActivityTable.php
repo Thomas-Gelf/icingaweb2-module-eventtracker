@@ -46,8 +46,22 @@ class ActivityTable extends BaseTable
         foreach ($modifications as $property => $modification) {
             if (is_array($modification)) {
                 list($old, $new) = $modification;
+                if (substr($property, 0, 3) === 'ts_') {
+                    if ($old !== null) {
+                        $old = substr(Time::timestampMsToDateTime($old)->format("Y-m-d H:i:s.u"), 0, -3);
+                    }
+                    if ($new !== null) {
+                        $new = substr(Time::timestampMsToDateTime($new)->format("Y-m-d H:i:s.u"), 0, -3);
+                    }
+                }
+
                 $result[] = $this->showModification($property, $old, $new);
             } else {
+                if (substr($property, 0, 3) === 'ts_') {
+                    if ($modification !== null) {
+                        $modification = substr(Time::timestampMsToDateTime($modification)->format("Y-m-d H:i:s.u"), 0, -3);
+                    }
+                }
                 $result[] = $this->showModification($property, null, $modification);
             }
         }
