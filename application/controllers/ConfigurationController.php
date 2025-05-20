@@ -323,6 +323,16 @@ class ConfigurationController extends Controller
         }
     }
 
+    protected function refreshDaemonHostLists(): bool
+    {
+        try {
+            $this->syncRpcCall('eventtracker.reloadHostLists');
+            return true;
+        } catch (Exception $e) {
+            return false;
+        }
+    }
+
     public function hostlistsAction()
     {
 
@@ -373,9 +383,9 @@ class ConfigurationController extends Controller
             switch ($this->getServerRequest()->getMethod()) {
                 case 'GET':
                     $this->checkBearerToken('host_list/read');
-                    $this->getHostList();
-                        $this->runForApi(function () {
-                        });
+                    $this->runForApi(function () {
+                        $this->getHostList();
+                    });
                     break;
                 case 'POST':
                     $this->checkBearerToken('host_list/write');
@@ -403,7 +413,7 @@ class ConfigurationController extends Controller
     protected function getHostList()
     {
         $uuid = Uuid::fromString($this->params->getRequired('listUuid'))->getBytes();
-        $this->sendJsonResponse(self::cleanRows(array($this->db()->fetchOne(
+        $this->sendJsonResponse(self::cleanRows(array($this->db()->fetchRow(
             $this->db()
                 ->select()->from('host_list', ['label'])
                 ->where('uuid = ?', $uuid)
@@ -417,6 +427,7 @@ class ConfigurationController extends Controller
             'uuid'  => Uuid::uuid4()->getBytes(),
             'label' => $body->label,
         ]);
+        $this->refreshDaemonHostLists();
         $this->sendJsonSuccess([
             'message' => sprintf('added hostlist %s', $body->label)
         ]);
@@ -450,13 +461,11 @@ class ConfigurationController extends Controller
     protected function getHostListMember()
     {
         $uuid = Uuid::fromString($this->params->getRequired('listUuid'))->getBytes();
-        $hostname = $this->params->getRequired('hostname');
-        $this->sendJsonResponse(self::cleanRows(array($this->db()->fetchOne(
+        $this->sendJsonResponse($this->db()->fetchCol(
             $this->db()
                 ->select()->from('host_list_member', ['hostname'])
                 ->where('list_uuid = ?', $uuid)
-                ->where('hostname = ?', $hostname)
-        ))));
+        ));
     }
 
     protected function postHostListMember()
@@ -468,6 +477,7 @@ class ConfigurationController extends Controller
             'hostname ' => $body->hostname,
         ];
         $this->db()->insert('host_list_member', $hostListMember);
+        $this->refreshDaemonHostLists();
         $hostlist = $this->db()->fetchOne(
             $this->db()->select()
                 ->from('host_list', ['label'])
@@ -487,6 +497,7 @@ class ConfigurationController extends Controller
             $db->quoteInto('list_uuid = ?', $listUuid->getBytes())
             . $db->quoteInto(' AND hostname = ?', $hostname)
         ) > 0) {
+            $this->refreshDaemonHostLists();
             $this->sendJsonSuccess(['message' => sprintf('deleted host list member %s', $hostname)]);
         } else {
             $this->sendJsonSuccess(['message' => 'Nothing has been deleted']);
@@ -577,6 +588,7 @@ class ConfigurationController extends Controller
                 }
             }
         });
+        $this->refreshDaemonHostLists();
 
         $this->sendJsonSuccess(['message' => sprintf('updated  %s hosts', $cnt)], 201);
     }
