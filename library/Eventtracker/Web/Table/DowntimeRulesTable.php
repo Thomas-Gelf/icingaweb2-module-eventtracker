@@ -45,7 +45,7 @@ class DowntimeRulesTable extends WebActionTable
                         $this->niceTsFormat($row->ts_triggered),
                     );
                 } else {
-                    $activeInfo = $this->translate('This downtime is currently not active');
+                    $activeInfo = $this->wrapInactive($this->translate('This downtime is currently not active'));
                 }
                 return [
                     Link::create($label, $this->action->url, [
@@ -64,25 +64,34 @@ class DowntimeRulesTable extends WebActionTable
         if ($slot->end) {
             return $this->wrapActive(Html::sprintf(
                 $this->translate('Currently active, slot started %s, and finishes %s'),
-                Html::tag('span', ['class' => 'time-ago', 'title' => $slot->start->format('Y-m-d H:i:s')], DateFormatter::timeAgo($slot->start->getTimestamp())),
-                Html::tag('span', ['class' => 'time-until', 'title' => $slot->end->format('Y-m-d H:i:s')], DateFormatter::timeUntil($slot->end->getTimestamp())),
+                Html::tag('span', [
+                    'class' => 'time-ago',
+                    'title' => $slot->start->format('Y-m-d H:i:s'),
+                ], DateFormatter::timeAgo($slot->start->getTimestamp())),
+                Html::tag('span', [
+                    'class' => 'time-until',
+                    'title' => $slot->end->format('Y-m-d H:i:s'),
+                ], DateFormatter::timeUntil($slot->end->getTimestamp())),
             ));
         }
 
         return $this->wrapActive(Html::sprintf(
             $this->translate('Currently active, slot started %s'),
-            Html::tag('span', ['class' => 'time-ago', 'title' => $slot->start->format('Y-m-d H:i:s')], DateFormatter::timeAgo($slot->start->getTimestamp()))
+            Html::tag('span', [
+                'class' => 'time-ago',
+                'title' => $slot->start->format('Y-m-d H:i:s'),
+            ], DateFormatter::timeAgo($slot->start->getTimestamp()))
         ));
     }
 
     protected function wrapActive($content): HtmlElement
     {
-        return Html::tag('span', ['style' => 'color: green'], $content);
+        return Html::tag('span', ['class' => 'downtime-active'], $content);
     }
 
-    protected function wrapInactive($content)
+    protected function wrapInactive($content):HtmlElement
     {
-        return Html::tag('span', ['style' => 'color: gray'], $content);
+        return Html::tag('span', ['class' => 'downtime-inactive'], $content);
     }
 
     protected function niceTsFormat($ts): string
