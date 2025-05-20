@@ -612,6 +612,7 @@ class ConfigurationController extends Controller
 
     protected function showList(WebAction $action)
     {
+        $this->setAutorefreshInterval(15);
         $this->addTitle(sprintf($this->translate('Configured %s'), $action->plural));
         $this->tabForList($action);
         $this->actions()->add([$this->linkBack(), $this->linkAdd($action)]);
