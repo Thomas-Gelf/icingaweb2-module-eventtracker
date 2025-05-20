@@ -37,20 +37,15 @@ class RemoteApi implements EventEmitterInterface
     protected InputAndChannelRunner $runner;
     protected ?ControlSocket $controlSocket = null;
 
-    /** @var RunningConfig */
-    protected $runningConfig;
-
     protected DowntimeRunner $downtimeRunner;
 
     public function __construct(
         InputAndChannelRunner $runner,
-        DowntimeRunner        $downtimeRunner,
-        RunningConfig         $runningConfig,
+        DowntimeRunner     $downtimeRunner,
         LoggerInterface       $logger
     ) {
         $this->runner = $runner;
         $this->logger = $logger;
-        $this->runningConfig = $runningConfig;
         $this->downtimeRunner = $downtimeRunner;
     }
 

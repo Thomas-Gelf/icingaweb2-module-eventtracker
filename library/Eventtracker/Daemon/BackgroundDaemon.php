@@ -10,8 +10,8 @@ use gipfl\IcingaCliDaemon\DbResourceConfigWatch;
 use gipfl\SystemD\NotifySystemD;
 use Icinga\Module\Eventtracker\Configuration;
 use Icinga\Module\Eventtracker\Daemon\RpcNamespace\RpcNamespaceProcess;
+use Icinga\Module\Eventtracker\Engine\Downtime\DowntimePeriodRunner;
 use Icinga\Module\Eventtracker\Engine\Downtime\DowntimeRunner;
-use Icinga\Module\Eventtracker\Engine\Downtime\GeneratedDowntimeGenerator;
 use Psr\Log\LoggerInterface;
 use React\EventLoop\Loop;
 use React\EventLoop\LoopInterface;
@@ -24,6 +24,7 @@ class BackgroundDaemon implements EventEmitterInterface
 {
     use EventEmitterTrait;
 
+    protected DowntimePeriodRunner $downtimePeriodRunner;
 
     /** @var NotifySystemD|boolean */
     protected $systemd;
@@ -51,17 +52,9 @@ class BackgroundDaemon implements EventEmitterInterface
 
     /** @var RemoteApi */
     protected ?RemoteApi $remoteApi = null;
+    protected ?DowntimeRunner $downtimeRunner = null;
     protected bool $reloading = false;
     protected bool $shuttingDown = false;
-
-    /** @var RunningConfig */
-    protected $runningConfig;
-
-    /** @var GeneratedDowntimeGenerator */
-    protected $generatedDowntimeGenerator;
-
-    /** @var DowntimeRunner */
-    protected $downtimeRunner;
 
     protected LoggerInterface $logger;
 
@@ -92,26 +85,19 @@ class BackgroundDaemon implements EventEmitterInterface
             ->registerProcessList($this->jobRunner->getProcessList());
         $this->logProxy = new LogProxy($this->logger);
         $this->jobRunner->forwardLog($this->logProxy);
-        $this->generatedDowntimeGenerator = new GeneratedDowntimeGenerator($this->logger);
-        $this->downtimeRunner = new DowntimeRunner($this->logger);
+        $this->downtimePeriodRunner = new DowntimePeriodRunner($this->logger);
+        $this->downtimeRunner = new DowntimeRunner($this->downtimePeriodRunner, $this->logger);
         $this->channelRunner = new InputAndChannelRunner($this->downtimeRunner, $this->logger);
         $this->daemonDb = $this->initializeDb(
             $this->processDetails,
             $this->processState,
             $this->dbResourceName
         );
-        $this->runningConfig = new RunningConfig($this->logger);
-        $this->runningConfig->watchRules(function ($rules) {
-            // Disabled for now
-            // $this->generatedDowntimeGenerator->triggerCalculation($rules);
-            // $this->downtimeRunner->setDowntimeRules($rules);
-        });
         $this->daemonDb
             ->register($this->jobRunner)
             ->register($this->logProxy)
             ->register($this->channelRunner)
-            ->register($this->generatedDowntimeGenerator)
-            ->register($this->runningConfig)
+            ->register($this->downtimePeriodRunner)
             ->register($this->downtimeRunner)
             ->run();
         $this->prepareApi($this->channelRunner, $this->logger);
