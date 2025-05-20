@@ -12,7 +12,7 @@ use Psr\Log\LoggerAwareInterface;
 use Psr\Log\LoggerAwareTrait;
 use Psr\Log\LoggerInterface;
 use Ramsey\Uuid\UuidInterface;
-use React\EventLoop\LoopInterface;
+use React\EventLoop\Loop;
 use React\EventLoop\TimerInterface;
 use Throwable;
 
@@ -25,29 +25,17 @@ class InputRunner implements LoggerAwareInterface
 
     public const RELOAD_CONFIG_TIMER = 60;
 
-    /** @var LoopInterface */
-    protected $loop;
-
-    /** @var ConfigStore */
-    protected $store;
-
-    /** @var DowntimeRunner */
-    protected $downtimeRunner;
-
+    protected ConfigStore $store;
+    protected DowntimeRunner $downtimeRunner;
     /** @var Input[] */
-    protected $inputs = [];
-
+    protected array $inputs = [];
     /** @var Channel[] */
-    protected $channels;
-
+    protected array $channels = [];
     /** @var Action[] */
-    protected $actions;
-
-    /** @var TimerInterface */
-    protected $reloadConfigTimer;
-
+    protected array $actions;
+    protected ?TimerInterface $reloadConfigTimer = null;
     /** @var array<string, Channel> InputUuid -> Channel */
-    protected $linkedInputChannels = [];
+    protected array $linkedInputChannels = [];
 
     public function __construct(ConfigStore $store, DowntimeRunner $downtimeRunner, LoggerInterface $logger)
     {
@@ -59,13 +47,12 @@ class InputRunner implements LoggerAwareInterface
         $this->logger = $logger;
     }
 
-    public function start(LoopInterface $loop)
+    public function start()
     {
-        $this->loop = $loop;
         try {
             $this->inputs = $this->store->loadInputs();
-            $buckets = $this->store->loadBuckets($this->loop);
-            $this->channels = $this->store->loadChannels($loop, $this->downtimeRunner, $buckets);
+            $buckets = $this->store->loadBuckets();
+            $this->channels = $this->store->loadChannels($this->downtimeRunner, $buckets);
             $this->actions = $this->store->loadActions(['enabled' => 'y']);
             $this->linkInputsToChannels();
             $this->startInputs();
@@ -87,7 +74,7 @@ class InputRunner implements LoggerAwareInterface
         }
 
         if ($this->reloadConfigTimer !== null) {
-            $this->loop->cancelTimer($this->reloadConfigTimer);
+            Loop::cancelTimer($this->reloadConfigTimer);
 
             $this->reloadConfigTimer = null;
         }
@@ -95,24 +82,24 @@ class InputRunner implements LoggerAwareInterface
 
     protected function startAction(Action $action)
     {
-        $this->loop->futureTick(function () use ($action) {
-            $action->on(self::ON_ERROR, function ($error) {
-                echo $error->getMessage() . "\n";
-                // TODO: log error, detach and restart input
+        Loop::futureTick(function () use ($action) {
+            $action->on(self::ON_ERROR, function (Throwable $error) use ($action) {
+                $this->logger->error('Starting Action failed, will be disabled: ' . $error->getMessage());
+                unset($this->actions[$action->getUuid()->toString()]);
             });
-            $action->run($this->loop);
+            $action->run();
         });
     }
 
     protected function startInputs()
     {
         foreach ($this->inputs as $input) {
-            $this->loop->futureTick(function () use ($input) {
+            Loop::futureTick(function () use ($input) {
                 $input->on(self::ON_ERROR, function ($error) use ($input) {
                     $this->logger->error($input->getName() . ' failed: ' . $error->getMessage());
                     // TODO: log error, detach and restart input
                 });
-                $input->run($this->loop);
+                $input->run();
             });
         }
 
@@ -123,7 +110,7 @@ class InputRunner implements LoggerAwareInterface
 
     protected function startPeriodConfigReload(): TimerInterface
     {
-        return $this->loop->addPeriodicTimer(static::RELOAD_CONFIG_TIMER, function (): void {
+        return Loop::addPeriodicTimer(static::RELOAD_CONFIG_TIMER, function (): void {
             // Load actions without filter for enabled yes,
             // because we want to stop and remove running actions that have been disabled.
             $actions = $this->store->loadActions();
@@ -184,15 +171,13 @@ class InputRunner implements LoggerAwareInterface
 
     public function onIssue(Issue $issue): void
     {
-        $this->loop->futureTick(function () use ($issue): void {
-            ActionHelper::processIssue(
-                $this->actions,
-                $issue,
-                $this->store->getDb(),
-                $this->logger
-            )->otherwise(function (Throwable $reason) {
-                $this->logger->error($reason);
-            });
-        });
+        Loop::futureTick(fn () => ActionHelper::processIssue(
+            $this->actions,
+            $issue,
+            $this->store->getDb(),
+            $this->logger
+        )->otherwise(function (Throwable $reason) {
+            $this->logger->error($reason);
+        }));
     }
 }
