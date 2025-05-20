@@ -67,7 +67,20 @@ class Time
 
     public static function timestampMsToDateTime(int $timestampMs, ?DateTimeZone $timeZone = null): DateTimeImmutable
     {
-        return DateTimeImmutable::createFromFormat('u', $timestampMs . '000', $timeZone);
+        $time = DateTimeImmutable::createFromFormat('U.u', sprintf(
+            '%s.%s000',
+            substr($timestampMs, 0, -3),
+            substr($timestampMs, -3)
+        ), $timeZone);
+        if ($time === false) {
+            throw new \RuntimeException(sprintf(
+                'Unable to instantiate DateTime for %s (tz: %s)',
+                $timestampMs,
+                $timeZone ? $timeZone->getName() : 'null'
+            ));
+        }
+
+        return $time;
     }
 
     public static function dateTimeToTimestampMs(DateTimeInterface $dateTime): int
