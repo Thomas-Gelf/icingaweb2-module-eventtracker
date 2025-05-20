@@ -8,26 +8,19 @@ use gipfl\Web\InlineForm;
 use Icinga\Module\Eventtracker\Daemon\RemoteClient;
 use ipl\Html\FormElement\SelectElement;
 use Psr\Log\LogLevel;
-use React\EventLoop\LoopInterface;
+
 use function Clue\React\Block\await;
 
 class LogLevelForm extends InlineForm
 {
     use TranslationHelper;
 
-    /** @var RemoteClient */
-    protected $client;
+    protected RemoteClient $client;
+    protected bool $talkedToSocket = false;
 
-    /** @var LoopInterface */
-    protected $loop;
-
-    /** @var boolean */
-    protected $talkedToSocket;
-
-    public function __construct(RemoteClient $client, LoopInterface $loop)
+    public function __construct(RemoteClient $client)
     {
         $this->client = $client;
-        $this->loop = $loop;
     }
 
     public function talkedToSocket(): ?bool
@@ -38,7 +31,7 @@ class LogLevelForm extends InlineForm
     protected function assemble()
     {
         try {
-            $currentLevel = await($this->client->request('logger.getLogLevel'), $this->loop);
+            $currentLevel = await($this->client->request('logger.getLogLevel'));
             $this->talkedToSocket = true;
         } catch (\Exception $e) {
             $this->talkedToSocket = false;
@@ -64,7 +57,7 @@ class LogLevelForm extends InlineForm
     {
         await($this->client->request('logger.setLogLevel', [
             'level' => $this->getValue('log_level')
-        ]), $this->loop);
+        ]));
     }
 
     protected function listLogLevels()
