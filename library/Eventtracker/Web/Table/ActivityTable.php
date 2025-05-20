@@ -48,10 +48,10 @@ class ActivityTable extends BaseTable
                 list($old, $new) = $modification;
                 if (substr($property, 0, 3) === 'ts_') {
                     if ($old !== null) {
-                        $old = substr(Time::timestampMsToDateTime($old)->format("Y-m-d H:i:s.u"), 0, -3);
+                        $old = self::formatMsTime($old);
                     }
                     if ($new !== null) {
-                        $new = substr(Time::timestampMsToDateTime($new)->format("Y-m-d H:i:s.u"), 0, -3);
+                        $new = self::formatMsTime($new);
                     }
                 }
 
@@ -59,7 +59,7 @@ class ActivityTable extends BaseTable
             } else {
                 if (substr($property, 0, 3) === 'ts_') {
                     if ($modification !== null) {
-                        $modification = substr(Time::timestampMsToDateTime($modification)->format("Y-m-d H:i:s.u"), 0, -3);
+                        $modification = self::formatMsTime($modification);
                     }
                 }
                 $result[] = $this->showModification($property, null, $modification);
@@ -67,6 +67,11 @@ class ActivityTable extends BaseTable
         }
 
         return $result;
+    }
+
+    protected static function formatMsTime(int $ms)
+    {
+        return  substr(Time::timestampMsToDateTime($ms)->format("Y-m-d H:i:s.u"), 0, -3);
     }
 
     protected function showModification($property, $old, $new)
