@@ -41,7 +41,7 @@ class TimePeriodDefinitionCronBased extends TimePeriodDefinitionNonRecurring
         try {
             return $this->createTimeSlot($this->cronExpression->getNextRunDate($time));
         } catch (\Exception $e) {
-            echo $e->getMessage();
+            // TODO: should never happen. If in doubt: add logging
             return null;
         }
     }
@@ -52,7 +52,7 @@ class TimePeriodDefinitionCronBased extends TimePeriodDefinitionNonRecurring
         try {
             return $this->createTimeSlot($this->cronExpression->getNextRunDate($time, 0, true));
         } catch (\Exception $e) {
-            echo $e->getMessage();
+            // TODO: should never happen. If in doubt: add logging
             return null;
         }
     }
