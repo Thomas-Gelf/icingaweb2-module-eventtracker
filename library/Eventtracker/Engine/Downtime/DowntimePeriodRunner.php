@@ -133,7 +133,7 @@ class DowntimePeriodRunner implements EventEmitterInterface, DbBasedComponent
      */
     public function setRules(array $rules): void
     {
-        $this->logger->notice('Setting downtime rules');
+        // $this->logger->notice('Setting downtime rules');
         $new = [];
         $removed = [];
         foreach ($rules as $uuid => $rule) {
@@ -268,9 +268,8 @@ class DowntimePeriodRunner implements EventEmitterInterface, DbBasedComponent
             if ($definition->hasSlotAfter($now)) {
                 $this->currentRules[$id] = $rule;
                 $this->timePeriodDefinitions[$id] = $definition;
-                $this->logger->notice('Activated definition ' . $rule->get('label'));
-            } else {
-                $this->logger->notice('Definition has no slot after now: ' . var_export($rule, true));
+                // $this->logger->notice('Activated definition ' . $rule->get('label'));
+                // else: $this->logger->notice('Definition has no slot after now: ' . var_export($rule, true));
             }
         } catch (Exception $e) {
             $this->logger->error(sprintf(
@@ -298,13 +297,13 @@ class DowntimePeriodRunner implements EventEmitterInterface, DbBasedComponent
         }
         $this->activeTimeSlots[$id] = $slot;
         $this->activeRules[$id] = $this->currentRules[$id];
-        $this->logger->notice("Activated period $id");
+        // $this->logger->notice("Activated period $id");
         $this->emit(self::ON_PERIOD_ACTIVATED, [Uuid::fromString($id), $slot]);
     }
 
     protected function deactivatePeriod(string $id, TimeSlot $slot): void
     {
-        $this->logger->notice("Deactivated period $id");
+        // $this->logger->notice("Deactivated period $id");
         unset($this->activeTimeSlots[$id]);
         unset($this->activeRules[$id]);
 
@@ -313,7 +312,7 @@ class DowntimePeriodRunner implements EventEmitterInterface, DbBasedComponent
 
     protected function expireDefinition(string $id, DowntimeRule $rule, TimePeriodDefinition $definition): void
     {
-        $this->logger->notice("Expired definition $id");
+        // $this->logger->notice("Expired definition $id");
         if (isset($this->activeRules[$id])) {
             $this->deactivatePeriod($id, $this->activeTimeSlots[$id]);
         }
