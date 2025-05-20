@@ -10,26 +10,18 @@ use Icinga\Module\Eventtracker\IssueHistory;
 use Psr\Log\LoggerInterface;
 use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\UuidInterface;
-use React\EventLoop\LoopInterface;
 
 class RpcNamespaceIssue implements EventEmitterInterface
 {
     use EventEmitterTrait;
 
-    /** @var Db */
-    protected $db;
+    protected Db $db;
+    protected LoggerInterface $logger;
 
-    /** @var LoopInterface */
-    protected $loop;
-
-    /** @var LoggerInterface */
-    protected $logger;
-
-    public function __construct(LoopInterface $loop, LoggerInterface $logger, Db $db)
+    public function __construct(Db $db, LoggerInterface $logger)
     {
-        $this->loop = $loop;
-        $this->logger = $logger;
         $this->db = $db;
+        $this->logger = $logger;
     }
 
     /**

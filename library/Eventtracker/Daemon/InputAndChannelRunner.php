@@ -7,49 +7,33 @@ use Icinga\Module\Eventtracker\Db\ConfigStore;
 use Icinga\Module\Eventtracker\Engine\Downtime\DowntimeRunner;
 use Icinga\Module\Eventtracker\Engine\InputRunner;
 use Psr\Log\LoggerInterface;
-use React\EventLoop\LoopInterface;
+
 use function React\Promise\resolve;
 
 class InputAndChannelRunner implements DbBasedComponent
 {
-    /** @var Db */
-    protected $db;
+    protected DowntimeRunner $downtimeRunner;
+    protected LoggerInterface $logger;
+    protected ?InputRunner $runner = null;
 
-    /** @var LoopInterface */
-    protected $loop;
-
-    /** @var ?InputRunner */
-    protected $runner = null;
-
-    /** @var DowntimeRunner */
-    protected $downtimeRunner;
-
-    /** @var LoggerInterface */
-    protected $logger;
-
-    public function __construct(DowntimeRunner $downtimeRunner, LoopInterface $loop, LoggerInterface $logger)
+    public function __construct(DowntimeRunner $downtimeRunner, LoggerInterface $logger)
     {
         $this->downtimeRunner = $downtimeRunner;
-        $this->loop = $loop;
         $this->logger = $logger;
     }
 
     /**
-     * @param Db $db
      * @return \React\Promise\ExtendedPromiseInterface
      */
     public function initDb(Db $db)
     {
-        $this->db = $db;
-
         $store = new ConfigStore($db, $this->logger);
         $this->runner = new InputRunner($store, $this->downtimeRunner, $this->logger);
         $this->runner->setLogger($this->logger);
-        $this->runner->start($this->loop);
+        $this->runner->start();
 
         return resolve(null);
     }
-
 
     public function getInputRunner(): ?InputRunner
     {
@@ -72,6 +56,5 @@ class InputAndChannelRunner implements DbBasedComponent
     public function __destruct()
     {
         $this->stopDb();
-        $this->loop = null;
     }
 }

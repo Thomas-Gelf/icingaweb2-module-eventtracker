@@ -5,20 +5,23 @@ namespace Icinga\Module\Eventtracker\Daemon;
 use Closure;
 use Icinga\Module\Eventtracker\Engine\Downtime\DowntimeRule;
 use Psr\Log\LoggerInterface;
+use Ramsey\Uuid\Uuid;
 use React\EventLoop\Loop;
 
+/**
+ * @deprecated Might be deprecated, if Host lists are already handled elsewhere
+ */
 class RunningConfig implements DbBasedComponent
 {
     use SimpleDbBasedComponent;
 
-    /** @var LoggerInterface */
-    protected $logger;
+    protected LoggerInterface $logger;
 
     /** @var DowntimeRule[] */
-    protected $downtimeRules = [];
+    protected array $downtimeRules = [];
 
     /** @var Closure[] */
-    protected $onRuleChanges;
+    protected array $onRuleChanges;
 
     public function __construct(LoggerInterface $logger)
     {

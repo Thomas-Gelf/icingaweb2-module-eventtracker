@@ -17,7 +17,6 @@ use Icinga\Module\Eventtracker\Issue;
 use Psr\Log\LoggerInterface;
 use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\UuidInterface;
-use React\EventLoop\LoopInterface;
 use React\Promise\Deferred;
 use React\Promise\PromiseInterface;
 use stdClass;
@@ -36,38 +35,23 @@ class RpcNamespaceEvent implements EventEmitterInterface
     const CNT_REFRESHED = 'refreshed';
 
     public const ACTION_TIMEOUT = 15;
-    /** @var Db */
-    protected $db;
 
-    /** @var LoopInterface */
-    protected $loop;
-
-    /** @var Counters */
-    protected $counters;
-
+    protected Db $db;
+    protected Counters $counters;
     /** @var Action[] */
-    protected $actions;
-
-    /** @var LoggerInterface */
-    protected $logger;
-
-    /** @var InputAndChannelRunner */
-    protected $runner;
-    /**
-     * @var DowntimeRunner
-     */
-    protected $downtimeRunner;
+    protected array $actions = [];
+    protected LoggerInterface $logger;
+    protected InputAndChannelRunner $runner;
+    protected DowntimeRunner $downtimeRunner;
 
     public function __construct(
         InputAndChannelRunner $runner,
         DowntimeRunner $downtimeRunner,
-        LoopInterface $loop,
         LoggerInterface $logger,
         Db $db
     ) {
         $this->runner = $runner;
         $this->downtimeRunner = $downtimeRunner;
-        $this->loop = $loop;
         $this->logger = $logger;
         $this->db = $db;
         $this->counters = new Counters();
@@ -79,7 +63,7 @@ class RpcNamespaceEvent implements EventEmitterInterface
         $actions = (new ConfigStore($this->db, $this->logger))->loadActions(['enabled' => 'y']);
         /** @var Action $action */
         foreach ($actions as $action) {
-            $action->run($this->loop);
+            $action->run();
         }
         $this->actions = $actions;
     }
@@ -187,7 +171,7 @@ class RpcNamespaceEvent implements EventEmitterInterface
 
         if ($issue->hasBeenCreatedNow()) {
             $actions = ActionHelper::processIssue($this->actions, $issue, $this->db, $this->logger);
-            timeout($actions, 15, $this->loop);
+            timeout($actions, 15);
         }
 
         return $issue;

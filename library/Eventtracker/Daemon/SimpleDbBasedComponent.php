@@ -6,16 +6,15 @@ use gipfl\ZfDb\Adapter\Adapter as Db;
 use gipfl\ZfDbStore\ZfDbStore;
 use React\EventLoop\Loop;
 use React\Promise\Deferred;
+use React\Promise\Promise;
+use React\Promise\PromiseInterface;
 
 trait SimpleDbBasedComponent
 {
-    /** @var ?Db */
-    protected $db = null;
+    protected ?Db $db = null;
+    protected ?ZfDbStore $dbStore = null;
 
-    /** @var ?ZfDbStore */
-    protected $dbStore = null;
-
-    public function initDb(Db $db)
+    final public function initDb(Db $db): Promise
     {
         $this->db = $db;
         $this->dbStore = new ZfDbStore($db);
@@ -27,7 +26,7 @@ trait SimpleDbBasedComponent
                     $deferred->resolve(null);
                 } catch (\Exception $e) {
                     if (isset($this->logger) && $this->logger instanceof Loop) {
-                        $this->logger->critical(__CLASS__ . ' failed on initDb(): ' . $e->getMessage());
+                        $this->logger->critical(__CLASS__ . ' failed on onDbReady(): ' . $e->getMessage());
                     }
                     $deferred->reject($e);
                 }
@@ -39,7 +38,7 @@ trait SimpleDbBasedComponent
         return $deferred->promise();
     }
 
-    public function stopDb()
+    final public function stopDb(): PromiseInterface
     {
         $this->db = null;
         $this->dbStore = null;
@@ -51,7 +50,7 @@ trait SimpleDbBasedComponent
                     $deferred->resolve(null);
                 } catch (\Exception $e) {
                     if (isset($this->logger) && $this->logger instanceof Loop) {
-                        $this->logger->critical(__CLASS__ . ' failed on stopDb(): ' . $e->getMessage());
+                        $this->logger->critical(__CLASS__ . ' failed on onDbLost(): ' . $e->getMessage());
                     }
                     $deferred->reject($e);
                 }

@@ -13,9 +13,12 @@ use Icinga\Application\Icinga;
 use Icinga\Module\Eventtracker\Db\ZfDbConnectionFactory;
 use Icinga\Module\Eventtracker\Modifier\Settings;
 use Psr\Log\LoggerInterface;
+use React\EventLoop\Loop;
 use React\EventLoop\LoopInterface;
+use React\EventLoop\TimerInterface;
 use React\Promise\Deferred;
 use React\Promise\ExtendedPromiseInterface;
+use React\Promise\PromiseInterface;
 use RuntimeException;
 use SplObjectStorage;
 use function React\Promise\reject;
@@ -35,40 +38,28 @@ class DaemonDb
     const TABLE_NAME = 'daemon_info';
     protected LoggerInterface $logger;
 
-    /** @var LoopInterface */
-    private $loop;
-
     /** @var ZfDb|Mysql */
     protected $db;
 
-    /** @var DaemonProcessDetails */
-    protected $details;
+    protected DaemonProcessDetails $details;
 
     /** @var DbBasedComponent[] */
-    protected $registeredComponents = [];
+    protected array $registeredComponents = [];
 
-    /** @var DbResourceConfigWatch|null */
-    protected $configWatch;
+    protected ?DbResourceConfigWatch $configWatch;
 
-    /** @var array|null */
-    protected $dbConfig;
+    protected ?array $dbConfig;
 
-    /** @var RetryUnless|null */
-    protected $pendingReconnection;
+    protected ?RetryUnless $pendingReconnection = null;
 
     /** @var ExtendedPromiseInterface|null */
     protected $pendingDisconnect;
+    protected ?TimerInterface $refreshTimer = null;
+    protected ?TimerInterface $schemaCheckTimer = null;
 
-    /** @var \React\EventLoop\TimerInterface */
-    protected $refreshTimer;
+    protected ?int $startupSchemaVersion = null;
 
-    /** @var \React\EventLoop\TimerInterface */
-    protected $schemaCheckTimer;
-
-    /** @var int */
-    protected $startupSchemaVersion;
-
-    public function __construct(DaemonProcessDetails $details, LoggerInterface $logger, $dbConfig = null)
+    public function __construct(DaemonProcessDetails $details, LoggerInterface $logger, ?array $dbConfig = null)
     {
         $this->details = $details;
         $this->dbConfig = $dbConfig;
@@ -86,32 +77,21 @@ class DaemonDb
     {
         $this->configWatch = $configWatch;
         $configWatch->notify(function ($config) {
-            $this->disconnect()->then(function () use ($config) {
-                return $this->onNewConfig($config);
-            });
+            $this->disconnect()->then(fn () => $this->onNewConfig($config));
         });
-        if ($this->loop) {
-            $configWatch->run($this->loop);
+        if ($this->refreshTimer) {
+            $configWatch->run(Loop::get());
         }
-
-        return $this;
     }
 
-    public function run(LoopInterface $loop)
+    public function run()
     {
-        $this->loop = $loop;
         $this->connect();
-        $this->refreshTimer = $loop->addPeriodicTimer(3, function () {
-            $this->refreshMyState();
-        });
-        $this->schemaCheckTimer = $loop->addPeriodicTimer(15, function () {
-            $this->checkDbSchema();
-        });
-        $loop->addTimer(1, function () {
-            $this->checkDbSchema();
-        });
+        $this->refreshTimer = Loop::addPeriodicTimer(3, fn () => $this->refreshMyState());
+        $this->schemaCheckTimer = Loop::addPeriodicTimer(15, fn () => $this->checkDbSchema());
+        Loop::addTimer(1, fn () => $this->checkDbSchema());
         if ($this->configWatch) {
-            $this->configWatch->run($this->loop);
+            $this->configWatch->run(Loop::get());
         }
     }
 
@@ -126,7 +106,7 @@ class DaemonDb
             $this->emitStatus(self::ON_NO_CONFIGURATION);
             $this->dbConfig = $config;
 
-            return resolve();
+            return resolve(null);
         } else {
             $this->emitStatus(self::ON_CONFIGURATION_LOADED);
             $this->dbConfig = $config;
@@ -135,11 +115,11 @@ class DaemonDb
         }
     }
 
-    protected function establishConnection($config)
+    protected function establishConnection($config): PromiseInterface
     {
         if ($this->db !== null) {
             $this->logger->error('Trying to establish a connection while being connected');
-            return reject();
+            return reject(new RuntimeException('Trying to establish a connection while being connected'));
         }
         $callback = function () use ($config) {
             $this->reallyEstablishConnection($config);
@@ -189,7 +169,7 @@ class DaemonDb
         $this->details->set('schema_version', $this->startupSchemaVersion);
 
         $this->db = $db;
-        $this->loop->futureTick(function () {
+        Loop::futureTick(function () {
             $this->refreshMyState();
         });
 
@@ -274,7 +254,7 @@ class DaemonDb
             }
         }
 
-        return resolve();
+        return resolve(null);
     }
 
     protected function stopRegisteredComponents(): ExtendedPromiseInterface
@@ -286,7 +266,7 @@ class DaemonDb
             $resolve = function () use ($pendingComponents, $component, $pending) {
                 $pendingComponents->detach($component);
                 if ($pendingComponents->count() === 0) {
-                    $pending->resolve();
+                    $pending->resolve(null);
                 }
             };
             // TODO: What should we do in case they don't?
@@ -299,7 +279,7 @@ class DaemonDb
     public function disconnect(): ExtendedPromiseInterface
     {
         if (! $this->db) {
-            return resolve();
+            return resolve(null);
         }
         if ($this->pendingDisconnect instanceof ExtendedPromiseInterface) {
             return $this->pendingDisconnect;

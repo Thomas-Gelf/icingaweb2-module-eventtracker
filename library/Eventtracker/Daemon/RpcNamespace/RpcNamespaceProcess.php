@@ -4,21 +4,13 @@ namespace Icinga\Module\Eventtracker\Daemon\RpcNamespace;
 
 use Evenement\EventEmitterInterface;
 use Evenement\EventEmitterTrait;
-use React\EventLoop\LoopInterface;
+use React\EventLoop\Loop;
 
 class RpcNamespaceProcess implements EventEmitterInterface
 {
     use EventEmitterTrait;
 
     const ON_RESTART = 'restart';
-
-    /** @var LoopInterface */
-    protected $loop;
-
-    public function __construct(LoopInterface $loop)
-    {
-        $this->loop = $loop;
-    }
 
     /*
     public function infoRequest()
@@ -41,7 +33,7 @@ class RpcNamespaceProcess implements EventEmitterInterface
     public function restartRequest(): bool
     {
         // Grant some time to ship the response
-        $this->loop->addTimer(0.1, function () {
+        Loop::addTimer(0.1, function () {
             $this->emit(self::ON_RESTART);
         });
 

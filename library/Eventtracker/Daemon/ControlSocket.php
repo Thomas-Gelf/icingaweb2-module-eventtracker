@@ -4,9 +4,9 @@ namespace Icinga\Module\Eventtracker\Daemon;
 
 use Evenement\EventEmitterInterface;
 use Evenement\EventEmitterTrait;
-use React\EventLoop\LoopInterface;
 use React\Socket\UnixServer;
 use React\Stream\Util;
+
 use function file_exists;
 use function umask;
 use function unlink;
@@ -15,14 +15,8 @@ class ControlSocket implements EventEmitterInterface
 {
     use EventEmitterTrait;
 
-    /** @var string */
-    protected $path;
-
-    /** @var LoopInterface */
-    protected $loop;
-
-    /** @var UnixServer */
-    protected $server;
+    protected string $path;
+    protected ?UnixServer $server = null;
 
     public function __construct(string $path)
     {
@@ -30,16 +24,15 @@ class ControlSocket implements EventEmitterInterface
         $this->eventuallyRemoveSocketFile();
     }
 
-    public function run(LoopInterface $loop)
+    public function run()
     {
-        $this->loop = $loop;
         $this->listen();
     }
 
     protected function listen()
     {
         $old = umask(0000);
-        $server = new UnixServer('unix://' . $this->path, $this->loop);
+        $server = new UnixServer('unix://' . $this->path);
         umask($old);
         Util::forwardEvents($server, $this, ['connection' ,'error']);
         $this->server = $server;

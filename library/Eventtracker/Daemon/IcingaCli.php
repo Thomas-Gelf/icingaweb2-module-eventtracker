@@ -4,20 +4,14 @@ namespace Icinga\Module\Eventtracker\Daemon;
 
 use Evenement\EventEmitterTrait;
 use gipfl\Process\FinishedProcessState;
-use React\EventLoop\LoopInterface;
 use React\Promise\Deferred;
 
 class IcingaCli
 {
     use EventEmitterTrait;
 
-    /** @var IcingaCliRunner */
-    protected $runner;
-
-    protected $arguments = [];
-
-    /** @var LoopInterface */
-    protected $loop;
+    protected ?IcingaCliRunner $runner;
+    protected array $arguments = [];
 
     public function __construct(IcingaCliRunner $runner = null)
     {
@@ -33,22 +27,16 @@ class IcingaCli
         // Override this if you want.
     }
 
-    public function setArguments($arguments)
+    public function setArguments(array $arguments)
     {
         $this->arguments = $arguments;
 
         return $this;
     }
 
-    public function getArguments()
+    public function run()
     {
-        return $this->arguments;
-    }
-
-    public function run(LoopInterface $loop)
-    {
-        $this->loop = $loop;
-        $process = $this->runner->command($this->getArguments());
+        $process = $this->runner->command($this->arguments);
         $canceller = function () use ($process) {
             // TODO: first soft, then hard
             $process->terminate();
@@ -58,12 +46,12 @@ class IcingaCli
         $process->on('exit', function ($exitCode, $termSignal) use ($deferred) {
             $state = new FinishedProcessState($exitCode, $termSignal);
             if ($state->succeeded()) {
-                $deferred->resolve();
+                $deferred->resolve(null);
             } else {
                 $deferred->reject(new \RuntimeException($state->getReason()));
             }
         });
-        $process->start($loop);
+        $process->start();
         $this->emit('start', [$process]);
 
         return $deferred->promise();

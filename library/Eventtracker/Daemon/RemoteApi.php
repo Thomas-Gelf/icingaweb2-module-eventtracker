@@ -5,7 +5,6 @@ namespace Icinga\Module\Eventtracker\Daemon;
 use Evenement\EventEmitterInterface;
 use Evenement\EventEmitterTrait;
 use Exception;
-use gipfl\Curl\CurlAsync;
 use gipfl\Log\Logger;
 use gipfl\Protocol\JsonRpc\Error;
 use gipfl\Protocol\JsonRpc\Handler\FailingPacketHandler;
@@ -22,10 +21,11 @@ use Icinga\Module\Eventtracker\Daemon\RpcNamespace\RpcNamespaceLogger;
 use Icinga\Module\Eventtracker\DbFactory;
 use Icinga\Module\Eventtracker\Engine\Downtime\DowntimeRunner;
 use Psr\Log\LoggerInterface;
-use React\EventLoop\LoopInterface;
+use React\EventLoop\Loop;
 use React\Promise\ExtendedPromiseInterface;
 use React\Socket\ConnectionInterface;
 use React\Stream\Util;
+
 use function posix_getegid;
 use function React\Promise\resolve;
 
@@ -33,44 +33,29 @@ class RemoteApi implements EventEmitterInterface
 {
     use EventEmitterTrait;
 
-    /** @var LoggerInterface */
-    protected $logger;
-
-    /** @var LoopInterface */
-    protected $loop;
-
-    /** @var ControlSocket */
-    protected $controlSocket;
-
-    /** @var CurlAsync */
-    protected $curl;
-
-    /** @var InputAndChannelRunner */
-    protected $runner;
+    protected LoggerInterface $logger;
+    protected InputAndChannelRunner $runner;
+    protected ?ControlSocket $controlSocket = null;
 
     /** @var RunningConfig */
     protected $runningConfig;
 
-    /** @var DowntimeRunner */
-    protected $downtimeRunner;
+    protected DowntimeRunner $downtimeRunner;
 
     public function __construct(
         InputAndChannelRunner $runner,
         DowntimeRunner        $downtimeRunner,
         RunningConfig         $runningConfig,
-        LoopInterface         $loop,
         LoggerInterface       $logger
     ) {
         $this->runner = $runner;
         $this->logger = $logger;
-        $this->loop = $loop;
         $this->runningConfig = $runningConfig;
         $this->downtimeRunner = $downtimeRunner;
     }
 
-    public function run($socketPath, LoopInterface $loop)
+    public function run($socketPath)
     {
-        $this->loop = $loop;
         $this->initializeControlSocket($socketPath);
     }
 
@@ -81,7 +66,7 @@ class RemoteApi implements EventEmitterInterface
         }
         $this->logger->info("[socket] launching control socket in $path");
         $socket = new ControlSocket($path);
-        $socket->run($this->loop);
+        $socket->run();
         $this->addSocketEventHandlers($socket);
         $this->controlSocket = $socket;
     }
@@ -113,7 +98,7 @@ class RemoteApi implements EventEmitterInterface
                 $peer = UnixSocketInspection::getPeer($connection);
             } catch (Exception $e) {
                 $jsonRpc->setHandler(new FailingPacketHandler(Error::forException($e)));
-                $this->loop->addTimer(3, function () use ($connection) {
+                Loop::addTimer(3, function () use ($connection) {
                     $connection->close();
                 });
                 return;
@@ -124,24 +109,23 @@ class RemoteApi implements EventEmitterInterface
                     '%s is not allowed to control this socket',
                     $peer->getUsername()
                 ))));
-                $this->loop->addTimer(10, function () use ($connection) {
+                Loop::addTimer(10, function () use ($connection) {
                     $connection->close();
                 });
                 return;
             }
 
-            $rpcProcess = new RpcNamespaceProcess($this->loop);
+            $rpcProcess = new RpcNamespaceProcess();
             Util::forwardEvents($rpcProcess, $this, [RpcNamespaceProcess::ON_RESTART]);
             $handler = new NamespacedPacketHandler();
             $handler->registerNamespace('event', new RpcNamespaceEvent(
                 $this->runner,
                 $this->downtimeRunner,
-                $this->loop,
                 $this->logger,
                 DbFactory::db()
             ));
             $handler->registerNamespace('config', new RpcNamespaceConfig($this->runningConfig));
-            $handler->registerNamespace('issue', new RpcNamespaceIssue($this->loop, $this->logger, DbFactory::db()));
+            $handler->registerNamespace('issue', new RpcNamespaceIssue(DbFactory::db(), $this->logger));
             $handler->registerNamespace('process', $rpcProcess);
             if ($this->logger instanceof Logger) {
                 $handler->registerNamespace('logger', new RpcNamespaceLogger($this->logger));
@@ -161,6 +145,6 @@ class RemoteApi implements EventEmitterInterface
             unset($this->controlSocket);
         }
 
-        return resolve();
+        return resolve(null);
     }
 }

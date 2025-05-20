@@ -4,6 +4,7 @@ namespace Icinga\Module\Eventtracker\Daemon;
 
 use gipfl\Protocol\JsonRpc\JsonRpcConnection;
 use gipfl\Protocol\NetString\StreamWrapper;
+use React\EventLoop\Loop;
 use React\EventLoop\LoopInterface;
 use React\Socket\ConnectionInterface;
 use React\Socket\UnixConnector;
@@ -16,15 +17,12 @@ class RemoteClient
     /** @var JsonRpcConnection */
     protected $connection;
 
-    /** @var LoopInterface */
-    protected $loop;
 
     protected $pendingConnection;
 
-    public function __construct($path, LoopInterface $loop)
+    public function __construct($path)
     {
         $this->path = $path;
-        $this->loop = $loop;
     }
 
     public function request(string $method, $params = null)
@@ -56,7 +54,7 @@ class RemoteClient
 
     protected function connect()
     {
-        $connector = new UnixConnector($this->loop);
+        $connector = new UnixConnector(Loop::get());
         $connected = function (ConnectionInterface $connection) {
             $jsonRpc = new JsonRpcConnection(new StreamWrapper($connection));
             $this->connection = $jsonRpc;

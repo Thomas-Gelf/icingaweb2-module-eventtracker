@@ -13,7 +13,7 @@ use Icinga\Module\Eventtracker\Daemon\RpcNamespace\RpcNamespaceProcess;
 use Icinga\Module\Eventtracker\Engine\Downtime\DowntimeRunner;
 use Icinga\Module\Eventtracker\Engine\Downtime\GeneratedDowntimeGenerator;
 use Psr\Log\LoggerInterface;
-use React\EventLoop\Factory as Loop;
+use React\EventLoop\Loop;
 use React\EventLoop\LoopInterface;
 use Ramsey\Uuid\Uuid;
 use React\Stream\Util as StreamUtil;
@@ -24,8 +24,6 @@ class BackgroundDaemon implements EventEmitterInterface
 {
     use EventEmitterTrait;
 
-    /** @var LoopInterface */
-    private $loop;
 
     /** @var NotifySystemD|boolean */
     protected $systemd;
@@ -52,7 +50,9 @@ class BackgroundDaemon implements EventEmitterInterface
     protected $logProxy;
 
     /** @var RemoteApi */
-    protected $remoteApi;
+    protected ?RemoteApi $remoteApi = null;
+    protected bool $reloading = false;
+    protected bool $shuttingDown = false;
 
     /** @var RunningConfig */
     protected $runningConfig;
@@ -63,39 +63,24 @@ class BackgroundDaemon implements EventEmitterInterface
     /** @var DowntimeRunner */
     protected $downtimeRunner;
 
-    /** @var bool */
-    protected $reloading = false;
-
-    /** @var bool */
-    protected $shuttingDown = false;
-
-    protected $logger;
+    protected LoggerInterface $logger;
 
     public function __construct(LoggerInterface $logger)
     {
         $this->logger = $logger;
     }
 
-    public function run(LoopInterface $loop = null)
+    public function run()
     {
-        if ($ownLoop = ($loop === null)) {
-            $loop = Loop::create();
-        }
-        $this->loop = $loop;
-        $this->loop->futureTick(function () {
-            $this->initialize();
-        });
-        if ($ownLoop) {
-            $loop->run();
-        }
+        Loop::futureTick(fn () => $this->initialize());
     }
 
     protected function initialize()
     {
         $this->logger->notice('Starting up');
-        $this->registerSignalHandlers($this->loop);
+        $this->registerSignalHandlers();
         $this->processState = new DaemonProcessState(Application::PROCESS_NAME);
-        $this->jobRunner = new JobRunner($this->loop, $this->logger);
+        $this->jobRunner = new JobRunner($this->logger);
         $this->systemd = $this->optionallyInitializeSystemd();
         $this->processState->setSystemd($this->systemd);
         if ($this->systemd) {
@@ -109,7 +94,7 @@ class BackgroundDaemon implements EventEmitterInterface
         $this->jobRunner->forwardLog($this->logProxy);
         $this->generatedDowntimeGenerator = new GeneratedDowntimeGenerator($this->logger);
         $this->downtimeRunner = new DowntimeRunner($this->logger);
-        $this->channelRunner = new InputAndChannelRunner($this->downtimeRunner, $this->loop, $this->logger);
+        $this->channelRunner = new InputAndChannelRunner($this->downtimeRunner, $this->logger);
         $this->daemonDb = $this->initializeDb(
             $this->processDetails,
             $this->processState,
@@ -128,17 +113,16 @@ class BackgroundDaemon implements EventEmitterInterface
             ->register($this->generatedDowntimeGenerator)
             ->register($this->runningConfig)
             ->register($this->downtimeRunner)
-            ->run($this->loop);
-        $this->prepareApi($this->channelRunner, $this->loop, $this->logger);
+            ->run();
+        $this->prepareApi($this->channelRunner, $this->logger);
         $this->setState('running');
         $this->logger->notice('Daemon has been initialized');
     }
 
     /**
      * @param NotifySystemD|false $systemd
-     * @return DaemonProcessDetails
      */
-    protected function initializeProcessDetails($systemd)
+    protected function initializeProcessDetails($systemd): DaemonProcessDetails
     {
         if ($systemd && $systemd->hasInvocationId()) {
             $uuid = $systemd->getInvocationId();
@@ -162,7 +146,7 @@ class BackgroundDaemon implements EventEmitterInterface
      */
     protected function optionallyInitializeSystemd()
     {
-        $systemd = NotifySystemD::ifRequired($this->loop);
+        $systemd = NotifySystemD::ifRequired(Loop::get());
         if ($systemd) {
             $this->logger->info(sprintf(
                 "Started by systemd, notifying watchdog every %0.2Gs via %s",
@@ -180,7 +164,7 @@ class BackgroundDaemon implements EventEmitterInterface
         DaemonProcessDetails $processDetails,
         DaemonProcessState $processState,
         $dbResourceName = null
-    ) {
+    ): DaemonDb {
         $db = new DaemonDb($processDetails, $this->logger);
         $db->on('state', function ($state, $level = null) use ($processState) {
             // TODO: level is sent but not used
@@ -189,9 +173,7 @@ class BackgroundDaemon implements EventEmitterInterface
         $db->on('schemaOutdated', function () {
             $this->reloading = true;
             $this->setState('reloading the main process');
-            $this->daemonDb->disconnect()->then(function () {
-                Process::restart();
-            });
+            $this->daemonDb->disconnect()->then(fn () => Process::restart());
         });
         $db->on(DaemonDb::ON_SCHEMA_CHANGE, function ($startupSchema, $dbSchema) {
             $this->logger->info(sprintf(
@@ -199,9 +181,7 @@ class BackgroundDaemon implements EventEmitterInterface
                 $startupSchema,
                 $dbSchema
             ));
-            $this->loop->addTimer(0.3, function () {
-                $this->reload();
-            });
+            Loop::addTimer(0.3, fn () => $this->reload());
         });
 
         $db->setConfigWatch(
@@ -213,15 +193,15 @@ class BackgroundDaemon implements EventEmitterInterface
         return $db;
     }
 
-    protected function prepareApi(InputAndChannelRunner $runner, LoopInterface $loop, LoggerInterface $logger)
+    protected function prepareApi(InputAndChannelRunner $runner, LoggerInterface $logger)
     {
         $socketPath = Configuration::getSocketPath();
-        $this->remoteApi = new RemoteApi($runner, $this->downtimeRunner, $this->runningConfig, $loop, $logger);
+        $this->remoteApi = new RemoteApi($runner, $this->downtimeRunner, $logger);
         StreamUtil::forwardEvents($this->remoteApi, $this, [RpcNamespaceProcess::ON_RESTART]);
-        $this->remoteApi->run($socketPath, $loop);
+        $this->remoteApi->run($socketPath);
     }
 
-    protected function registerSignalHandlers(LoopInterface $loop)
+    protected function registerSignalHandlers()
     {
         $func = function ($signal) use (&$func) {
             $this->shutdownWithSignal($signal, $func);
@@ -229,14 +209,14 @@ class BackgroundDaemon implements EventEmitterInterface
         $funcReload = function () {
             $this->reload();
         };
-        $loop->addSignal(SIGHUP, $funcReload);
-        $loop->addSignal(SIGINT, $func);
-        $loop->addSignal(SIGTERM, $func);
+        Loop::addSignal(SIGHUP, $funcReload);
+        Loop::addSignal(SIGINT, $func);
+        Loop::addSignal(SIGTERM, $func);
     }
 
     protected function shutdownWithSignal($signal, &$func)
     {
-        $this->loop->removeSignal($signal, $func);
+        Loop::removeSignal($signal, $func);
         $this->shutdown();
     }
 
@@ -250,8 +230,8 @@ class BackgroundDaemon implements EventEmitterInterface
         $this->setState('reloading the main process');
         $this->logger->notice('Going down for reload');
         $this->prepareShutdown()->then(function () {
-            $this->loop->addTimer(0.1, function () {
-                $this->loop->stop();
+            Loop::addTimer(0.1, function () {
+                Loop::stop();
                 Process::restart();
             });
         });
@@ -261,22 +241,17 @@ class BackgroundDaemon implements EventEmitterInterface
     {
         $this->prepareShutdown()->then(function () {
             $this->logger->info('Shutdown completed');
-            $this->loop->addTimer(0.1, function () {
-                $this->loop->stop();
-            });
+            Loop::addTimer(0.1, fn () => Loop::stop());
         }, function (Exception $e) {
             $this->logger->error('Problem on shutdown: ' . $e->getMessage());
-            $this->loop->addTimer(0.1, function () {
-                $this->loop->stop();
-            });
-        });
+            Loop::addTimer(0.1, fn () => Loop::stop());
+       });
     }
 
     protected function prepareShutdown()
     {
         if ($this->shuttingDown) {
-            $this->logger->error('Ignoring shutdown request, shutdown is already in progress');
-            return reject();
+            return reject(new Exception('Ignoring shutdown request, shutdown is already in progress'));
         }
         $this->logger->info('Shutting down');
         $this->shuttingDown = true;
@@ -292,12 +267,10 @@ class BackgroundDaemon implements EventEmitterInterface
         ]);
     }
 
-    protected function setState($state)
+    protected function setState(string $state): void
     {
         if ($this->processState) {
             $this->processState->setState($state);
         }
-
-        return $this;
     }
 }

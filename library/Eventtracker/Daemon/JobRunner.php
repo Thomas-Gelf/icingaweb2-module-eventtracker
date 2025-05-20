@@ -11,7 +11,7 @@ use Icinga\Application\Config;
 use Icinga\Application\Icinga;
 use Psr\Log\LoggerInterface;
 use React\ChildProcess\Process;
-use React\EventLoop\LoopInterface;
+use React\EventLoop\Loop;
 use React\EventLoop\TimerInterface;
 use React\Promise\ExtendedPromiseInterface;
 use React\Promise\Promise;
@@ -21,7 +21,6 @@ use function React\Promise\resolve;
 
 class JobRunner implements DbBasedComponent
 {
-    protected LoopInterface $loop;
     protected ProcessList $running;
     protected LoggerInterface $logger;
     protected ?Db $db = null;
@@ -34,9 +33,8 @@ class JobRunner implements DbBasedComponent
     protected array $scheduledTasks = [];
     protected int $checkInterval = 10;
 
-    public function __construct(LoopInterface $loop, LoggerInterface $logger)
+    public function __construct(LoggerInterface $logger)
     {
-        $this->loop = $loop;
         $this->running = new ProcessList();
         $this->logger = $logger;
     }
@@ -88,17 +86,17 @@ class JobRunner implements DbBasedComponent
             }
         };
         if ($this->timer === null) {
-            $this->loop->futureTick($check);
+            Loop::futureTick($check);
         }
         if ($this->timer !== null) {
             $this->logger->info('Cancelling former timer');
-            $this->loop->cancelTimer($this->timer);
+            Loop::cancelTimer($this->timer);
         }
         if ($this->scheduleTimer !== null) {
-            $this->loop->cancelTimer($this->scheduleTimer);
+            Loop::cancelTimer($this->scheduleTimer);
         }
-        $this->timer = $this->loop->addPeriodicTimer($this->checkInterval, $check);
-        $this->scheduleTimer = $this->loop->addPeriodicTimer(7, $schedule); // TODO: can this be combined?
+        $this->timer = Loop::addPeriodicTimer($this->checkInterval, $check);
+        $this->scheduleTimer = Loop::addPeriodicTimer(7, $schedule); // TODO: can this be combined?
 
         return resolve(null);
     }
@@ -107,14 +105,14 @@ class JobRunner implements DbBasedComponent
     {
         $this->scheduledTasks = [];
         if ($this->timer !== null) {
-            $this->loop->cancelTimer($this->timer);
+            Loop::cancelTimer($this->timer);
             $this->timer = null;
         }
         if ($this->scheduleTimer !== null) {
-            $this->loop->cancelTimer($this->scheduleTimer);
+            Loop::cancelTimer($this->scheduleTimer);
             $this->scheduleTimer = null;
         }
-        $terminateProcesses = ProcessKiller::terminateProcesses($this->running, $this->loop);
+        $terminateProcesses = ProcessKiller::terminateProcesses($this->running, Loop::get());
         foreach ($this->runningTasks as $id => $promise) {
             $promise->cancel();
         }
@@ -183,15 +181,13 @@ class JobRunner implements DbBasedComponent
             });
         }
         unset($this->scheduledTasks[$what]);
-        $this->runningTasks[$what] = $cli->run($this->loop)->then(function () use ($what) {
+        $this->runningTasks[$what] = $cli->run()->then(function () use ($what) {
             $this->logger->debug("Job ($what) finished");
         }, function (\Exception $e) use ($what) {
             $this->logger->error("Job ($what) failed: " . $e->getMessage());
         })->always(function () use ($what) {
             unset($this->runningTasks[$what]);
-            $this->loop->futureTick(function () {
-                $this->runNextPendingTask();
-            });
+            Loop::futureTick(fn () => $this->runNextPendingTask());
         });
     }
 

@@ -6,21 +6,14 @@ use Exception;
 use gipfl\Protocol\JsonRpc\JsonRpcConnection;
 use gipfl\Protocol\NetString\StreamWrapper;
 use React\ChildProcess\Process;
+use React\EventLoop\Loop;
 use React\Promise\Deferred;
 use React\Promise\PromiseInterface;
 
 class IcingaCliRpc extends IcingaCli
 {
-    /** @var IcingaCliRunner */
-    protected $runner;
-
-    /** @var JsonRpcConnection */
-    protected $rpc;
-
-    /** @var Deferred */
-    protected $waitingForRpc;
-
-    protected $arguments = [];
+    protected ?JsonRpcConnection $rpc = null;
+    protected ?Deferred $waitingForRpc = null;
 
     protected function init()
     {
@@ -53,7 +46,7 @@ class IcingaCliRpc extends IcingaCli
         }
 
         if ($this->rpc) {
-            $this->loop->futureTick(function () {
+            Loop::futureTick(function () {
                 if ($this->rpc && $deferred = $this->waitingForRpc) {
                     $this->waitingForRpc = null;
                     $deferred->resolve($this->rpc);
