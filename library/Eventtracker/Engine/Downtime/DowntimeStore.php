@@ -106,6 +106,9 @@ class DowntimeStore
 
     public function removeDowntimeForIssue(Issue $issue, ?DowntimeRule $rule): void
     {
+        if ($issue->get('status') !== 'in_downtime') {
+            return;
+        }
         $this->runTransaction(fn () => $this->runRemoveDowntimeForIssue($issue, $rule), 'remove a downtime');
     }
 
