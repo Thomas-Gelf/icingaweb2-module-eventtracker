@@ -94,15 +94,17 @@ class DowntimeStore
         $issue->set('status', 'in_downtime');
         $issue->set('downtime_rule_uuid', $rule->get('uuid'));
         $issue->set('downtime_config_uuid', $rule->get('config_uuid'));
-        $issue->set('ts_downtime_triggered', $now);
+        if ($issue->get('downtime_rule_uuid') !== $rule->get('uuid')) {
+            $issue->set('ts_downtime_triggered', $now);
+            $this->db->insert('issue_downtime_history', [
+                'ts_modification'  => $now,
+                'issue_uuid'       => $issue->get('issue_uuid'),
+                'rule_uuid'        => $rule->get('uuid'),
+                'rule_config_uuid' => $rule->get('config_uuid'),
+                'action'           => 'activated',
+            ]);
+        }
         $issue->storeToDb($this->db);
-        $this->db->insert('issue_downtime_history', [
-            'ts_modification'  => $now,
-            'issue_uuid'       => $issue->get('issue_uuid'),
-            'rule_uuid'        => $rule->get('uuid'),
-            'rule_config_uuid' => $rule->get('config_uuid'),
-            'action'           => 'activated',
-        ]);
     }
 
     public function removeDowntimeForIssue(Issue $issue, ?DowntimeRule $rule): void
