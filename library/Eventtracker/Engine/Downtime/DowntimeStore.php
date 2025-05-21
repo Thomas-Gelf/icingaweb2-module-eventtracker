@@ -92,6 +92,7 @@ class DowntimeStore
     {
         $now = Time::unixMilli();
         $issue->set('status', 'in_downtime');
+        $issue->set('downtime_rule_uuid', $rule->get('uuid'));
         $issue->set('downtime_config_uuid', $rule->get('config_uuid'));
         $issue->set('ts_downtime_triggered', $now);
         $issue->storeToDb($this->db);
