@@ -133,10 +133,8 @@ class DowntimeStore
     public function getHostList(string $binaryUuid): ?HostList
     {
         if (!isset($this->hostLists[$binaryUuid])) {
-            if ($this->db) {
-                if ($list = HostList::load(Uuid::fromBytes($binaryUuid), $this->db)) {
-                    $this->hostLists[$binaryUuid] = $list;
-                }
+            if ($list = HostList::load(Uuid::fromBytes($binaryUuid), $this->db)) {
+                $this->hostLists[$binaryUuid] = $list;
             }
         }
 
