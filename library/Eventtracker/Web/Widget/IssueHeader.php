@@ -9,6 +9,7 @@ use gipfl\Translation\TranslationHelper;
 use gipfl\Web\Widget\Hint;
 use gipfl\ZfDb\Adapter\Adapter as Db;
 use gipfl\ZfDbStore\NotFoundError;
+use gipfl\ZfDbStore\ZfDbStore;
 use Icinga\Application\Hook;
 use Icinga\Authentication\Auth;
 use Icinga\Date\DateFormatter;
@@ -100,10 +101,19 @@ class IssueHeader extends BaseHtmlElement
                 )));
             } else {
                 try {
-                    $downtime = DowntimeRule::loadWithConfigUuid(
-                        $this->db,
-                        Uuid::fromBytes($issue->get('downtime_config_uuid'))
-                    );
+                    if ($issue->get('downtime_rule_uuid') === null) {
+                        // Legacy
+                        $downtime = DowntimeRule::loadWithConfigUuid(
+                            $this->db,
+                            Uuid::fromBytes($issue->get('downtime_config_uuid'))
+                        );
+                    } else {
+                        $store = new ZfDbStore($this->db);
+                        $downtime = DowntimeRule::load(
+                            $store,
+                            Uuid::fromBytes($issue->get('downtime_uuid'))
+                        );
+                    }
                     $this->add(Hint::info([$this->translate(
                         'Alert silenced by Downtime: '
                     ), Html::tag('strong', $downtime->get('label'))]));
