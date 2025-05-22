@@ -87,6 +87,28 @@ class DowntimeStore
         $this->runTransaction(fn () => $this->runSetDowntimeForIssue($issue, $rule), 'set a downtime');
     }
 
+    public function logDowntimeActivation(Issue $issue, DowntimeRule $rule, ?int $now = null)
+    {
+        $this->db->insert('issue_downtime_history', [
+            'ts_modification'  => $now ?? Time::unixMilli(),
+            'issue_uuid'       => $issue->get('issue_uuid'),
+            'rule_uuid'        => $rule->get('uuid'),
+            'rule_config_uuid' => $rule->get('config_uuid'),
+            'action'           => 'activated',
+        ]);
+    }
+
+    public function logDowntimeDeactivation(Issue $issue, ?DowntimeRule $rule, ?int $now = null)
+    {
+        $this->db->insert('issue_downtime_history', [
+            'ts_modification'  => $now ?? Time::unixMilli(),
+            'issue_uuid'       => $issue->get('issue_uuid'),
+            'rule_uuid'        => $rule ? $rule->get('uuid') : null,
+            'rule_config_uuid' => $rule ? $rule->get('config_uuid') : null,
+            'action'           => 'deactivated',
+        ]);
+    }
+
     protected function runSetDowntimeForIssue(Issue $issue, DowntimeRule $rule)
     {
         $now = Time::unixMilli();
@@ -95,13 +117,7 @@ class DowntimeStore
         $issue->set('downtime_config_uuid', $rule->get('config_uuid'));
         if ($issue->get('downtime_rule_uuid') !== $rule->get('uuid')) {
             $issue->set('ts_downtime_triggered', $now);
-            $this->db->insert('issue_downtime_history', [
-                'ts_modification'  => $now,
-                'issue_uuid'       => $issue->get('issue_uuid'),
-                'rule_uuid'        => $rule->get('uuid'),
-                'rule_config_uuid' => $rule->get('config_uuid'),
-                'action'           => 'activated',
-            ]);
+            $this->logDowntimeActivation($issue, $rule);
         }
         $issue->storeToDb($this->db);
     }
@@ -126,13 +142,7 @@ class DowntimeStore
         // Hint: we leave downtime_config_uuid and ts_downtime_triggered to not trigger the
         // same downtime twice, depending on rle configuration
         $issue->storeToDb($this->db);
-        $this->db->insert('issue_downtime_history', [
-            'ts_modification'  => $now,
-            'issue_uuid'       => $issue->get('issue_uuid'),
-            'rule_uuid'        => $rule ? $rule->get('uuid') : null,
-            'rule_config_uuid' => $rule ? $rule->get('config_uuid') : null,
-            'action'           => 'deactivated',
-        ]);
+        $this->logDowntimeDeactivation($issue, $rule, $now);
     }
 
     public function getHostList(string $binaryUuid): ?HostList
