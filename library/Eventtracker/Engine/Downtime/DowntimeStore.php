@@ -138,6 +138,7 @@ class DowntimeStore
         } else {
             $issue->set('status', 'open');
         }
+        $issue->set('ts_downtime_expired', $now);
 
         // Hint: we leave downtime_config_uuid and ts_downtime_triggered to not trigger the
         // same downtime twice, depending on rle configuration
