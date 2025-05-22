@@ -187,7 +187,7 @@ class IssuesTable extends BaseTable
             return [' ', Icon::create('plug', [
                 'title' => $this->translate('In downtime')
             ])];
-        } else if ($row->status === 'acknowledged') {
+        } elseif ($row->status === 'acknowledged') {
             return [' ', Icon::create('check', [
                 'title' => $this->translate('Acknowledged')
             ])];
