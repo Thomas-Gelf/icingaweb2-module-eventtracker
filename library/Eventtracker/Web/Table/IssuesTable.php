@@ -151,11 +151,9 @@ class IssuesTable extends BaseTable
         if ($this->compact) {
             return Html::tag('td', [
                 'class' => $classes
-            ], [
-                $this->formatTime($row->timestamp)->add(
-                    $prioIconRenderer($row)
-                )
-            ]);
+            ], $this->noWrap([$this->formatTime($row->timestamp)->add(
+                $prioIconRenderer($row)
+            ), $this->getStateIcon($row)]));
         }
 
         $link = Link::create(substr(strtoupper($row->severity), 0, 4), 'eventtracker/issue', [
@@ -168,12 +166,34 @@ class IssuesTable extends BaseTable
             $link->add($prioIconRenderer($row));
         }
 
-        $td = Html::tag('td', ['class' => $classes], $link);
+        $td = Html::tag('td', ['class' => $classes], $this->noWrap([$link, $this->getStateIcon($row)]));
         if (! \in_array('received', $this->getChosenColumnNames())) {
             $td->add($this->formatTime($row->timestamp));
         }
 
         return $td;
+    }
+
+    protected function noWrap($content)
+    {
+        return Html::tag('span', [
+            'class' => 'nowrap'
+        ], $content);
+    }
+
+    protected function getStateIcon($row): ?array
+    {
+        if ($row->status === 'in_downtime') {
+            return [' ', Icon::create('plug', [
+                'title' => $this->translate('In downtime')
+            ])];
+        } else if ($row->status === 'acknowledged') {
+            return [' ', Icon::create('check', [
+                'title' => $this->translate('Acknowledged')
+            ])];
+        }
+
+        return null;
     }
 
     protected function formatTime($timestamp)
