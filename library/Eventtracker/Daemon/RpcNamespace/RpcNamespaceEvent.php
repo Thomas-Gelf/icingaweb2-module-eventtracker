@@ -156,11 +156,16 @@ class RpcNamespaceEvent implements EventEmitterInterface
                 $issue->set('severity', 'notice');
             }
             if ($rule = $this->downtimeRunner->getDowntimeRuleForIssueIfAny($issue)) {
+                $now = Time::unixMilli();
                 $issue->set('status', 'in_downtime');
+                $issue->set('downtime_rule_uuid', $rule->get('uuid'));
                 $issue->set('downtime_config_uuid', $rule->get('config_uuid'));
-                $issue->set('ts_downtime_triggered', Time::unixMilli());
+                $issue->set('ts_downtime_triggered', $now);
+                $issue->storeToDb($this->db);
+                $this->downtimeRunner->store->logDowntimeActivation($issue, $rule, $now);
+            } else {
+                $issue->storeToDb($this->db);
             }
-            $issue->storeToDb($this->db);
         } elseif ($issue) {
             $this->counters->increment(self::CNT_RECOVERED);
             $issue->recover($event, $this->db);
