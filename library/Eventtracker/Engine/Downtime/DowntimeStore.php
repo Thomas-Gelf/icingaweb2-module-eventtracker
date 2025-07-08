@@ -64,7 +64,7 @@ class DowntimeStore
     {
         $db = $this->db;
         return self::dbResultsToIssues($db->fetchAll(
-            $db->select()->from('issue')
+            $db->select()->from(['i' => 'issue'])
                 ->where('status = ?', 'in_downtime')
                 ->where('i.downtime_rule_uuid = ?', $ruleUuid->getBytes())
         ));
