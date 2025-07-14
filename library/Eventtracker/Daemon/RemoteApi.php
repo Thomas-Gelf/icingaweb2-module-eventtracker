@@ -18,7 +18,6 @@ use Icinga\Module\Eventtracker\Daemon\RpcNamespace\RpcNamespaceEventtracker;
 use Icinga\Module\Eventtracker\Daemon\RpcNamespace\RpcNamespaceIssue;
 use Icinga\Module\Eventtracker\Daemon\RpcNamespace\RpcNamespaceProcess;
 use Icinga\Module\Eventtracker\Daemon\RpcNamespace\RpcNamespaceLogger;
-use Icinga\Module\Eventtracker\DbFactory;
 use Icinga\Module\Eventtracker\Engine\Downtime\DowntimeRunner;
 use Psr\Log\LoggerInterface;
 use React\EventLoop\Loop;
@@ -38,15 +37,18 @@ class RemoteApi implements EventEmitterInterface
     protected ?ControlSocket $controlSocket = null;
 
     protected DowntimeRunner $downtimeRunner;
+    protected DaemonDb $daemonDb;
 
     public function __construct(
         InputAndChannelRunner $runner,
-        DowntimeRunner     $downtimeRunner,
+        DowntimeRunner        $downtimeRunner,
+        DaemonDb              $daemonDb,
         LoggerInterface       $logger
     ) {
         $this->runner = $runner;
-        $this->logger = $logger;
         $this->downtimeRunner = $downtimeRunner;
+        $this->daemonDb = $daemonDb;
+        $this->logger = $logger;
     }
 
     public function run($socketPath)
@@ -117,13 +119,12 @@ class RemoteApi implements EventEmitterInterface
                 $this->downtimeRunner,
                 $this->logger
             ));
-            $handler->registerNamespace('event', new RpcNamespaceEvent(
-                $this->runner,
-                $this->downtimeRunner,
-                $this->logger,
-                DbFactory::db()
-            ));
-            $handler->registerNamespace('issue', new RpcNamespaceIssue(DbFactory::db(), $this->logger));
+            $nsEvent = new RpcNamespaceEvent($this->runner, $this->downtimeRunner, $this->logger);
+            $handler->registerNamespace('event', $nsEvent);
+            $this->daemonDb->register($nsEvent);
+            $nsIssue = new RpcNamespaceIssue($this->logger);
+            $handler->registerNamespace('issue', $nsIssue);
+            $this->daemonDb->register($nsIssue);
             $handler->registerNamespace('process', $rpcProcess);
             if ($this->logger instanceof Logger) {
                 $handler->registerNamespace('logger', new RpcNamespaceLogger($this->logger));

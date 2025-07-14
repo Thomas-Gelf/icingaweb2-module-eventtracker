@@ -100,7 +100,7 @@ class BackgroundDaemon implements EventEmitterInterface
             ->register($this->downtimePeriodRunner)
             ->register($this->downtimeRunner)
             ->run();
-        $this->prepareApi($this->channelRunner, $this->logger);
+        $this->prepareApi($this->channelRunner, $this->daemonDb, $this->logger);
         $this->setState('running');
         $this->logger->notice('Daemon has been initialized');
     }
@@ -179,10 +179,10 @@ class BackgroundDaemon implements EventEmitterInterface
         return $db;
     }
 
-    protected function prepareApi(InputAndChannelRunner $runner, LoggerInterface $logger)
+    protected function prepareApi(InputAndChannelRunner $runner, DaemonDb $daemonDb, LoggerInterface $logger)
     {
         $socketPath = Configuration::getSocketPath();
-        $this->remoteApi = new RemoteApi($runner, $this->downtimeRunner, $logger);
+        $this->remoteApi = new RemoteApi($runner, $this->downtimeRunner, $this->daemonDb, $logger);
         StreamUtil::forwardEvents($this->remoteApi, $this, [RpcNamespaceProcess::ON_RESTART]);
         $this->remoteApi->run($socketPath);
     }

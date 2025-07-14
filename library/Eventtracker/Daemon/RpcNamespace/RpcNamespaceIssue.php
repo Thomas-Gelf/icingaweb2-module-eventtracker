@@ -5,22 +5,26 @@ namespace Icinga\Module\Eventtracker\Daemon\RpcNamespace;
 use Evenement\EventEmitterInterface;
 use Evenement\EventEmitterTrait;
 use gipfl\ZfDb\Adapter\Adapter as Db;
+use Icinga\Module\Eventtracker\Daemon\DbBasedComponent;
 use Icinga\Module\Eventtracker\Issue;
 use Icinga\Module\Eventtracker\IssueHistory;
 use Psr\Log\LoggerInterface;
 use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\UuidInterface;
+use React\Promise\ExtendedPromiseInterface;
+use RuntimeException;
 
-class RpcNamespaceIssue implements EventEmitterInterface
+use function React\Promise\resolve;
+
+class RpcNamespaceIssue implements DbBasedComponent, EventEmitterInterface
 {
     use EventEmitterTrait;
 
-    protected Db $db;
+    protected ?Db $db = null;
     protected LoggerInterface $logger;
 
-    public function __construct(Db $db, LoggerInterface $logger)
+    public function __construct(LoggerInterface $logger)
     {
-        $this->db = $db;
         $this->logger = $logger;
     }
 
@@ -30,6 +34,10 @@ class RpcNamespaceIssue implements EventEmitterInterface
      */
     public function recoverRequest(Issue $issue): bool
     {
+        if ($this->db === null) {
+            throw new RuntimeException('Cannot recover the given issue, I have no DB connection');
+        }
+
         return Issue::closeIssue($issue, $this->db, IssueHistory::REASON_RECOVERY);
     }
 
@@ -39,6 +47,10 @@ class RpcNamespaceIssue implements EventEmitterInterface
      */
     public function expireRequest(Issue $issue): bool
     {
+        if ($this->db === null) {
+            throw new RuntimeException('Cannot expire the given issue, I have no DB connection');
+        }
+
         return Issue::closeIssue($issue, $this->db, IssueHistory::REASON_EXPIRATION);
     }
 
@@ -49,15 +61,18 @@ class RpcNamespaceIssue implements EventEmitterInterface
      */
     public function closeRequest(string $issueUuid, ?string $closedBy = null): bool
     {
+        if ($this->db === null) {
+            throw new RuntimeException('Cannot close the given issue, I have no DB connection');
+        }
         $uuid = Uuid::fromString($issueUuid);
         $issue = Issue::loadIfExists($uuid->getBytes(), $this->db);
+
         return $issue && Issue::closeIssue($issue, $this->db, IssueHistory::REASON_MANUAL, $closedBy);
     }
 
     protected function close(UuidInterface $uuid, $reason, $closedBy = null): bool
     {
         // This reflects Issue::closeIssue, and should replace that code. Currently missing: hooks!
-
         $db = $this->db;
         // TODO: Update? Log warning? Merge actions?
         //       -> This happens only when closing the issue formerly failed badly
@@ -77,5 +92,19 @@ class RpcNamespaceIssue implements EventEmitterInterface
         $db->delete(Issue::TABLE_NAME, $db->quoteInto('issue_uuid = ?', $issue->getUuid()));
 
         return true;
+    }
+
+    public function initDb(Db $db): ExtendedPromiseInterface
+    {
+        $this->db = $db;
+
+        return resolve(null);
+    }
+
+    public function stopDb(): ExtendedPromiseInterface
+    {
+        $this->db = null;
+
+        return resolve(null);
     }
 }

@@ -6,6 +6,7 @@ use Evenement\EventEmitterInterface;
 use Evenement\EventEmitterTrait;
 use gipfl\Json\JsonString;
 use gipfl\ZfDb\Adapter\Adapter as Db;
+use Icinga\Module\Eventtracker\Daemon\DbBasedComponent;
 use Icinga\Module\Eventtracker\Daemon\InputAndChannelRunner;
 use Icinga\Module\Eventtracker\Db\ConfigStore;
 use Icinga\Module\Eventtracker\Engine\Action;
@@ -19,12 +20,15 @@ use Psr\Log\LoggerInterface;
 use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\UuidInterface;
 use React\Promise\Deferred;
+use React\Promise\ExtendedPromiseInterface;
 use React\Promise\PromiseInterface;
+use RuntimeException;
 use stdClass;
 
+use function React\Promise\resolve;
 use function React\Promise\Timer\timeout;
 
-class RpcNamespaceEvent implements EventEmitterInterface
+class RpcNamespaceEvent implements DbBasedComponent, EventEmitterInterface
 {
     use EventEmitterTrait;
 
@@ -37,7 +41,7 @@ class RpcNamespaceEvent implements EventEmitterInterface
 
     public const ACTION_TIMEOUT = 15;
 
-    protected Db $db;
+    protected ?Db $db = null;
     protected Counters $counters;
     /** @var Action[] */
     protected array $actions = [];
@@ -48,13 +52,11 @@ class RpcNamespaceEvent implements EventEmitterInterface
     public function __construct(
         InputAndChannelRunner $runner,
         DowntimeRunner $downtimeRunner,
-        LoggerInterface $logger,
-        Db $db
+        LoggerInterface $logger
     ) {
         $this->runner = $runner;
         $this->downtimeRunner = $downtimeRunner;
         $this->logger = $logger;
-        $this->db = $db;
         $this->counters = new Counters();
         $this->initializeActions();
     }
@@ -80,6 +82,10 @@ class RpcNamespaceEvent implements EventEmitterInterface
      */
     public function receiveRequest($event): PromiseInterface
     {
+        if ($this->db === null) {
+            throw new RuntimeException('Cannot receive the event, I have no DB connection');
+        }
+
         $deferred = new Deferred();
         try {
             $deferred->resolve($this->processEvent($event));
@@ -99,6 +105,10 @@ class RpcNamespaceEvent implements EventEmitterInterface
      */
     public function sendToInputRequest(string $uuid, stdClass $event): PromiseInterface
     {
+        if ($this->db === null) {
+            throw new RuntimeException('Cannot send the event to your Input, I have no DB connection');
+        }
+
         // Hint: Rpc Handler doesn't (yet) hydrate objects
         $inputUuid = Uuid::fromString($uuid);
         $deferred = new Deferred();
@@ -183,5 +193,18 @@ class RpcNamespaceEvent implements EventEmitterInterface
         }
 
         return $issue;
+    }
+
+    public function initDb(Db $db): ExtendedPromiseInterface
+    {
+        $this->db = $db;
+        return resolve(null);
+    }
+
+    public function stopDb(): ExtendedPromiseInterface
+    {
+        $this->db = null;
+
+        return resolve(null);
     }
 }
