@@ -23,6 +23,7 @@ trait CommandWithLoop
 {
     protected ?Logger $logger = null;
     protected ?JsonRpcConnection $rpc = null;
+    protected ?NamespacedPacketHandler $rpcHandler = null;
 
     public function init()
     {
@@ -36,7 +37,7 @@ trait CommandWithLoop
 
     protected function enableRpc()
     {
-        $handler = new NamespacedPacketHandler();
+        $handler = $this->rpcHandler = new NamespacedPacketHandler();
         // in case we provide Methods:
         // $handler->registerNamespace('eventtracker', new DbRunner($this->logger, $this->loop()));
         $this->rpc = $this->prepareJsonRpc($handler);
