@@ -5,6 +5,7 @@ namespace Icinga\Module\Eventtracker\Modifier;
 use InvalidArgumentException;
 use JsonSerializable;
 use stdClass;
+
 use function get_class;
 use function gettype;
 use function is_array;
@@ -59,7 +60,7 @@ class Settings implements JsonSerializable
         return (array) $this->getRequired(($name));
     }
 
-    public function getAsSettings($name, Settings $default = null): Settings
+    public function getAsSettings($name, ?Settings $default = null): Settings
     {
         if ($this->has($name)) {
             return Settings::fromSerialization($this->settings[$name]);
@@ -102,7 +103,7 @@ class Settings implements JsonSerializable
         return $value;
     }
 
-    public function shiftAsSettings($name, Settings $default = null): Settings
+    public function shiftAsSettings($name, ?Settings $default = null): Settings
     {
         $value = $this->getAsSettings($name);
         unset($this->settings[$name]);

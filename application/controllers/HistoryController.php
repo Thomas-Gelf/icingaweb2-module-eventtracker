@@ -142,7 +142,7 @@ class HistoryController extends Controller
     protected function prepareQueryString(
         string $table,
         string $tsColumn,
-        array  $columns = null,
+        ?array  $columns = null,
         ?int   $from = null,
         ?int   $to = null
     ): Select {
