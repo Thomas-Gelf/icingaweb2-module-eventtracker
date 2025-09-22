@@ -68,6 +68,9 @@ class DaemonDb
     public function register(DbBasedComponent $component)
     {
         $this->registeredComponents[] = $component;
+        if ($this->db !== null) {
+            $component->initDb($this->db);
+        }
 
         return $this;
     }
