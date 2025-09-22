@@ -9,13 +9,36 @@ class DbCleanupFilter
     protected ?int $timestampLimit = null;
     protected array $columnFilters = [];
 
-    protected function __construct()
+    public function __construct(?int $timestampLimit, array $columnFilters)
     {
+        $this->timestampLimit = $timestampLimit;
+        $this->columnFilters = $columnFilters;
+    }
+
+    public function toCliParams(): array
+    {
+        $params = [];
+        if ($this->timestampLimit === null) {
+            $params[] = '--force';
+        } else {
+            $params[] = '--before';
+            $params[] = $this->timestampLimit;
+            if ($this->timestampLimit === 0) {
+                $params[] = '--force';
+            }
+        }
+        foreach ($this->columnFilters as $column => $filter) {
+            $params[] = "--$column";
+            $params[] = $filter;
+        }
+
+        return $params;
     }
 
     public static function fromCliParams(Params $params): DbCleanupFilter
     {
-        $self = new DbCleanupFilter();
+        $timestampLimit = null;
+        $columnFilters = [];
         $params = clone $params;
         $force = (bool) $params->shift('force');
         if ($before = $params->shift('before')) {
@@ -27,10 +50,10 @@ class DbCleanupFilter
             }
             $keepDays = (int) $keepDays;
             if ($keepDays > 0) {
-                $self->timestampLimit = (time() - (86400 * $keepDays)) * 1000;
+                $timestampLimit = (time() - (86400 * $keepDays)) * 1000;
             }
         }
-        if ($self->timestampLimit === null && !$force) {
+        if ($timestampLimit === null && !$force) {
             throw new \RuntimeException('Got no time constraint, and --force has not been used');
         }
         // They should not be there. To be on the safe side, but we shift them anyway,
@@ -42,17 +65,17 @@ class DbCleanupFilter
         $validFilters = ['host_name', 'object_name', 'object_class'];
         foreach ($params->getParams() as $key => $value) {
             if (in_array($key, $validFilters)) {
-                if (array_key_exists($key, $self->columnFilters)) {
-                    $self->columnFilters[$key][] = $value;
+                if (array_key_exists($key, $columnFilters)) {
+                    $columnFilters[$key][] = $value;
                 } else {
-                    $self->columnFilters[$key] = [$value];
+                    $columnFilters[$key] = [$value];
                 }
             } else {
                 throw new \RuntimeException("$key is not a valid filter column");
             }
         }
 
-        return $self;
+        return new DbCleanupFilter($timestampLimit, $columnFilters);
     }
 
     public function getColumnFilters(): array
