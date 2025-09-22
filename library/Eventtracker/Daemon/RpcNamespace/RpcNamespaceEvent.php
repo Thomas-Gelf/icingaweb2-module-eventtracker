@@ -58,7 +58,6 @@ class RpcNamespaceEvent implements DbBasedComponent, EventEmitterInterface
         $this->downtimeRunner = $downtimeRunner;
         $this->logger = $logger;
         $this->counters = new Counters();
-        $this->initializeActions();
     }
 
     protected function initializeActions()
@@ -69,6 +68,15 @@ class RpcNamespaceEvent implements DbBasedComponent, EventEmitterInterface
             $action->run();
         }
         $this->actions = $actions;
+    }
+
+    protected function stopActions(): void
+    {
+        foreach ($this->actions as $action) {
+            $action->stop();
+        }
+
+        $this->actions = [];
     }
 
     public function getCounters(): Counters
@@ -198,12 +206,14 @@ class RpcNamespaceEvent implements DbBasedComponent, EventEmitterInterface
     public function initDb(Db $db): ExtendedPromiseInterface
     {
         $this->db = $db;
+        $this->initializeActions();
         return resolve(null);
     }
 
     public function stopDb(): ExtendedPromiseInterface
     {
         $this->db = null;
+        $this->stopActions();
 
         return resolve(null);
     }
