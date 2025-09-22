@@ -11,7 +11,7 @@ class SoapMethodMeta
     /** @var ?string */
     public $returnType = null;
 
-    public function __construct(string $name, array $parameters = [], string $returnType = null)
+    public function __construct(string $name, array $parameters = [], ?string $returnType = null)
     {
         $this->name = $name;
         $this->parameters = $parameters;

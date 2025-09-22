@@ -98,7 +98,7 @@ class ConfigHelper
      * @param callable|null $callback
      * @return string|null
      */
-    public static function fillPlaceholders($string, $issue, callable $callback = null, bool $missingIsNull = false)
+    public static function fillPlaceholders($string, $issue, ?callable $callback = null, bool $missingIsNull = false)
     {
         if ($string === null) {
             return null;

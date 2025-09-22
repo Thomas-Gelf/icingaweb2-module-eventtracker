@@ -22,7 +22,7 @@ abstract class SimpleTaskConstructor implements Task
     /**
      * TODO: pass name, settings?
      */
-    public function __construct(Settings $settings, UuidInterface $uuid, $name, LoggerInterface $logger = null)
+    public function __construct(Settings $settings, UuidInterface $uuid, $name, ?LoggerInterface $logger = null)
     {
         if ($logger === null) {
             $this->setLogger(new NullLogger());

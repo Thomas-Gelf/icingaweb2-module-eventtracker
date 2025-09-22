@@ -19,7 +19,7 @@ class ConfigurationHistoryTable extends BaseTable
         'ch.action',
     ];
 
-    public function __construct($db, Url $url = null)
+    public function __construct($db, ?Url $url = null)
     {
         $this->actions = new WebActions();
         parent::__construct($db, $url);

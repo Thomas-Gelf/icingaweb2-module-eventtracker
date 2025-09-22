@@ -218,7 +218,7 @@ class CheckCommand extends Command
      * @param PluginState|null $state
      * @return never-returns
      */
-    public function fail($msg, PluginState $state = null)
+    public function fail($msg, ?PluginState $state = null)
     {
         if ($state === null) {
             $state = PluginState::unknown();

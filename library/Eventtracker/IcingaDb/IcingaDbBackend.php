@@ -59,7 +59,7 @@ class IcingaDbBackend
      * @return Host|Service
      * @throws NotFoundError
      */
-    public function getObject(string $hostname, string $serviceName = null)
+    public function getObject(string $hostname, ?string $serviceName = null)
     {
         if ($serviceName === null) {
             return $this->getHost($hostname);

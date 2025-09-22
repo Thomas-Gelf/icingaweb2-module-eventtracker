@@ -32,7 +32,7 @@ class ConfigStore
     /** @var LoggerInterface */
     protected $logger;
 
-    public function __construct(Adapter $db, LoggerInterface $logger = null)
+    public function __construct(Adapter $db, ?LoggerInterface $logger = null)
     {
         $this->db = $db;
         if ($logger === null) {

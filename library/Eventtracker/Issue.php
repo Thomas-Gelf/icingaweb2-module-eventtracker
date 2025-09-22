@@ -581,7 +581,7 @@ class Issue implements JsonSerialization
         return true;
     }
 
-    public function close(Db $db, Auth $auth = null): bool
+    public function close(Db $db, ?Auth $auth = null): bool
     {
         if ($auth === null) {
             $auth = Auth::getInstance();

@@ -584,7 +584,7 @@ class IssueHeader extends BaseHtmlElement
     }
 
     // TODO: Unused.
-    protected function addHookedActions(Issue $issue, BaseHtmlElement $target = null)
+    protected function addHookedActions(Issue $issue, ?BaseHtmlElement $target = null)
     {
         if ($target === null) {
             $target = $this->actions();

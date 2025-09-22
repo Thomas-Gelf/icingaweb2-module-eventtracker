@@ -13,7 +13,7 @@ class IcingaCli
     protected ?IcingaCliRunner $runner;
     protected array $arguments = [];
 
-    public function __construct(IcingaCliRunner $runner = null)
+    public function __construct(?IcingaCliRunner $runner = null)
     {
         if ($runner === null) {
             $runner = IcingaCliRunner::forArgv();
