@@ -52,7 +52,9 @@ class DeleteCommand extends Command
      *                        supplied multiple times
      *
      * --simulate             Does not delete, but gives the number of rows, that would
-     *                         have been deleted
+     *                        have been deleted
+     *
+     * --optimize             Run an OPTIMIZE TABLE after the cleanup
      */
     public function issuesAction()
     {
@@ -106,15 +108,16 @@ class DeleteCommand extends Command
      *                        supplied multiple times
      * --simulate             Does not delete, but gives the number of rows, that would
      *                        have been deleted
+     * --optimize             Run an OPTIMIZE TABLE after the cleanup
      */
     public function historyAction()
     {
         $simulate = (bool) $this->params->shift('simulate');
         $cleanup = new DbCleanup(DbFactory::db(), 'issue_history', DbCleanupFilter::fromCliParams($this->params));
         if ($simulate) {
-            printf('Dry run, %d issue history rows would have been deleted', $cleanup->count());
+            printf("Dry run, %d issue history rows would have been deleted\n", $cleanup->count());
         } else {
-            printf('%d issue history rows have been deleted', $cleanup->delete());
+            printf("%d issue history rows have been deleted\n", $cleanup->delete());
         }
     }
 }
