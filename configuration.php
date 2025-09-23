@@ -1,6 +1,9 @@
 <?php
 
 /** @var \Icinga\Application\Modules\Module $this */
+
+use Icinga\Application\Config;
+
 if ($this->getConfig()->get('ui', 'disabled', 'no') === 'yes') {
     return;
 }
@@ -23,6 +26,13 @@ $section->add(N_('Configuration'))
     ->setUrl('eventtracker/configuration')
     ->setPriority(70)
     ->setPermission('eventtracker/admin');
+
+if (Config::module('eventtracker')->get('ui', 'allows_cleanup') === 'true') {
+    $section->add(N_('DB-Cleanup'))
+        ->setUrl('eventtracker/cleanup')
+        ->setPriority(80)
+        ->setPermission('eventtracker/admin');
+}
 
 $this->provideSearchUrl('EventTracker', 'eventtracker/issues', 110);
 $this->providePermission(
