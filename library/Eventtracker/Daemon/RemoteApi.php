@@ -13,6 +13,7 @@ use gipfl\Protocol\JsonRpc\JsonRpcConnection;
 use gipfl\Protocol\NetString\StreamWrapper;
 use gipfl\Socket\UnixSocketInspection;
 use gipfl\Socket\UnixSocketPeer;
+use Icinga\Module\Eventtracker\Daemon\RpcNamespace\RpcNamespaceCleanup;
 use Icinga\Module\Eventtracker\Daemon\RpcNamespace\RpcNamespaceEvent;
 use Icinga\Module\Eventtracker\Daemon\RpcNamespace\RpcNamespaceEventtracker;
 use Icinga\Module\Eventtracker\Daemon\RpcNamespace\RpcNamespaceIssue;
@@ -21,7 +22,7 @@ use Icinga\Module\Eventtracker\Daemon\RpcNamespace\RpcNamespaceLogger;
 use Icinga\Module\Eventtracker\Engine\Downtime\DowntimeRunner;
 use Psr\Log\LoggerInterface;
 use React\EventLoop\Loop;
-use React\Promise\ExtendedPromiseInterface;
+use React\Promise\PromiseInterface;
 use React\Socket\ConnectionInterface;
 use React\Stream\Util;
 
@@ -38,6 +39,7 @@ class RemoteApi implements EventEmitterInterface
 
     protected DowntimeRunner $downtimeRunner;
     protected DaemonDb $daemonDb;
+    protected NamespacedPacketHandler $rpcHandler;
 
     public function __construct(
         InputAndChannelRunner $runner,
@@ -49,6 +51,7 @@ class RemoteApi implements EventEmitterInterface
         $this->downtimeRunner = $downtimeRunner;
         $this->daemonDb = $daemonDb;
         $this->logger = $logger;
+        $this->rpcHandler = $this->prepareRpcHandler();
     }
 
     public function run($socketPath)
@@ -101,7 +104,9 @@ class RemoteApi implements EventEmitterInterface
                 return;
             }
 
-            if (!$this->isAllowed($peer)) {
+            if ($this->isAllowed($peer)) {
+                $jsonRpc->setHandler($this->rpcHandler);
+            } else {
                 $jsonRpc->setHandler(new FailingPacketHandler(new Error(Error::METHOD_NOT_FOUND, sprintf(
                     '%s is not allowed to control this socket',
                     $peer->getUsername()
@@ -109,27 +114,7 @@ class RemoteApi implements EventEmitterInterface
                 Loop::addTimer(10, function () use ($connection) {
                     $connection->close();
                 });
-                return;
             }
-
-            $rpcProcess = new RpcNamespaceProcess();
-            Util::forwardEvents($rpcProcess, $this, [RpcNamespaceProcess::ON_RESTART]);
-            $handler = new NamespacedPacketHandler();
-            $handler->registerNamespace('eventtracker', new RpcNamespaceEventtracker(
-                $this->downtimeRunner,
-                $this->logger
-            ));
-            $nsEvent = new RpcNamespaceEvent($this->runner, $this->downtimeRunner, $this->logger);
-            $handler->registerNamespace('event', $nsEvent);
-            $this->daemonDb->register($nsEvent);
-            $nsIssue = new RpcNamespaceIssue($this->logger);
-            $handler->registerNamespace('issue', $nsIssue);
-            $this->daemonDb->register($nsIssue);
-            $handler->registerNamespace('process', $rpcProcess);
-            if ($this->logger instanceof Logger) {
-                $handler->registerNamespace('logger', new RpcNamespaceLogger($this->logger));
-            }
-            $jsonRpc->setHandler($handler);
         });
         $socket->on('error', function (Exception $error) {
             // Connection error, Socket remains functional
@@ -137,7 +122,7 @@ class RemoteApi implements EventEmitterInterface
         });
     }
 
-    public function shutdown(): ExtendedPromiseInterface
+    public function shutdown(): PromiseInterface
     {
         if ($this->controlSocket) {
             $this->controlSocket->shutdown();
@@ -145,5 +130,30 @@ class RemoteApi implements EventEmitterInterface
         }
 
         return resolve(null);
+    }
+
+    private function prepareRpcHandler(): NamespacedPacketHandler
+    {
+        $rpcProcess = new RpcNamespaceProcess();
+        Util::forwardEvents($rpcProcess, $this, [RpcNamespaceProcess::ON_RESTART]);
+        $handler = new NamespacedPacketHandler();
+        $handler->registerNamespace('eventtracker', new RpcNamespaceEventtracker(
+            $this->downtimeRunner,
+            $this->logger
+        ));
+        $nsCleanup = new RpcNamespaceCleanup($this->logger);
+        $handler->registerNamespace('cleanup', $nsCleanup);
+        $nsEvent = new RpcNamespaceEvent($this->runner, $this->downtimeRunner, $this->logger);
+        $handler->registerNamespace('event', $nsEvent);
+        $this->daemonDb->register($nsEvent);
+        $nsIssue = new RpcNamespaceIssue($this->logger);
+        $handler->registerNamespace('issue', $nsIssue);
+        $this->daemonDb->register($nsIssue);
+        $handler->registerNamespace('process', $rpcProcess);
+        if ($this->logger instanceof Logger) {
+            $handler->registerNamespace('logger', new RpcNamespaceLogger($this->logger));
+        }
+
+        return $handler;
     }
 }
