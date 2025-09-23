@@ -18,6 +18,7 @@ class ConfigurationHistoryTable extends BaseTable
     protected $searchColumns = [
         'ch.action',
     ];
+    protected WebActions $actions;
 
     public function __construct($db, ?Url $url = null)
     {
