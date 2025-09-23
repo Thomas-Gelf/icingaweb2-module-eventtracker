@@ -2,15 +2,33 @@
 
 namespace Icinga\Module\Eventtracker\Clicommands;
 
+use Icinga\Module\Eventtracker\Daemon\RpcNamespace\RpcNamespaceCleanup;
 use Icinga\Module\Eventtracker\Db\DbCleanup;
 use Icinga\Module\Eventtracker\Db\DbCleanupFilter;
 use Icinga\Module\Eventtracker\DbFactory;
+use React\Promise\Deferred;
 
 /**
  * Cleanup commands for the Eventtracker database
  */
 class DeleteCommand extends Command
 {
+    use CommandWithLoop;
+
+    public function rpcAction()
+    {
+        $this->enableRpc();
+        try {
+            $this->runWithLoop(function () {
+                $this->rpcHandler->registerNamespace('cleanup', new RpcNamespaceCleanup($this->logger, true));
+                // Keep this method running, parent will terminate our process:
+                return (new Deferred())->promise();
+            });
+        } catch (\Throwable $e) {
+            $this->logger->error('Caught late: ' . $e->getMessage());
+        }
+    }
+
     /**
      * Deletes current issues according to given rules
      *
