@@ -91,35 +91,40 @@ class RemoteApi implements EventEmitterInterface
     protected function addSocketEventHandlers(ControlSocket $socket)
     {
         $socket->on('connection', function (ConnectionInterface $connection) {
-            $jsonRpc = new JsonRpcConnection(new StreamWrapper($connection));
-            $jsonRpc->setLogger($this->logger);
-
-            try {
-                $peer = UnixSocketInspection::getPeer($connection);
-            } catch (Exception $e) {
-                $jsonRpc->setHandler(new FailingPacketHandler(Error::forException($e)));
-                Loop::addTimer(3, function () use ($connection) {
-                    $connection->close();
-                });
-                return;
-            }
-
-            if ($this->isAllowed($peer)) {
-                $jsonRpc->setHandler($this->rpcHandler);
-            } else {
-                $jsonRpc->setHandler(new FailingPacketHandler(new Error(Error::METHOD_NOT_FOUND, sprintf(
-                    '%s is not allowed to control this socket',
-                    $peer->getUsername()
-                ))));
-                Loop::addTimer(10, function () use ($connection) {
-                    $connection->close();
-                });
-            }
+            $this->handleNewConnection($connection);
         });
         $socket->on('error', function (Exception $error) {
             // Connection error, Socket remains functional
             $this->logger->error($error->getMessage());
         });
+    }
+
+    protected function handleNewConnection(ConnectionInterface $connection): void
+    {
+        $jsonRpc = new JsonRpcConnection(new StreamWrapper($connection));
+        $jsonRpc->setLogger($this->logger);
+
+        try {
+            $peer = UnixSocketInspection::getPeer($connection);
+        } catch (Exception $e) {
+            $jsonRpc->setHandler(new FailingPacketHandler(Error::forException($e)));
+            Loop::addTimer(3, function () use ($connection) {
+                $connection->close();
+            });
+            return;
+        }
+
+        if ($this->isAllowed($peer)) {
+            $jsonRpc->setHandler($this->rpcHandler);
+        } else {
+            $jsonRpc->setHandler(new FailingPacketHandler(new Error(Error::METHOD_NOT_FOUND, sprintf(
+                '%s is not allowed to control this socket',
+                $peer->getUsername()
+            ))));
+            Loop::addTimer(10, function () use ($connection) {
+                $connection->close();
+            });
+        }
     }
 
     public function shutdown(): PromiseInterface
