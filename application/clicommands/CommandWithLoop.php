@@ -15,7 +15,7 @@ use gipfl\Protocol\NetString\StreamWrapper;
 use gipfl\SystemD\systemd;
 use Icinga\Module\Eventtracker\Daemon\Application;
 use React\EventLoop\Loop;
-use React\Promise\ExtendedPromiseInterface;
+use React\Promise\PromiseInterface;
 use React\Stream\ReadableResourceStream;
 use React\Stream\WritableResourceStream;
 
@@ -111,20 +111,23 @@ trait CommandWithLoop
         Loop::futureTick(function () use ($callable) {
             try {
                 $result = $callable();
-                if ($result instanceof ExtendedPromiseInterface) {
+
+                if ($result instanceof PromiseInterface) {
                     $result->then(function () {
                         Loop::stop();
                     }, function ($error) {
-                        if ($error instanceof \Exception) {
+                        if ($error instanceof \Throwable) {
                             $this->failNice($error->getMessage());
                         } else {
                             $this->failNice($error);
                         }
                     });
                 } else {
-                    Loop::stop();
+                    Loop::addTimer(0.3, function () {
+                        Loop::stop();
+                    });
                 }
-            } catch (\Exception $e) {
+            } catch (\Throwable $e) {
                 $this->failNice($e->getMessage());
             }
         });
@@ -139,7 +142,7 @@ trait CommandWithLoop
             \printf("%s: %s\n", $this->screen->colorize('ERROR', 'red'), $msg);
         }
 
-        Loop::futureTick(function () {
+        Loop::addTimer(0.3, function () {
             Loop::stop();
             exit(1);
         });
