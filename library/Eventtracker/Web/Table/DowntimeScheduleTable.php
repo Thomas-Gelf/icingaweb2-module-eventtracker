@@ -4,6 +4,7 @@ namespace Icinga\Module\Eventtracker\Web\Table;
 
 use gipfl\IcingaWeb2\Table\QueryBasedTable;
 use gipfl\Translation\TranslationHelper;
+use Icinga\Data\SimpleQuery;
 use Icinga\Module\Eventtracker\Db\SelectPaginationAdapter;
 use Icinga\Module\Eventtracker\Engine\Downtime\DowntimeRule;
 use Icinga\Data\DataArray\ArrayDatasource;
@@ -15,6 +16,7 @@ class DowntimeScheduleTable extends QueryBasedTable
     protected DowntimeRule $rule;
     protected ?string $currentDateString = null;
     protected ?SelectPaginationAdapter $paginationAdapter = null;
+    protected ?SimpleQuery $query = null;
 
     public function __construct(DowntimeRule $rule)
     {
