@@ -10,28 +10,31 @@ use Icinga\Data\Filter\FilterAnd;
 use Icinga\Data\Filter\FilterLessThan;
 use Icinga\Data\Filter\FilterMatch;
 use Icinga\Data\Filter\FilterOr;
+use Psr\Log\LoggerInterface;
+use RuntimeException;
 
 class DbCleanup
 {
     protected Db $db;
     protected DbCleanupFilter $filter;
     protected string $table;
+    protected ?LoggerInterface $logger;
 
-    public function __construct(Db $db, string $table, DbCleanupFilter $filter)
+    public function __construct(Db $db, string $table, DbCleanupFilter $filter, ?LoggerInterface $logger = null)
     {
         $this->db = $db;
         $this->table = $table;
         $this->filter = $filter;
+        $this->logger = $logger;
     }
 
     public function delete(): int
     {
-        // $query = $this->db->delete()
         $query = (string) $this->prepareSelectQuery();
         $expectedPrefix = sprintf(' FROM %s WHERE ', $this->table);
         $prefixLength = strlen($expectedPrefix);
         if (substr($query, 0, $prefixLength) !== $expectedPrefix) {
-            throw new \RuntimeException("Query is expected to start with $expectedPrefix, got $query");
+            throw new RuntimeException("Query is expected to start with $expectedPrefix, got $query");
         }
 
         return $this->db->delete($this->table, substr($query, $prefixLength));
@@ -54,7 +57,14 @@ class DbCleanup
     {
         $filter = new FilterAnd();
         if ($this->filter->hasTimeConstraint()) {
-            $filter->addFilter(new FilterLessThan('ts_last_modified', '<', $this->filter->getTimestampLimit()));
+            $filter->addFilter(
+                new FilterLessThan('ts_last_modified', '<', (int) ($this->filter->getTimestampLimit() * 1000))
+            );
+        }
+        if ($this->filter->hasKeepSeverity()) {
+            $filter->addFilter(
+                new FilterLessThan('severity', '<', DbSeverity::getNumeric($this->filter->getKeepSeverity()))
+            );
         }
         foreach ($this->filter->getColumnFilters() as $column => $values) {
             if (count($values) === 1) {
