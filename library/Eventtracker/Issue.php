@@ -562,10 +562,12 @@ class Issue implements JsonSerialization
         }
         $db->update(self::$tableName, $this->getModifiedProperties(), $where);
         unset($modifications['ts_expiration']);
-        if (isset($modifications['downtime_config_uuid'])) {
-            foreach ($modifications['downtime_config_uuid'] as &$value) {
-                if ($value !== null) {
-                    $value = Uuid::fromBytes($value)->toString();
+        foreach (['downtime_config_uuid', 'downtime_rule_uuid'] as $binaryKey) {
+            if (isset($modifications[$binaryKey])) {
+                foreach ($modifications[$binaryKey] as &$value) {
+                    if ($value !== null) {
+                        $value = Uuid::fromBytes($value)->toString();
+                    }
                 }
             }
         }
