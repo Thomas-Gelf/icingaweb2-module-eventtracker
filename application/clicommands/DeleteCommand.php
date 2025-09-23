@@ -59,7 +59,8 @@ class DeleteCommand extends Command
     public function issuesAction()
     {
         $simulate = (bool) $this->params->shift('simulate');
-        $cleanup = new DbCleanup(DbFactory::db(), 'issue', DbCleanupFilter::fromCliParams($this->params));
+        $cleanup = $this->requireCleanup('issue');
+
         if ($simulate) {
             printf('Dry run, %d issues would have been deleted', $cleanup->count());
         } else {
@@ -113,11 +114,22 @@ class DeleteCommand extends Command
     public function historyAction()
     {
         $simulate = (bool) $this->params->shift('simulate');
-        $cleanup = new DbCleanup(DbFactory::db(), 'issue_history', DbCleanupFilter::fromCliParams($this->params));
+        $cleanup = $this->requireCleanup('issue_history');
+
         if ($simulate) {
             printf("Dry run, %d issue history rows would have been deleted\n", $cleanup->count());
         } else {
             printf("%d issue history rows have been deleted\n", $cleanup->delete());
         }
+    }
+
+    protected function requireCleanup(string $table): DbCleanup
+    {
+        return new DbCleanup(
+            DbFactory::db(),
+            $table,
+            DbCleanupFilter::fromCliParams($this->params),
+            $this->logger
+        );
     }
 }
