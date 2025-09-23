@@ -111,7 +111,7 @@ class IssueHeader extends BaseHtmlElement
                         $store = new ZfDbStore($this->db);
                         $downtime = DowntimeRule::load(
                             $store,
-                            Uuid::fromBytes($issue->get('downtime_uuid'))
+                            $issue->get('downtime_rule_uuid')
                         );
                     }
                     $this->add(Hint::info([$this->translate(
