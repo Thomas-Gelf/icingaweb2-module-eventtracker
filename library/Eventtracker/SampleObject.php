@@ -16,7 +16,6 @@ class SampleObject
         switch ($type) {
             case 'syslog':
                 return self::createSyslogOutput();
-                break;
             case 'json':
                 return self::createJsonStringOutput();
             default:
@@ -58,5 +57,4 @@ class SampleObject
             . '}' . "\n"
         );
     }
-
 }
