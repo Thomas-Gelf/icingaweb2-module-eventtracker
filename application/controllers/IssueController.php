@@ -60,6 +60,14 @@ class IssueController extends Controller
         $this->tabs()->activate('issue');
         $db = $this->db();
         $uuid = $this->params->get('uuid');
+        try {
+            $activeTimeSlots = (array) $this->syncRpcCall('eventtracker.getActiveTimeSlots');
+        } catch (\Exception $e) {
+            $this->content()->add(Hint::warning(
+                $this->translate('Got no active time slot info, is the daemon running?')
+            ));
+            $activeTimeSlots = [];
+        }
         if ($uuid === null) {
             $upload = $this->url()->shift('upload');
             $issues = SetOfIssues::fromUrl($this->url(), $db);
@@ -119,17 +127,17 @@ class IssueController extends Controller
                     $this->getResponse(),
                     $this->url(),
                     $this->Auth()
-                ))->disableActions());
+                ))->disableActions()->setActiveTimeSlots($activeTimeSlots));
             }
         } else {
             $binaryUuid = Uuid::fromString($uuid)->getBytes();
             if ($issue = Issue::loadIfExists($binaryUuid, $db)) {
-                $this->showIssue($issue);
+                $this->showIssue($issue, $activeTimeSlots);
             } elseif ($reason = IssueHistory::getReasonIfClosed($binaryUuid, $db)) {
                 $this->addTitle($this->translate('Issue has been closed'));
                 $this->content()->add(Hint::info($this->getCloseDetails($reason)));
                 $issue = Issue::loadFromHistory($binaryUuid, $db);
-                $this->showIssue($issue);
+                $this->showIssue($issue, $activeTimeSlots);
             } else {
                 $this->addTitle($this->translate('Not found'));
                 $this->content()->add(Hint::error($this->translate('There is no such issue')));
@@ -230,7 +238,7 @@ class IssueController extends Controller
         ]);
     }
 
-    protected function showIssue(Issue $issue)
+    protected function showIssue(Issue $issue, array $activeTimeSlots)
     {
         $db = $this->db();
         if ($hostname = $issue->get('host_name')) {
@@ -244,14 +252,14 @@ class IssueController extends Controller
         }
         // $this->addHookedActions($issue);
         $this->content()->add([
-            new IssueHeader(
+            (new IssueHeader(
                 $issue,
                 $this->db(),
                 $this->getServerRequest(),
                 $this->getResponse(),
                 $this->url(),
                 $this->Auth()
-            ),
+            ))->setActiveTimeSlots($activeTimeSlots),
             new IdoDetails($issue, $db),
             new IssueDetails($issue),
             new IssueActivities($issue, $db),

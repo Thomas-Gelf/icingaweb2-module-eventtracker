@@ -14,6 +14,7 @@ use Icinga\Application\Hook;
 use Icinga\Authentication\Auth;
 use Icinga\Date\DateFormatter;
 use Icinga\Module\Eventtracker\Engine\Downtime\DowntimeRule;
+use Icinga\Module\Eventtracker\Engine\TimePeriod\TimeSlot;
 use Icinga\Module\Eventtracker\Input;
 use Icinga\Module\Eventtracker\File;
 use Icinga\Module\Eventtracker\Hook\EventActionsHook;
@@ -33,12 +34,13 @@ use ipl\Html\Html;
 use ipl\Html\HtmlDocument;
 use ipl\Html\ValidHtml;
 use Psr\Http\Message\ServerRequestInterface;
-
 use Ramsey\Uuid\Uuid;
+
 use function date;
 
 class IssueHeader extends BaseHtmlElement
 {
+    use ActiveDowntimeSlots;
     use TranslationHelper;
 
     protected $tag = 'div';
@@ -114,9 +116,15 @@ class IssueHeader extends BaseHtmlElement
                             $issue->get('downtime_rule_uuid')
                         );
                     }
-                    $this->add(Hint::info([$this->translate(
-                        'Alert silenced by Downtime: '
-                    ), Html::tag('strong', $downtime->get('label'))]));
+                    $this->add(Hint::info([
+                        $this->translate('Alert silenced by Downtime: '),
+                        Html::tag('strong', $downtime->get('label')),
+                        Html::tag('br'),
+                        DowntimeDescription::getDowntimeActiveInfo(
+                            $this->getActiveDowntimeSlot(Uuid::fromBytes($downtime->get('uuid'))),
+                            $downtime->get('ts_triggered'),
+                        )
+                    ]));
                 } catch (NotFoundError $e) {
                     $this->add(Hint::warning($this->translate(
                         'Alert silenced by a Downtime, but the related Downtime configuration does not exist'

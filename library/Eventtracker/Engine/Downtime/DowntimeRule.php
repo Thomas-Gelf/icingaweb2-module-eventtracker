@@ -23,6 +23,8 @@ class DowntimeRule implements JsonSerialization, DbStorableInterface
     use UuidObjectHelper;
 
     public const TABLE_NAME = 'downtime_rule';
+    public const END_STATUS_OPEN = 'open';
+    public const END_STATUS_CLOSED = 'closed';
 
     protected $tableName = self::TABLE_NAME;
     protected $keyProperty = 'uuid';

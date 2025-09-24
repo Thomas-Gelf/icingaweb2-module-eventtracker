@@ -619,7 +619,14 @@ class ConfigurationController extends Controller
 
         $table = $this->prepareTableForList($action);
         if ($table instanceof DowntimeRulesTable) {
-            $slots = $this->syncRpcCall('eventtracker.getActiveTimeSlots');
+            try {
+                $slots = $this->syncRpcCall('eventtracker.getActiveTimeSlots');
+            } catch (Exception $e) {
+                $this->content()->add(Hint::warning(
+                    $this->translate('Got no active time slot info, is the daemon running?')
+                ));
+                $slots = [];
+            }
             $table->setActiveTimeSlots((array) $slots);
         }
         if ($table->count() > 0) {
