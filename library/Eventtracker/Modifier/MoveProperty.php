@@ -29,10 +29,11 @@ class MoveProperty extends BaseModifier
     public static function extendSettingsForm(ChannelRuleForm $form): void
     {
         $form->addElement('text', 'target_property', [
-        'label' => $form->translate('Target Property'),
-        'required' => false,
-        'description' => $form->translate('The value of the given property'
-        . ' will be moved to to target properties value'),
-            ]);
+            'label' => $form->translate('Target Property'),
+            'required' => false,
+            'description' => $form->translate(
+                'The value of the given property will be moved to to target properties value'
+            )
+        ]);
     }
 }

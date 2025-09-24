@@ -173,21 +173,12 @@ class ConfigurationController extends Controller
             'action' => 'add']
         )));
 
-//        $this->actions()->add(Link::create($this->translate('Edit'), 'TODO', [
-//            'what' => 'ever'
-//        ], [
-//            'class' => 'icon-edit'
-//        ]));
         $uuid = $this->requireUuid();
         $ns = $this->Window()->getSessionNamespace('eventtracker');
         $sessionKey = 'simulationObject/'. $uuid->toString();
 
         $form = $this->getForm($action); // TODO: w/o form
         $modifierRuleStore = new ModifierRuleStore($ns, $uuid, $form);
-        $rules = $modifierRuleStore->getStoredRules();
-        $rules = $modifierRuleStore->getRules();
-//        $form->addElement('submit', 'submit', ['label' => $this->translate('Save32')]);
-//        $this->addContent($form);
         if ($this->params->get('action') === 'add') {
             $ruleForm = new ChannelRuleForm();
             $ruleForm->handleRequest($this->getServerRequest());
@@ -659,7 +650,6 @@ class ConfigurationController extends Controller
         UuidInterface $uuid,
         UuidObjectForm $form
     ) {
-        $sessionKey = 'channelrules/' . $uuid->toString();
         $form->addElement('submit', 'add_modifier', []);
         
         if ($modifierRuleStore->getSessionRules() !== null) {
@@ -670,9 +660,6 @@ class ConfigurationController extends Controller
                 $message = Hint::warning(
                     'The order has been modified please safe if you want to preserver the new order'
                 );
-//                $form->addHtml(Hint::warning(
-//                    'The order has been modified please safe if you want to preserver the new order'
-//                ));
                 if ($newForm->hasBeenSubmitted()) {
                     $form->populate(['rules' => JsonString::encode($modifierRuleStore->getRules())]);
                     $form->storeObject();
@@ -681,21 +668,11 @@ class ConfigurationController extends Controller
                 }
                 $this->content()->add([$message, $newForm]);
             }
-            // $modifierRuleStore->setModifierRules($modifierRuleStore->getSessionRules());
         }
         if ($modifierRuleStore->getRules() === null) {
-            var_dump("foobar");
             return;
         }
-        try {
-            $modifiers = $modifierRuleStore->getRules();
-        } catch (JsonDecodeException $e) {
-            $this->content()->add(Hint::error(sprintf(
-                $this->translate('Configured rules are invalid: %s'),
-                $e->getMessage()
-            )));
-            return;
-        }
+        $modifiers = $modifierRuleStore->getRules();
         $url = Url::fromPath('eventtracker/configuration/channelrule', [
             'uuid' => $uuid->toString()
         ]);
