@@ -4,6 +4,7 @@ namespace Icinga\Module\Eventtracker\Modifier;
 
 use gipfl\Json\JsonString;
 use Icinga\Application\Config;
+use Icinga\Module\Eventtracker\Web\Form\ChannelRuleForm;
 use ipl\Html\Html;
 use ipl\Html\ValidHtml;
 use RuntimeException;
@@ -47,5 +48,13 @@ class ConfiguredMapLookup extends MapLookup
             Html::tag('strong', $propertyName),
             Html::tag('strong', $this->settings->getRequired('map_name'))
         );
+    }
+    public static function extendSettingsForm(ChannelRuleForm $form): void
+    {
+        $form->addElement('text', 'map_name', [
+            'label' => 'Map name',
+            'required' => true,
+            'description' => 'Name of the map file that is stored under /etc/icingaweb2/modules/eventtracker/maps/'
+        ]);
     }
 }

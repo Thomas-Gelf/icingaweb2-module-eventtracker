@@ -2,6 +2,7 @@
 
 namespace Icinga\Module\Eventtracker\Modifier;
 
+use Icinga\Module\Eventtracker\Web\Form\ChannelRuleForm;
 use InvalidArgumentException;
 use RuntimeException;
 use function gettype;
@@ -55,5 +56,25 @@ class MapLookup extends BaseModifier
         }
 
         return $map;
+    }
+
+    public static function extendSettingsForm(ChannelRuleForm $form): void
+    {
+        $form->addElement('text', 'default_value', [
+            'label' => $form->translate('Default Value'),
+            'required' => false,
+            'description' => "default value"
+        ]);
+        $form->addElement('text', 'map', [
+            'label' => $form->translate('Map'),
+            'required' => false,
+            'description' => "map"
+        ]);
+
+        $form->addElement('text', 'when_missing', [
+            'label' => $form->translate('When missing'),
+            'required' => false,
+            'description' => "when missing"
+        ]);
     }
 }

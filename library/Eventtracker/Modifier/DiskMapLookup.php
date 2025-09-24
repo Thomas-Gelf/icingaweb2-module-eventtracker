@@ -4,6 +4,7 @@ namespace Icinga\Module\Eventtracker\Modifier;
 
 use gipfl\Json\JsonString;
 use Icinga\Application\Config;
+use Icinga\Module\Eventtracker\Web\Form\ChannelRuleForm;
 use RuntimeException;
 
 class DiskMapLookup extends MapLookup
@@ -33,5 +34,13 @@ class DiskMapLookup extends MapLookup
         }
 
         return JsonString::decode(file_get_contents($filename));
+    }
+    public static function extendSettingsForm(ChannelRuleForm $form): void
+    {
+        $form->addElement('text', 'map_name', [
+            'label' => 'Map name',
+            'required' => false,
+            'description' => 'Name of the map file that is stored under /etc/icingaweb2/modules/eventtracker/maps/'
+        ]);
     }
 }

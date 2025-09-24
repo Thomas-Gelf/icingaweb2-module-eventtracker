@@ -3,6 +3,7 @@
 namespace Icinga\Module\Eventtracker\Modifier;
 
 use gipfl\Json\JsonString;
+use Icinga\Module\Eventtracker\Web\Form\ChannelRuleForm;
 use InvalidArgumentException;
 
 class DownloadUrl extends BaseModifier
@@ -57,5 +58,14 @@ class DownloadUrl extends BaseModifier
         if (! in_array(strtolower($scheme), ['http', 'https'])) {
             throw new InvalidArgumentException("Valid scheme expected, got '$scheme'");
         }
+    }
+
+    public static function extendSettingsForm(ChannelRuleForm $form): void
+    {
+        $form->addElement('text', 'header', [
+            'label' => 'Header',
+            'required' => false,
+            'description' => 'Header'
+        ]);
     }
 }
