@@ -5,6 +5,7 @@ namespace Icinga\Module\Eventtracker\Engine\Downtime;
 use Exception;
 use gipfl\ZfDb\Adapter\Adapter;
 use Icinga\Module\Eventtracker\Issue;
+use Icinga\Module\Eventtracker\IssueHistory;
 use Icinga\Module\Eventtracker\Time;
 use Psr\Log\LoggerInterface;
 use Ramsey\Uuid\Uuid;
@@ -136,7 +137,7 @@ class DowntimeStore
         if ($rule) {
             $status = $rule->get('on_iteration_end_issue_status');
             if ($status === DowntimeRule::END_STATUS_CLOSED) {
-                Issue::closeIssue($issue, $this->db, 'Downtime slot expired', 'daemon');
+                Issue::closeIssue($issue, $this->db, IssueHistory::REASON_EXPIRATION, 'downtime');
             } else {
                 $issue->set('status', $rule->get('on_iteration_end_issue_status'));
             }
