@@ -217,7 +217,9 @@ class DowntimeStore
         if ($now === null) {
             $now = Time::unixMilli();
         }
-        if ($now === self::$lastNow) {
+        if ($now < self::$lastNow && self::$lastNow - $now < 300_000) {
+            $now = self::$lastNow + 1;
+        } elseif ($now === self::$lastNow) {
             $now += 1;
         }
 
