@@ -14,6 +14,7 @@ use Ramsey\Uuid\UuidInterface;
 class DowntimeStore
 {
     const RECENT_ISSUE_CHECK_SECONDS = 86400;
+    protected static ?int $lastNow = 0;
 
     protected Adapter $db;
     protected LoggerInterface $logger;
@@ -91,7 +92,7 @@ class DowntimeStore
     public function logDowntimeActivation(Issue $issue, DowntimeRule $rule, ?int $now = null)
     {
         $this->db->insert('issue_downtime_history', [
-            'ts_modification'  => $now ?? Time::unixMilli(),
+            'ts_modification'  => self::safeNow($now),
             'issue_uuid'       => $issue->get('issue_uuid'),
             'rule_uuid'        => $rule->get('uuid'),
             'rule_config_uuid' => $rule->get('config_uuid'),
@@ -102,7 +103,7 @@ class DowntimeStore
     public function logDowntimeDeactivation(Issue $issue, ?DowntimeRule $rule, ?int $now = null)
     {
         $this->db->insert('issue_downtime_history', [
-            'ts_modification'  => $now ?? Time::unixMilli(),
+            'ts_modification'  => self::safeNow($now),
             'issue_uuid'       => $issue->get('issue_uuid'),
             'rule_uuid'        => $rule ? $rule->get('uuid') : null,
             'rule_config_uuid' => $rule ? $rule->get('config_uuid') : null,
@@ -202,5 +203,17 @@ class DowntimeStore
         }
 
         return $issues;
+    }
+
+    protected static function safeNow(?int $now): int
+    {
+        if ($now === null) {
+            $now = Time::unixMilli();
+        }
+        if ($now === self::$lastNow) {
+            $now += 1;
+        }
+
+        return $now;
     }
 }
