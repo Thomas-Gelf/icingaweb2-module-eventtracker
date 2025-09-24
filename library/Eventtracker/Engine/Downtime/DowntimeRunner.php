@@ -45,14 +45,18 @@ class DowntimeRunner implements DbBasedComponent
         }
 
         $inDowntime = $this->store->fetchIssuesInDowntime($uuid);
-        // $this->logger->notice(sprintf('%d issues should recover', count($inDowntime)));
+        $this->logger->debug(sprintf('%d issues should recover', count($inDowntime)));
         foreach ($inDowntime as $issue) {
             if ($rule = $this->getDowntimeRuleForIssueIfAny($issue)) {
                 $issue->set('downtime_config_uuid', $rule->get('config_uuid'));
-                // $this->logger->notice('Not recovering, there is another downtime for this issue');
+                $this->logger->debug(sprintf(
+                    'Not recovering %s, there is another downtime for this issue',
+                    $issue->getNiceUuid()
+                ));
             } else {
                 $rule = $this->periodRunner->getRuleByUuid($uuid);
                 $this->store->removeDowntimeForIssue($issue, $rule);
+                $this->logger->debug(sprintf('Removing downtime for issue %s', $issue->getNiceUuid()));
             }
         }
     }
