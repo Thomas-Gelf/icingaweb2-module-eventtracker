@@ -12,7 +12,6 @@ use Icinga\Module\Eventtracker\Modifier\ModifierRegistry;
 use Icinga\Module\Eventtracker\Modifier\Settings;
 use Icinga\Web\Form\Decorator\Autosubmit;
 
-
 class ChannelRuleForm extends Form
 {
     use TranslationHelper;

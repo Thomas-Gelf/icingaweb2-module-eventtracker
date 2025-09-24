@@ -2,6 +2,7 @@
 
 namespace Icinga\Module\Eventtracker\Modifier;
 
+use Icinga\Module\Eventtracker\Web\Form\ChannelRuleForm;
 use function ipl\Stdlib\get_php_type;
 
 class SimpleNameValueParser extends BaseModifier
@@ -38,5 +39,17 @@ class SimpleNameValueParser extends BaseModifier
         }
 
         return (object) $properties;
+    }
+
+    public static function extendSettingsForm(ChannelRuleForm $form): void
+    {
+        $form->addElement(
+            'text',
+            'catchall_key',
+            ['label' => $form->translate('catchall_key'),
+                'required' => false,
+                'description' => 'catchall_key'
+            ]
+        );
     }
 }
