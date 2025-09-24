@@ -2,6 +2,7 @@
 
 namespace Icinga\Module\Eventtracker\Modifier;
 
+use Icinga\Module\Eventtracker\Web\Form\ChannelRuleForm;
 use ipl\Html\Html;
 use ipl\Html\ValidHtml;
 
@@ -23,5 +24,15 @@ class MoveProperty extends BaseModifier
             Html::tag('strong', $propertyName),
             Html::tag('strong', $this->settings->getRequired('target_property'))
         );
+    }
+
+    public static function extendSettingsForm(ChannelRuleForm $form): void
+    {
+        $form->addElement('text', 'target_property', [
+        'label' => $form->translate('Target Property'),
+        'required' => false,
+        'description' => $form->translate('The value of the given property'
+        . ' will be moved to to target properties value'),
+            ]);
     }
 }
