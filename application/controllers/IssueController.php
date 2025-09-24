@@ -68,8 +68,11 @@ class IssueController extends Controller
             ));
             $activeTimeSlots = [];
         }
+        $upload = $this->url()->shift('upload');
+        if (! $upload) {
+            $this->setAutorefreshInterval(30);
+        }
         if ($uuid === null) {
-            $upload = $this->url()->shift('upload');
             $issues = SetOfIssues::fromUrl($this->url(), $db);
             $count = \count($issues);
             $this->addTitle($this->translate('%d issues'), $count);
