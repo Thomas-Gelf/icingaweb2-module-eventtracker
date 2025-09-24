@@ -12,19 +12,13 @@ use gipfl\Web\Widget\Hint;
 use gipfl\ZfDbStore\DbStorableInterface;
 use gipfl\ZfDbStore\NotFoundError;
 use gipfl\ZfDbStore\ZfDbStore;
-use Icinga\Chart\Inline\Inline;
 use Icinga\Module\Eventtracker\Data\PlainObjectRenderer;
 use Icinga\Module\Eventtracker\Db\ConfigStore;
 use Icinga\Module\Eventtracker\Engine\Downtime\DowntimeRule;
 use Icinga\Module\Eventtracker\Engine\Input\KafkaInput;
-use Icinga\Module\Eventtracker\Modifier\Modifier;
 use Icinga\Module\Eventtracker\Modifier\ModifierRuleStore;
-use Icinga\Module\Eventtracker\Modifier\ModifierChain;
-use Icinga\Module\Eventtracker\Modifier\RuleStore;
 use Icinga\Module\Eventtracker\Modifier\Settings;
-use Icinga\Module\Eventtracker\Syslog\SyslogParser;
 use Icinga\Module\Eventtracker\Web\Dashboard\ConfigurationDashboard;
-use Icinga\Module\Eventtracker\Web\Form\ChannelConfigForm;
 use Icinga\Module\Eventtracker\Web\Form\ChannelRuleForm;
 use Icinga\Module\Eventtracker\Web\Form\DowntimeForm;
 use Icinga\Module\Eventtracker\Web\Form\SimulateRuleForm;
@@ -38,14 +32,10 @@ use Icinga\Module\Eventtracker\Web\WebAction;
 use Icinga\Module\Eventtracker\Web\WebActions;
 use Icinga\Web\Notification;
 use Icinga\Web\Session\SessionNamespace;
-use ipl\Html\FormElement\SubmitButtonElement;
-use ipl\Html\FormElement\SubmitElement;
 use ipl\Html\Html;
 use ipl\Html\Table;
 use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\UuidInterface;
-use function _PHPStan_90b10482a\React\Async\waterfall;
-use function ipl\Stdlib\get_php_type;
 
 class ConfigurationController extends Controller
 {
@@ -175,7 +165,6 @@ class ConfigurationController extends Controller
     public function channelrulesAction()
     {
         $this->notForApi();
-//        $this->add
         $action = $this->actions->get('channels');
         $this->channelTabs()->activate('rules');
         $this->actions()->add(Link::create($this->translate('Add Modifier'), Url::fromPath(
@@ -217,8 +206,7 @@ class ConfigurationController extends Controller
                 ['uuid' => $this->requireUuid(),
                     'action' => 'stop_simulation']
             )));
-        }
-        else if ($this->params->get('action') === 'load_simulation') {
+        } elseif ($this->params->get('action') === 'load_simulation') {
             $simulationForm = new SimulateRuleForm($ns, $sessionKey);
             $simulationForm->handleRequest($this->getServerRequest());
             if ($simulationForm->hasBeenSubmitted()) {
@@ -665,8 +653,12 @@ class ConfigurationController extends Controller
         $this->sendJsonSuccess(['message' => sprintf('updated  %s hosts', $cnt)], 201);
     }
 
-    protected function showRules(ModifierRuleStore $modifierRuleStore, SessionNamespace $ns, UuidInterface $uuid, UuidObjectForm $form)
-    {
+    protected function showRules(
+        ModifierRuleStore $modifierRuleStore,
+        SessionNamespace $ns,
+        UuidInterface $uuid,
+        UuidObjectForm $form
+    ) {
         $sessionKey = 'channelrules/' . $uuid->toString();
         $form->addElement('submit', 'add_modifier', []);
         
@@ -696,7 +688,6 @@ class ConfigurationController extends Controller
             return;
         }
         try {
-            //$modifiers = ModifierChain::fromSerialization($modifierRuleStore->getRules());
             $modifiers = $modifierRuleStore->getRules();
         } catch (JsonDecodeException $e) {
             $this->content()->add(Hint::error(sprintf(
@@ -705,8 +696,6 @@ class ConfigurationController extends Controller
             )));
             return;
         }
-//        $ns->set('channelrules/' . $uuid->toString(), 'test');
-//        $ns->get()
         $url = Url::fromPath('eventtracker/configuration/channelrule', [
             'uuid' => $uuid->toString()
         ]);
@@ -742,46 +731,6 @@ class ConfigurationController extends Controller
             Html::tag('h3', $this->translate('Configured Rules')),
             $info
         ]);
-    }
-
-    protected function getSampleObject()
-    {
-        return SyslogParser::parseLine(
-            'Jan 11 13:12:54 goj oem_syslog[2837832]: timestamp=2025-01-11T12:12:54.560Z'
-            . ' hostname=kri.example.com component=kri.example.com id=2837644 state=nok severity=2 oem_clear=false'
-            . ' oem_host_name=kri.example.com oem_incident_ack_by_owner=no url=https://ip.gelf.net oem_incident_id=4996'
-            . ' oem_incident_status=new'
-            . ' oem_issue_type=incident oem_target_name=kri.example.com oem_target_type=host msg=Alert; Value=7;'
-            . ' String <Returncode:> with values <> 0 found in /var/log/dbms/load_dbclone_for_oracle_mssql.log!'
-            . ' OEMIncidentID: 4996'
-        );
-        return SyslogParser::parseLine(
-            'Jan 11 13:12:54 goj oem_syslog[2837832]: timestamp=2025-01-11T12:12:54.560Z'
-            . ' hostname=kri.example.com component=kri.example.com id=2837644 state=nok severity=2 oem_clear=false'
-            . ' oem_host_name=kri.example.com oem_incident_ack_by_owner=no oem_incident_id=4996 oem_incident_status=new'
-            . ' oem_issue_type=incident oem_target_name=kri.example.com oem_target_type=host msg=Alert; Value=7;'
-            . ' String <Returncode:> with values <> 0 found in /var/log/dbms/dbclone_for_oracle_mssql.log!'
-            . ' OEMIncidentID: 4996'
-        );
-        return JsonString::decode(
-            '{' . "\n"
-            . '    "host_name": "goj",' . "\n"
-            . '    "object_name": "oem_syslog",' . "\n"
-            . '    "object_class": "user",' . "\n"
-            . '    "severity": "critical",' . "\n"
-            . '    "priority": null,' . "\n"
-            . '    "message": "timestamp=2025-02-02T13:24:30.276Z hostname=atb.example.com'
-            . ' component=DBMS03_SITE1.EXAMPLE id=125690 state=nok severity=1 oem_clear=false'
-            . ' oem_host_name=atb.example.com oem_incident_ack_by_owner=no oem_incident_id=144826'
-            . ' oem_incident_status=new oem_issue_type=incident oem_target_name=dbms03_site1.example'
-            . ' oem_target_type=oracle_pdb msg=The pluggable database DBMS03_SITE1.EXAMPLE is down.'
-            . ' OEMIncidentID: 144826",' . "\n"
-            . '    "attributes": {' . "\n"
-            . '        "syslog_sender_pid": 125795' . "\n"
-            . '    }' . "\n"
-            . '}' . "\n"
-        );
-        return null;
     }
 
     protected function showList(WebAction $action)
