@@ -20,7 +20,6 @@ class SimulateRuleForm extends Form
 
     protected function assemble()
     {
-
         $this->addElement('select', 'simulation_entries', [
            'label' => $this->translate('Simulation entries'),
            'description' => $this->translate('Simulation entries'),

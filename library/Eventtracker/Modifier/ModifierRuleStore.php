@@ -67,9 +67,6 @@ class ModifierRuleStore
         return ModifierChain::fromSerialization($modifier);
     }
 
-    /**
-     * @return mixed
-     */
     public function getRules(): ModifierChain
     {
         return $this->getSessionRules() ?? $this->getStoredRules();

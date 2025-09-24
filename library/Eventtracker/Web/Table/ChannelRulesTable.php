@@ -110,7 +110,7 @@ class ChannelRulesTable extends Table
                     'class' => ['collapsible-table-row', 'collapsed']
                 ]),
                 $this::td([
-                  $this->deleteButton($row),
+                    $this->deleteButton($row),
                     $this->moveUpButton($row),
                     $this->moveDownButton($row),
                 ])
