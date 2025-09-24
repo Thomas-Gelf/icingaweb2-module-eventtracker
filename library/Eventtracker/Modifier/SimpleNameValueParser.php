@@ -46,7 +46,8 @@ class SimpleNameValueParser extends BaseModifier
         $form->addElement(
             'text',
             'catchall_key',
-            ['label' => $form->translate('catchall_key'),
+            [
+                'label' => $form->translate('catchall_key'),
                 'required' => false,
                 'description' => 'catchall_key'
             ]
