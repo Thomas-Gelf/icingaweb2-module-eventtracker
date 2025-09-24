@@ -689,8 +689,8 @@ class ConfigurationController extends Controller
                 $modifiers,
                 $url,
                 $this->getServerRequest(),
+                $modifierRuleStore,
                 $sampleObject,
-                $modifierRuleStore
             );
             if ($info->hasModifications()) {
                 $this->redirectNow($this->url());

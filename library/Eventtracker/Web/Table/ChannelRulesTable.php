@@ -14,13 +14,11 @@ use gipfl\Web\InlineForm;
 use gipfl\Web\Widget\Hint;
 use Icinga\Module\Eventtracker\Data\PlainObjectRenderer;
 use Icinga\Module\Eventtracker\Modifier\ModifierChain;
-use Icinga\Module\Eventtracker\Modifier\ModifierRegistry;
 use Icinga\Module\Eventtracker\Modifier\ModifierRuleStore;
 use Icinga\Module\Eventtracker\Web\Form\ChannelConfigForm;
 use Icinga\Module\Eventtracker\Web\Form\InstanceInlineForm;
 use ipl\Html\Html;
 use ipl\Html\Table;
-use mysql_xdevapi\CrudOperationBindable;
 use Psr\Http\Message\ServerRequestInterface;
 
 class ChannelRulesTable extends Table
@@ -37,7 +35,7 @@ class ChannelRulesTable extends Table
     protected ModifierChain $modifierChain;
     protected Url $url;
     protected ServerRequestInterface $request;
-    protected ModifierRuleStore $ruleStore;
+    protected ModifierRuleStore $modifierRuleStore;
     private ?object $sampleObject;
 
     public function getModifierChain(): ModifierChain
@@ -48,11 +46,11 @@ class ChannelRulesTable extends Table
     private bool $hasBeenModified = false;
 
     public function __construct(
-        ModifierChain          $modifierChain,
-        Url                    $url,
+        ModifierChain $modifierChain,
+        Url $url,
         ServerRequestInterface $request,
-        ?object                $sampleObject = null,
-        ModifierRuleStore $modifierRuleStore
+        ModifierRuleStore $modifierRuleStore,
+        ?object $sampleObject = null
     ) {
         $this->modifierChain = $modifierChain;
         $this->url = $url;
