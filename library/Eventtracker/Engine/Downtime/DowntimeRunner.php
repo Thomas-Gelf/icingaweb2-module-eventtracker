@@ -170,6 +170,8 @@ class DowntimeRunner implements DbBasedComponent
     protected function onDbReady(): void
     {
         $this->store = new DowntimeStore($this->db, $this->logger);
+        $this->recheckOpenIssues();
+        $this->recheckIssuesInDowntime();
     }
 
     protected function onDbLost(): void
