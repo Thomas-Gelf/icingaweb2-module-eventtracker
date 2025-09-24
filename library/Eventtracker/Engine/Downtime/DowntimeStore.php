@@ -117,6 +117,7 @@ class DowntimeStore
         $issue->set('status', 'in_downtime');
         $issue->set('downtime_rule_uuid', $rule->get('uuid'));
         $issue->set('downtime_config_uuid', $rule->get('config_uuid'));
+        $issue->set('ts_downtime_expired', null);
         if ($issue->get('downtime_rule_uuid') !== $rule->get('uuid')) {
             $issue->set('ts_downtime_triggered', $now);
             $this->logDowntimeActivation($issue, $rule);
@@ -150,7 +151,7 @@ class DowntimeStore
         }
 
         // Hint: we leave downtime_config_uuid and ts_downtime_triggered to not trigger the
-        // same downtime twice, depending on rle configuration
+        // same downtime twice, depending on rule configuration
         $issue->storeToDb($this->db);
         $this->logDowntimeDeactivation($issue, $rule, $now);
     }
