@@ -8,9 +8,12 @@ use Icinga\Module\Eventtracker\Daemon\SimpleDbBasedComponent;
 use Icinga\Module\Eventtracker\Engine\EnrichmentHelper;
 use Icinga\Module\Eventtracker\Engine\TimePeriod\TimeSlot;
 use Icinga\Module\Eventtracker\Issue;
+use Icinga\Module\Eventtracker\Time;
 use Psr\Log\LoggerInterface;
 use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\UuidInterface;
+use React\EventLoop\Loop;
+use React\EventLoop\TimerInterface;
 use Throwable;
 
 class DowntimeRunner implements DbBasedComponent
@@ -24,10 +27,12 @@ class DowntimeRunner implements DbBasedComponent
     protected static array $knownFilters = [];
     /** @readonly */
     public ?DowntimeStore $store = null;
+    protected TimerInterface $periodicChecker;
 
     public function __construct(DowntimePeriodRunner $periodRunner, LoggerInterface $logger)
     {
         $this->logger = $logger;
+        $this->periodicChecker = Loop::addPeriodicTimer(15, fn () => $this->recheckIssuesInDowntime());
         $this->periodRunner = $periodRunner;
         $this->periodRunner->on(DowntimePeriodRunner::ON_PERIODS_CHANGED, fn () => $this->recheckOpenIssues());
         $this->periodRunner->on(
@@ -78,6 +83,23 @@ class DowntimeRunner implements DbBasedComponent
     }
 
     protected function issueShouldBeInGivenDowntime(Issue $issue, DowntimeRule $downtime): bool
+    {
+        $matches = $this->downtimeFiltersMatchGivenIssue($issue, $downtime);
+        if (!$matches) {
+            return false;
+        }
+
+        if ($duration = $downtime->get('max_single_problem_duration')) {
+            $tsTriggered = $issue->get('ts_downtime_triggered');
+            if ($tsTriggered) {
+                return (int) ($tsTriggered + ($duration * 1000)) > Time::unixMilli();
+            }
+        }
+
+        return true;
+    }
+
+    protected function downtimeFiltersMatchGivenIssue(Issue $issue, DowntimeRule $downtime): bool
     {
         // TODO: check former downtime reference on issue,
         // when set -> do not allow again, if configured accordingly

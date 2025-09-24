@@ -114,11 +114,12 @@ class DowntimeStore
     protected function runSetDowntimeForIssue(Issue $issue, DowntimeRule $rule)
     {
         $now = Time::unixMilli();
+        $wasInDowntime = $issue->get('status') === 'in_downtime';
         $issue->set('status', 'in_downtime');
         $issue->set('downtime_rule_uuid', $rule->get('uuid'));
         $issue->set('downtime_config_uuid', $rule->get('config_uuid'));
         $issue->set('ts_downtime_expired', null);
-        if ($issue->get('downtime_rule_uuid') !== $rule->get('uuid')) {
+        if (!$wasInDowntime || $issue->get('downtime_rule_uuid') !== $rule->get('uuid')) {
             $issue->set('ts_downtime_triggered', $now);
             $this->logDowntimeActivation($issue, $rule);
         }
@@ -137,6 +138,9 @@ class DowntimeStore
     {
         $now = Time::unixMilli();
         $issue->set('ts_downtime_expired', $now);
+        // This is related to issues with limited duration. However, removing triggered will re-trigger
+        // it within the very same slot once again. Leaving this here for reference
+        // $issue->set('ts_downtime_triggered', null);
         if ($rule) {
             $status = $rule->get('on_iteration_end_issue_status');
             if ($status === DowntimeRule::END_STATUS_CLOSED) {
