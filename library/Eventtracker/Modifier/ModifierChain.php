@@ -2,11 +2,11 @@
 
 namespace Icinga\Module\Eventtracker\Modifier;
 
-use gipfl\Json\JsonString;
+use Countable;
 use JsonSerializable;
 use stdClass;
 
-class ModifierChain implements JsonSerializable, \Countable
+class ModifierChain implements JsonSerializable, Countable
 {
     protected array $modifiers = [];
 
@@ -125,7 +125,7 @@ class ModifierChain implements JsonSerializable, \Countable
         return $result;
     }
 
-    public function count()
+    public function count(): int
     {
         return count($this->modifiers);
     }
