@@ -31,7 +31,6 @@ class ChannelRulesTable extends Table
         'id' => 'channel-rules-table',
         'class' => [
             'common-table',
-        //    'table-row-selectable',
         ]
     ];
 
@@ -111,14 +110,11 @@ class ChannelRulesTable extends Table
                     'class' => ['collapsible-table-row', 'collapsed']
                 ]),
                 $this::td([
-//                    $this->disableButton('X' . $row),
                   $this->deleteButton($row),
                     $this->moveUpButton($row),
                     $this->moveDownButton($row),
-//                    Icon::create('angle-down'),
-//                    Icon::create('angle-up'),
                 ])
-            ], ['class' => 'sortable']));
+            ]));
         }
     }
 
@@ -146,9 +142,6 @@ class ChannelRulesTable extends Table
             $this->modifierChain->removeModifier($key);
             $this->modifierRuleStore->setModifierRules($this->modifierChain);
             $this->hasBeenModified = true;
-
-//            var_dump($this->modifierChain->getModifiers());
-//            var_dump("KILL $key");
         }
         return $form;
     }
