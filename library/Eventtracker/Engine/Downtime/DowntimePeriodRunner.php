@@ -240,7 +240,7 @@ class DowntimePeriodRunner implements EventEmitterInterface, DbBasedComponent
             $this->deactivatePeriod($id, $slot);
         }
         foreach ($expiredRules as $id => $definition) {
-            $this->expireDefinition($id, $this->activeRules[$id], $definition);
+            $this->expireDefinition($id, $definition);
             $this->removeRule($id);
         }
 
@@ -310,14 +310,19 @@ class DowntimePeriodRunner implements EventEmitterInterface, DbBasedComponent
         $this->emit(self::ON_PERIOD_DEACTIVATED, [Uuid::fromString($id), $slot]);
     }
 
-    protected function expireDefinition(string $id, DowntimeRule $rule, TimePeriodDefinition $definition): void
+    protected function expireDefinition(string $id, TimePeriodDefinition $definition): void
     {
         // $this->logger->notice("Expired definition $id");
         if (isset($this->activeRules[$id])) {
+            $rule = $this->activeRules[$id];
             $this->deactivatePeriod($id, $this->activeTimeSlots[$id]);
+        } else {
+            $rule = null;
         }
         unset($this->currentRules[$id]);
-        $this->emit(self::ON_DEFINITION_EXPIRED, [Uuid::fromString($id), $rule, $definition]);
+        if ($rule) {
+            $this->emit(self::ON_DEFINITION_EXPIRED, [Uuid::fromString($id), $rule, $definition]);
+        }
     }
 
     public function stop(): void
