@@ -135,17 +135,19 @@ class DowntimeStore
     protected function runRemoveDowntimeForIssue(Issue $issue, ?DowntimeRule $rule): void
     {
         $now = Time::unixMilli();
+        $issue->set('ts_downtime_expired', $now);
         if ($rule) {
             $status = $rule->get('on_iteration_end_issue_status');
             if ($status === DowntimeRule::END_STATUS_CLOSED) {
                 Issue::closeIssue($issue, $this->db, IssueHistory::REASON_EXPIRATION, 'downtime');
+                $this->logDowntimeDeactivation($issue, $rule, $now);
+                return; // We do not want to reach storeToDb
             } else {
                 $issue->set('status', $rule->get('on_iteration_end_issue_status'));
             }
         } else {
             $issue->set('status', 'open');
         }
-        $issue->set('ts_downtime_expired', $now);
 
         // Hint: we leave downtime_config_uuid and ts_downtime_triggered to not trigger the
         // same downtime twice, depending on rle configuration
