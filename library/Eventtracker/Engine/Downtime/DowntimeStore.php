@@ -134,7 +134,12 @@ class DowntimeStore
     {
         $now = Time::unixMilli();
         if ($rule) {
-            $issue->set('status', $rule->get('on_iteration_end_issue_status'));
+            $status = $rule->get('on_iteration_end_issue_status');
+            if ($status === DowntimeRule::END_STATUS_CLOSED) {
+                Issue::closeIssue($issue, $this->db, 'Downtime slot expired', 'daemon');
+            } else {
+                $issue->set('status', $rule->get('on_iteration_end_issue_status'));
+            }
         } else {
             $issue->set('status', 'open');
         }
