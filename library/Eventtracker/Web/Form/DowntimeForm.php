@@ -139,7 +139,10 @@ class DowntimeForm extends UuidObjectForm
                 ]);
             }
         } elseif ($this->getValue('filter_type') === 'custom_filter') {
-            if ($this->complexFilterIsNotSimple) {
+            if ($this->hasBeenSent()
+                && $this->getSentValue('filter_type') === 'simple_filter'
+                && $this->complexFilterIsNotSimple
+            ) {
                 $errorPrefix = Html::tag('span', [
                     'class' => 'error'
                 ], [Html::tag('strong', $this->translate('Error')), ': ', $this->translate(
@@ -175,6 +178,7 @@ EOT
                 ),
                 'placeholder' => 'severity=critical&message=*SAP*&attributes.env=production&host.vars.os=Linux'
             ]);
+            $this->addHidden('host_list_uuid');
         } elseif ($this->getValue('filter_type') === 'host_list') {
             $this->addElement('select', 'host_list_uuid', [
                 'label' => $this->translate('Host list'),
@@ -184,6 +188,7 @@ EOT
                 ),
                 'options' => [null => $this->translate('- please choose (optional) -')] + $this->enumHostLists(),
             ]);
+            $this->addHidden('filter_definition');
         }
     }
 
