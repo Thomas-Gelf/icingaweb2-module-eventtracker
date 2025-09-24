@@ -6,7 +6,7 @@ use gipfl\Json\JsonString;
 use JsonSerializable;
 use stdClass;
 
-class ModifierChain implements JsonSerializable
+class ModifierChain implements JsonSerializable, \Countable
 {
     protected array $modifiers = [];
 
@@ -26,7 +26,7 @@ class ModifierChain implements JsonSerializable
         return new static($modifiers);
     }
 
-    protected static function makeModifier(array $modifier): array
+    public static function makeModifier(array $modifier): array
     {
         /** @var Modifier|string $class Just a hint, it's a string */
         $class = __NAMESPACE__ . '\\' . $modifier[1];
@@ -123,5 +123,10 @@ class ModifierChain implements JsonSerializable
         }
 
         return $result;
+    }
+
+    public function count()
+    {
+        return count($this->modifiers);
     }
 }

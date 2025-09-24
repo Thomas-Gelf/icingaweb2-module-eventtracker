@@ -14,10 +14,13 @@ use gipfl\Web\InlineForm;
 use gipfl\Web\Widget\Hint;
 use Icinga\Module\Eventtracker\Data\PlainObjectRenderer;
 use Icinga\Module\Eventtracker\Modifier\ModifierChain;
+use Icinga\Module\Eventtracker\Modifier\ModifierRegistry;
+use Icinga\Module\Eventtracker\Modifier\ModifierRuleStore;
 use Icinga\Module\Eventtracker\Web\Form\ChannelConfigForm;
 use Icinga\Module\Eventtracker\Web\Form\InstanceInlineForm;
 use ipl\Html\Html;
 use ipl\Html\Table;
+use mysql_xdevapi\CrudOperationBindable;
 use Psr\Http\Message\ServerRequestInterface;
 
 class ChannelRulesTable extends Table
@@ -35,6 +38,7 @@ class ChannelRulesTable extends Table
     protected ModifierChain $modifierChain;
     protected Url $url;
     protected ServerRequestInterface $request;
+    protected ModifierRuleStore $ruleStore;
     private ?object $sampleObject;
 
     public function getModifierChain(): ModifierChain
@@ -48,12 +52,14 @@ class ChannelRulesTable extends Table
         ModifierChain          $modifierChain,
         Url                    $url,
         ServerRequestInterface $request,
-        ?object                $sampleObject = null
+        ?object                $sampleObject = null,
+        ModifierRuleStore $modifierRuleStore
     ) {
         $this->modifierChain = $modifierChain;
         $this->url = $url;
         $this->request = $request;
         $this->sampleObject = $sampleObject;
+        $this->modifierRuleStore = $modifierRuleStore;
     }
 
     public function isHasBeenModified(): bool
@@ -116,7 +122,7 @@ class ChannelRulesTable extends Table
         }
     }
 
-    public function hasBeenModified(): bool
+    public function hasModifications(): bool
     {
         $this->ensureAssembled();
         return $this->hasBeenModified;
@@ -137,8 +143,8 @@ class ChannelRulesTable extends Table
         $form->handleRequest($this->request);
         $confirm->addToForm($form);
         if ($yes->hasBeenPressed()) {
-//            var_dump($this->getValues);
             $this->modifierChain->removeModifier($key);
+            $this->modifierRuleStore->setModifierRules($this->modifierChain);
             $this->hasBeenModified = true;
 
 //            var_dump($this->modifierChain->getModifiers());
@@ -158,6 +164,7 @@ class ChannelRulesTable extends Table
         ]);
         if ($form->hasBeenSubmitted()) {
             $this->modifierChain->moveUp($key);
+            $this->modifierRuleStore->setModifierRules($this->modifierChain);
             $this->hasBeenModified = true;
         }
         return $form;
@@ -174,6 +181,7 @@ class ChannelRulesTable extends Table
         ]);
         if ($form->hasBeenSubmitted()) {
             $this->modifierChain->moveDown($key);
+            $this->modifierRuleStore->setModifierRules($this->modifierChain);
             $this->hasBeenModified = true;
         }
         return $form;
