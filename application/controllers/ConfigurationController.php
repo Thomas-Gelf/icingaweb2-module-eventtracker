@@ -17,7 +17,10 @@ use Icinga\Module\Eventtracker\Data\PlainObjectRenderer;
 use Icinga\Module\Eventtracker\Db\ConfigStore;
 use Icinga\Module\Eventtracker\Engine\Downtime\DowntimeRule;
 use Icinga\Module\Eventtracker\Engine\Input\KafkaInput;
+use Icinga\Module\Eventtracker\Modifier\Modifier;
+use Icinga\Module\Eventtracker\Modifier\ModifierRuleStore;
 use Icinga\Module\Eventtracker\Modifier\ModifierChain;
+use Icinga\Module\Eventtracker\Modifier\RuleStore;
 use Icinga\Module\Eventtracker\Modifier\Settings;
 use Icinga\Module\Eventtracker\Syslog\SyslogParser;
 use Icinga\Module\Eventtracker\Web\Dashboard\ConfigurationDashboard;
@@ -159,10 +162,11 @@ class ConfigurationController extends Controller
             $this->addObjectTab($action);
         }
         $this->content()->add($this->getForm($action, function () {
-            $uuid = $this->requireUuid();
-            $ns = $this->Window()->getSessionNamespace('eventtracker');
-            $sessionKey = 'channelrules/' . $uuid->toString();
-            $ns->delete($sessionKey);
+            if ($uuid = $this->getUuid()) {
+                $ns = $this->Window()->getSessionNamespace('eventtracker');
+                $sessionKey = 'channelrules/' . $uuid->toString();
+                $ns->delete($sessionKey);
+            }
         }));
     }
 
@@ -186,7 +190,9 @@ class ConfigurationController extends Controller
         $ns = $this->Window()->getSessionNamespace('eventtracker');
 
         $form = $this->getForm($action); // TODO: w/o form
-
+        $modifierRuleStore = new ModifierRuleStore($ns, $uuid, $form);
+        $rules = $modifierRuleStore->getStoredRules();
+        $rules = $modifierRuleStore->getRules();
 //        $form->addElement('submit', 'submit', ['label' => $this->translate('Save32')]);
 //        $this->addContent($form);
         if ($this->params->get('action') === 'add') {
@@ -194,11 +200,13 @@ class ConfigurationController extends Controller
             $ruleForm->handleRequest($this->getServerRequest());
 
             if ($ruleForm->hasBeenSubmitted()) {
-//                $form->getElementValue('')
+                $rules = $modifierRuleStore->getRules();
+                $rules->addModifier($ruleForm->getModifier(), $ruleForm->getPropertyName());
+                $modifierRuleStore->setModifierRules($rules);
             }
             $this->content()->add($ruleForm);
         }
-        $this->showRules($ns, $uuid, $form, $form->getElementValue('rules'));
+        $this->showRules($modifierRuleStore, $ns, $uuid, $form);
     }
 
     public function channelruleAction()
@@ -627,13 +635,13 @@ class ConfigurationController extends Controller
         $this->sendJsonSuccess(['message' => sprintf('updated  %s hosts', $cnt)], 201);
     }
 
-    protected function showRules(SessionNamespace $ns, UuidInterface $uuid, UuidObjectForm $form, ?string $rules = null)
+    protected function showRules(ModifierRuleStore $modifierRuleStore, SessionNamespace $ns, UuidInterface $uuid, UuidObjectForm $form)
     {
         $sessionKey = 'channelrules/' . $uuid->toString();
         $form->addElement('submit', 'add_modifier', []);
         
-        if ($sessionRules = $ns->get($sessionKey)) {
-            if ($rules !== $sessionRules) {
+        if ($modifierRuleStore->getSessionRules() !== null) {
+            if ($modifierRuleStore->hasBeenModified()) {
                 $newForm = new InlineForm();
                 $newForm->handleRequest($this->getServerRequest());
                 $newForm->addElement('submit', 'submit', ['label' => $this->translate('Save')]);
@@ -644,20 +652,23 @@ class ConfigurationController extends Controller
 //                    'The order has been modified please safe if you want to preserver the new order'
 //                ));
                 if ($newForm->hasBeenSubmitted()) {
-                    $form->populate(['rules' => $sessionRules]);
+                    $form->populate(['rules' => JsonString::encode($modifierRuleStore->getRules())]);
                     $form->storeObject();
-                    $ns->delete($sessionKey);
+                    var_dump("modified yes");
+                    $modifierRuleStore->deleteSessionRules();
                     $this->redirectNow($this->url());
                 }
                 $this->content()->add([$message, $newForm]);
             }
-            $rules = $sessionRules;
+            // $modifierRuleStore->setModifierRules($modifierRuleStore->getSessionRules());
         }
-        if ($rules === null) {
+        if ($modifierRuleStore->getRules() === null) {
+            var_dump("foobar");
             return;
         }
         try {
-            $modifiers = ModifierChain::fromSerialization(JsonString::decode($rules));
+            //$modifiers = ModifierChain::fromSerialization($modifierRuleStore->getRules());
+            $modifiers = $modifierRuleStore->getRules();
         } catch (JsonDecodeException $e) {
             $this->content()->add(Hint::error(sprintf(
                 $this->translate('Configured rules are invalid: %s'),
@@ -679,16 +690,21 @@ class ConfigurationController extends Controller
                     ], PlainObjectRenderer::render($sampleObject)),
                 ]);
             }
-            $info = new ChannelRulesTable($modifiers, $url, $this->getServerRequest(), $sampleObject);
-            if ($info->hasBeenModified()) {
-                $ns->set($sessionKey, JsonString::encode($info->getModifierChain(), JSON_PRETTY_PRINT));
+            $info = new ChannelRulesTable(
+                $modifiers,
+                $url,
+                $this->getServerRequest(),
+                $sampleObject,
+                $modifierRuleStore
+            );
+            if ($info->hasModifications()) {
                 $this->redirectNow($this->url());
             }
         } catch (\Throwable $e) {
             $info = [
                  Hint::error($e),
-                 Html::tag('pre', $rules),
-                 Html::tag('pre', JsonString::encode($modifiers, JSON_PRETTY_PRINT)),
+                 Html::tag('pre', $modifierRuleStore->getRules()),
+                 Html::tag('pre', $modifierRuleStore->getRules(), JSON_PRETTY_PRINT),
             ];
         }
 
@@ -813,6 +829,7 @@ class ConfigurationController extends Controller
         } else {
             $form = new $formClass($store);
         }
+        /** @var UuidObjectForm */
         if ($onSuccess) {
             $form->on($form::ON_SUCCESS, $onSuccess);
         }
