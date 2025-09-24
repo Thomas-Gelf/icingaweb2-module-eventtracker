@@ -14,7 +14,6 @@ use Icinga\Application\Hook;
 use Icinga\Authentication\Auth;
 use Icinga\Date\DateFormatter;
 use Icinga\Module\Eventtracker\Engine\Downtime\DowntimeRule;
-use Icinga\Module\Eventtracker\Engine\TimePeriod\TimeSlot;
 use Icinga\Module\Eventtracker\Input;
 use Icinga\Module\Eventtracker\File;
 use Icinga\Module\Eventtracker\Hook\EventActionsHook;
