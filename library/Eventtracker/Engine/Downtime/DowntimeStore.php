@@ -121,7 +121,7 @@ class DowntimeStore
         $issue->set('ts_downtime_expired', null);
         if (!$wasInDowntime || $issue->get('downtime_rule_uuid') !== $rule->get('uuid')) {
             $issue->set('ts_downtime_triggered', $now);
-            $this->logDowntimeActivation($issue, $rule);
+            $this->logDowntimeActivation($issue, $rule, $now);
         }
         $issue->storeToDb($this->db);
     }
