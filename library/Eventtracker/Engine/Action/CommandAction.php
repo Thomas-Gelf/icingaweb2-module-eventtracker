@@ -133,7 +133,7 @@ class CommandAction extends SimpleTaskConstructor implements Action
                 $deferred->reject(new Exception(sprintf(
                     'Command %s failed for issue %s: %s',
                     $this->command,
-                    $issue->getUuid(),
+                    $issue->getNiceUuid(),
                     $state->getReason()
                 )));
             }
