@@ -120,9 +120,11 @@ class CommandAction extends SimpleTaskConstructor implements Action
 
         $process->start();
         $process->stdout->on('data', function ($chunk) use ($issue) {
+            $chunk = \iconv('UTF-8', 'UTF-8//IGNORE', $chunk);
             $this->logger->debug("{$issue->getUuid()}: {$this->command}: ($chunk)");
         });
         $process->stderr->on('data', function ($chunk) use ($issue) {
+            $chunk = \iconv('UTF-8', 'UTF-8//IGNORE', $chunk);
             $this->logger->error("{$issue->getUuid()}: {$this->command}: [$chunk]");
         });
         $process->on('exit', function ($exitCode, $termSignal) use ($deferred, $issue) {
