@@ -14,7 +14,7 @@ use RuntimeException;
  */
 class ConfiguredMapLookup extends MapLookup
 {
-    protected static ?string $name = 'Lookup (and map) values via a configured Map (deprecated)';
+    protected static ?string $name = 'Lookup (and map) values via a configured Map (DEPRECATED)';
 
     protected $map;
 
@@ -44,7 +44,7 @@ class ConfiguredMapLookup extends MapLookup
     public function describe(string $propertyName): ValidHtml
     {
         return Html::sprintf(
-            'Lookup %s in the Map "%s"',
+            'DEPRECATED Lookup %s in the Map "%s"',
             Html::tag('strong', $propertyName),
             Html::tag('strong', $this->settings->getRequired('map_name'))
         );

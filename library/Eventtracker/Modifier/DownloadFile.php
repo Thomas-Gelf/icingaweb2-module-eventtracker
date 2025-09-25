@@ -2,8 +2,14 @@
 
 namespace Icinga\Module\Eventtracker\Modifier;
 
+use gipfl\Translation\TranslationHelper;
+use ipl\Html\Html;
+use ipl\Html\ValidHtml;
+
 class DownloadFile extends DownloadUrl
 {
+    use TranslationHelper;
+
     protected static ?string $name = 'Download a file from a URL';
 
     public function transform($object, string $propertyName)
@@ -31,5 +37,13 @@ class DownloadFile extends DownloadUrl
         ];
 
         return $value;
+    }
+
+    public function describe(string $propertyName): ValidHtml
+    {
+        return Html::sprintf(
+            $this->translate('Download a file from %s'),
+            Html::tag('strong', $propertyName)
+        );
     }
 }
