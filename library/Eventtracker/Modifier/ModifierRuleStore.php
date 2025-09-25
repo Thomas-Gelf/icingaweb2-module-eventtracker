@@ -26,7 +26,7 @@ class ModifierRuleStore
             return false;
         }
 
-        if (JsonString::encode($this->getStoredRules()) !== JsonString::encode($sessionRules)) {
+        if (!$this->getStoredRules()->equals($sessionRules)) {
             return true;
         }
         return false;

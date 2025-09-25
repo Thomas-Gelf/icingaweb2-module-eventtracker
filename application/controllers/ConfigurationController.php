@@ -2,6 +2,7 @@
 
 namespace Icinga\Module\Eventtracker\Controllers;
 
+use ECSPrefix202509\React\Dns\Model\Message;
 use Exception;
 use gipfl\IcingaWeb2\Link;
 use gipfl\IcingaWeb2\Url;
@@ -16,6 +17,9 @@ use Icinga\Module\Eventtracker\Data\PlainObjectRenderer;
 use Icinga\Module\Eventtracker\Db\ConfigStore;
 use Icinga\Module\Eventtracker\Engine\Downtime\DowntimeRule;
 use Icinga\Module\Eventtracker\Engine\Input\KafkaInput;
+use Icinga\Module\Eventtracker\Modifier\Modifier;
+use Icinga\Module\Eventtracker\Modifier\ModifierChain;
+use Icinga\Module\Eventtracker\Modifier\ModifierRegistry;
 use Icinga\Module\Eventtracker\Modifier\ModifierRuleStore;
 use Icinga\Module\Eventtracker\Modifier\Settings;
 use Icinga\Module\Eventtracker\Web\Dashboard\ConfigurationDashboard;
@@ -167,11 +171,17 @@ class ConfigurationController extends Controller
         $this->notForApi();
         $action = $this->actions->get('channels');
         $this->channelTabs()->activate('rules');
-        $this->actions()->add(Link::create($this->translate('Add Modifier'), Url::fromPath(
+        $this->actions()->add(Link::create(
+            $this->translate('Add Modifier'),
             'eventtracker/configuration/channelRules/',
-            ['uuid' => $this->requireUuid(),
-            'action' => 'add']
-        )));
+            [
+                'uuid' => $this->requireUuid(),
+                'action' => 'add'
+            ],
+            [
+                'class' => 'icon-plus'
+            ]
+        ));
 
         $uuid = $this->requireUuid();
         $ns = $this->Window()->getSessionNamespace('eventtracker');
@@ -180,36 +190,68 @@ class ConfigurationController extends Controller
         $form = $this->getForm($action); // TODO: w/o form
         $modifierRuleStore = new ModifierRuleStore($ns, $uuid, $form);
         if ($this->params->get('action') === 'add') {
-            $ruleForm = new ChannelRuleForm();
-            $ruleForm->handleRequest($this->getServerRequest());
-
-            if ($ruleForm->hasBeenSubmitted()) {
+            $ruleForm = new ChannelRuleForm($modifierRuleStore);
+            $ruleForm->on($ruleForm::ON_SUCCESS, function () use ($ruleForm, $modifierRuleStore) {
                 $rules = $modifierRuleStore->getRules();
                 $rules->addModifier($ruleForm->getModifier(), $ruleForm->getPropertyName());
                 $modifierRuleStore->setModifierRules($rules);
+                $this->redirectNow($this->url()->getUrlWithout('action'));
+            });
+            $ruleForm->handleRequest($this->getServerRequest());
+            if ($ruleForm->hasBeenCancelled()) {
                 $this->redirectNow($this->url()->getUrlWithout('action'));
             }
             $this->content()->add($ruleForm);
         }
         if ($ns->get($sessionKey) !== null) {
-            $this->actions()->add(Link::create($this->translate('Stop Simulation'), Url::fromPath(
-                'eventtracker/configuration/channelRules/',
-                ['uuid' => $this->requireUuid(),
-                    'action' => 'stop_simulation']
-            )));
+            $this->actions()->add(Link::create(
+                $this->translate('Stop Simulation'),
+                'eventtracker/configuration/channelRules',
+                [
+                    'uuid'   => $this->requireUuid(),
+                    'action' => 'stop_simulation'
+                ]
+            ));
         } elseif ($this->params->get('action') === 'load_simulation') {
             $simulationForm = new SimulateRuleForm($ns, $sessionKey);
+            $simulationForm->on($simulationForm::ON_SUCCESS, function () {
+                $this->redirectNow($this->url()->getUrlWithout('action'));
+            });
             $simulationForm->handleRequest($this->getServerRequest());
-            if ($simulationForm->hasBeenSubmitted()) {
+            if ($simulationForm->hasBeenCancelled()) {
                 $this->redirectNow($this->url()->getUrlWithout('action'));
             }
+
             $this->content()->add($simulationForm);
+        }
+        if ($this->params->get('action') === 'edit') {
+            var_dump("foobar");
+            $ruleForm = new ChannelRuleForm($modifierRuleStore);
+            $ruleForm->editRow(
+                $this->url()->getParam('row'),
+                $this->url()->getParam('checksum')
+            );
+            $ruleForm->on($ruleForm::ON_SUCCESS, function () {
+                $this->redirectNow($this->url()->getUrlWithout('action'));
+            });
+            $ruleForm->handleRequest($this->getServerRequest());
+            if ($ruleForm->hasBeenCancelled()) {
+                $this->redirectNow($this->url()->getUrlWithout('action'));
+            }
+
+            $this->content()->add($ruleForm);
         } else {
-            $this->actions()->add(Link::create($this->translate('Load Simulation'), Url::fromPath(
+            $this->actions()->add(Link::create(
+                $this->translate('Load Simulation'),
                 'eventtracker/configuration/channelRules/',
-                ['uuid' => $this->requireUuid(),
-                    'action' => 'load_simulation']
-            )));
+                [
+                    'uuid'   => $this->requireUuid(),
+                    'action' => 'load_simulation',
+                ],
+                [
+                    'class' => 'icon-magic'
+                ]
+            ));
         }
         if ($this->params->get('action') === 'stop_simulation') {
             $ns->delete($sessionKey);
@@ -655,17 +697,24 @@ class ConfigurationController extends Controller
         if ($modifierRuleStore->getSessionRules() !== null) {
             if ($modifierRuleStore->hasBeenModified()) {
                 $newForm = new InlineForm();
+                $newForm->on($newForm::ON_SUCCESS, function () use ($form, $modifierRuleStore) {
+                    $form->populate(['rules' => JsonString::encode($modifierRuleStore->getRules())]);
+                    $form->storeObject();
+                    $modifierRuleStore->deleteSessionRules();
+                    $this->redirectNow($this->url());
+                });
                 $newForm->handleRequest($this->getServerRequest());
                 $newForm->addElement('submit', 'submit', ['label' => $this->translate('Save')]);
                 $message = Hint::warning(
                     'The order has been modified please safe if you want to preserver the new order'
                 );
-                if ($newForm->hasBeenSubmitted()) {
-                    $form->populate(['rules' => JsonString::encode($modifierRuleStore->getRules())]);
-                    $form->storeObject();
-                    $modifierRuleStore->deleteSessionRules();
-                    $this->redirectNow($this->url());
-                }
+
+                //if ($newForm->hasBeenSubmitted()) {
+                //    $form->populate(['rules' => JsonString::encode($modifierRuleStore->getRules())]);
+                //    $form->storeObject();
+                //    $modifierRuleStore->deleteSessionRules();
+                //    $this->redirectNow($this->url());
+                //}
                 $this->content()->add([$message, $newForm]);
             }
         }

@@ -8,17 +8,23 @@ use gipfl\IcingaWeb2\Icon;
 use gipfl\IcingaWeb2\IconHelper;
 use gipfl\IcingaWeb2\Link;
 use gipfl\IcingaWeb2\Url;
+use gipfl\Json\JsonString;
 use gipfl\Translation\TranslationHelper;
 use gipfl\Web\Form\Feature\NextConfirmCancel;
 use gipfl\Web\InlineForm;
 use gipfl\Web\Widget\Hint;
 use Icinga\Module\Eventtracker\Data\PlainObjectRenderer;
 use Icinga\Module\Eventtracker\Modifier\ModifierChain;
+use Icinga\Module\Eventtracker\Modifier\ModifierRegistry;
 use Icinga\Module\Eventtracker\Modifier\ModifierRuleStore;
 use Icinga\Module\Eventtracker\Web\Form\ChannelConfigForm;
 use Icinga\Module\Eventtracker\Web\Form\InstanceInlineForm;
+use Icinga\Module\Eventtracker\Web\WebActions;
+use Icinga\Web\Form\Element\Button;
 use ipl\Html\Html;
 use ipl\Html\Table;
+use ipl\Web\Widget\ActionLink;
+use ipl\Web\Widget\ButtonLink;
 use Psr\Http\Message\ServerRequestInterface;
 
 class ChannelRulesTable extends Table
@@ -73,6 +79,7 @@ class ChannelRulesTable extends Table
         } else {
             $old = null;
         }
+        $checksum = $this->modifierChain->getShortChecksum();
         foreach ($this->modifierChain->getModifiers() as list($propertyName, $modifier)) {
             $row++;
             $show = Html::tag('div', [
@@ -109,6 +116,7 @@ class ChannelRulesTable extends Table
                     'class' => ['collapsible-table-row', 'collapsed']
                 ]),
                 $this::td([
+                    $this->editButton($row, $modifier, $checksum),
                     $this->deleteButton($row),
                     $this->moveUpButton($row),
                     $this->moveDownButton($row),
@@ -143,6 +151,21 @@ class ChannelRulesTable extends Table
             $this->hasBeenModified = true;
         }
         return $form;
+    }
+
+    protected function editButton($key, $modifier, $checksum): Link
+    {
+        $link =  Link::create(
+            Icon::create('edit', ['class' => 'icon-button', 'color' => 'red']),
+            'eventtracker/configuration/channelrules',
+            [
+                'uuid' => $this->url->getParam('uuid'),
+                'row' => $key,
+                'action' => 'edit',
+                'checksum' => $checksum
+            ],
+        );
+        return $link;
     }
 
     protected function moveUpButton($key): InlineForm
