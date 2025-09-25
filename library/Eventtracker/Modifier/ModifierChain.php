@@ -70,7 +70,7 @@ class ModifierChain implements JsonSerializable, Countable
     }
 
     public function replaceModifier(Modifier $modifier, $propertyName, $row)
-    {;
+    {
         $this->modifiers[$row] = [$propertyName, $modifier];
     }
 
