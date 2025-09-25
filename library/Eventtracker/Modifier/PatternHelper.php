@@ -4,12 +4,7 @@ namespace Icinga\Module\Eventtracker\Modifier;
 
 class PatternHelper
 {
-    /**
-     * @param $string
-     * @param object $object
-     * @return string|null
-     */
-    public static function fillPlaceholders($string, $object)
+    public static function fillPlaceholders(string $string, object $object): ?string
     {
         return \preg_replace_callback('/({[^}]+})/', function ($match) use ($object) {
             $property = \trim($match[1], '{}');
