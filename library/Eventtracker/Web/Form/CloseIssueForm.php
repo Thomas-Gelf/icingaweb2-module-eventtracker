@@ -16,7 +16,12 @@ class CloseIssueForm extends InlineIssueForm
     public function onSuccess()
     {
         foreach ($this->issues as $issue) {
-            Issue::closeIssue($issue, $this->db, IssueHistory::REASON_MANUAL, Auth::getInstance()->getUser()->getUsername());
+            Issue::closeIssue(
+                $issue,
+                $this->db,
+                IssueHistory::REASON_MANUAL,
+                Auth::getInstance()->getUser()->getUsername(),
+            );
         }
     }
 }
