@@ -3,6 +3,7 @@
 namespace Icinga\Module\Eventtracker\Modifier;
 
 use stdClass;
+
 use function array_key_exists;
 use function property_exists;
 

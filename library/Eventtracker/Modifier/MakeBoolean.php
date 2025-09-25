@@ -2,10 +2,16 @@
 
 namespace Icinga\Module\Eventtracker\Modifier;
 
+use gipfl\Translation\TranslationHelper;
+use Icinga\Module\Eventtracker\Web\Form\ChannelRuleForm;
 use InvalidArgumentException;
+use ipl\Html\Html;
+use ipl\Html\ValidHtml;
 
 class MakeBoolean extends BaseModifier
 {
+    use TranslationHelper;
+
     protected static array $validStrings = [
         '0'     => false,
         'false' => false,
@@ -58,5 +64,32 @@ class MakeBoolean extends BaseModifier
                     $value
                 );
         }
+    }
+
+    public static function extendSettingsForm(ChannelRuleForm $form): void
+    {
+        $form->addElement('select', 'on_invalid', [
+            'label'       => $form->translate('When missing'),
+            'required'    => true,
+            'description' => $form->translate(
+                "'0', 'false', 'n' and 'no' will become false. '1', 'true', 'y' and 'yes' will become true."
+                . " What should happen in case another value appears?"
+            ),
+            'options'     => [
+                null      => $form->translate('- please choose -'),
+                'null'    => $form->translate('Set null'),
+                'false' => $form->translate('Set to false'),
+                'true'    => $form->translate('Set to true'),
+                'fail'    => $form->translate('Let the action fail'),
+            ]
+        ]);
+    }
+
+    public function describe(string $propertyName): ValidHtml
+    {
+        return Html::sprintf(
+            $this->translate('Convert %s into a boolean value'),
+            Html::tag('strong', $propertyName),
+        );
     }
 }
