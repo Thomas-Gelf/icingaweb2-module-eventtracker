@@ -4,6 +4,7 @@ namespace Icinga\Module\Eventtracker\Web\Form;
 
 use Icinga\Authentication\Auth;
 use Icinga\Module\Eventtracker\Issue;
+use Icinga\Module\Eventtracker\IssueHistory;
 
 class CloseIssueForm extends InlineIssueForm
 {
@@ -15,7 +16,7 @@ class CloseIssueForm extends InlineIssueForm
     public function onSuccess()
     {
         foreach ($this->issues as $issue) {
-            Issue::closeIssue($issue, $this->db, 'Manually closed', Auth::getInstance()->getUser()->getUsername());
+            Issue::closeIssue($issue, $this->db, IssueHistory::REASON_MANUAL, Auth::getInstance()->getUser()->getUsername());
         }
     }
 }
