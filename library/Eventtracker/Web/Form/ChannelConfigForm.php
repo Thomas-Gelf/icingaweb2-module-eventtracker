@@ -15,6 +15,7 @@ class ChannelConfigForm extends UuidObjectForm
             'label' => $this->translate('Label'),
             'required' => true,
         ]);
+        /*
         $this->addElement('textarea', 'rules', [
             'label' => $this->translate('Rules'),
             'description' => $this->translate('For now, these are JSON-encoded rules'),
@@ -24,6 +25,8 @@ class ChannelConfigForm extends UuidObjectForm
             'value' => '[]',
             'required' => true,
         ]);
+        */
+        $this->addHidden('rules', '[]');
         $this->addElement('select', 'input_uuids', [
             'label'       => $this->translate('Single Inputs'),
             'description' => $this->translate('Wire specific inputs to this channel'),
