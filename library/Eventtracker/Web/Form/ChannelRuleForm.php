@@ -51,7 +51,8 @@ class ChannelRuleForm extends Form
             $this->populate(['modifyProperty' => $modifier[0], 'modifierImplementation' => $modifier[1]->getName()]);
             $this->populate((array) $modifier[1]->getSettings()->jsonSerialize());
         } else {
-            throw new \Exception('Checksum doesn\'t not match checksum from url: ' . $compareChecksum . ' != ' . $this->modifierChain->getShortChecksum());
+            throw new \Exception('Checksum doesn\'t not match checksum from url: '
+                . $compareChecksum . ' != ' . $this->modifierChain->getShortChecksum());
         }
     }
 
