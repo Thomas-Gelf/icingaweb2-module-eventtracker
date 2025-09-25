@@ -68,6 +68,7 @@ class ChannelRulesTable extends Table
     {
         $row = -1;
         if ($object = $this->sampleObject) {
+            $object = clone($object);
             $old = PlainObjectRenderer::render($object);
         } else {
             $old = null;
