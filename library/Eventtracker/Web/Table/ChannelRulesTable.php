@@ -156,7 +156,7 @@ class ChannelRulesTable extends Table
     protected function editButton($key, $modifier, $checksum): Link
     {
         $link =  Link::create(
-            Icon::create('edit', ['class' => 'icon-button', 'color' => 'red']),
+            Icon::create('edit', ['class' => 'icon-button']),
             'eventtracker/configuration/channelrules',
             [
                 'uuid' => $this->url->getParam('uuid'),

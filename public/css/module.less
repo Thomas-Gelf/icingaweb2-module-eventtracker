@@ -735,8 +735,22 @@ table.common-table table.Differences {
 
 #channel-rules-table {
   > tbody > tr > td:last-of-type {
+    input {
+      margin-right: 0.2em;
+    }
     text-align: right;
     min-width: 8em;
+    a {
+      color: @icinga-blue;
+      padding-left: 0.2em ;
+      display: inline-block;
+      margin-right: 0.2em;
+    }
+    a:hover {
+      color: @text-color-inverted;
+      background: @icinga-blue;
+      border-radius: 3px;
+    }
   }
 }
 td.collapsible-table-row {
