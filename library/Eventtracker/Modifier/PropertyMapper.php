@@ -3,6 +3,7 @@
 namespace Icinga\Module\Eventtracker\Modifier;
 
 use stdClass;
+
 use function array_key_exists;
 use function property_exists;
 
@@ -18,7 +19,7 @@ class PropertyMapper
         $this->map = $map;
     }
 
-    public function mapObject(stdClass $source)
+    public function mapObject(stdClass $source): stdClass
     {
         $result = [];
         foreach ($this->map as $left => $right) {
@@ -30,7 +31,7 @@ class PropertyMapper
         return (object) $result;
     }
 
-    public function mapArray(array $source)
+    public function mapArray(array $source): array
     {
         $result = [];
         foreach ($this->map as $left => $right) {

@@ -2,10 +2,12 @@
 
 namespace Icinga\Module\Eventtracker\Modifier;
 
+use Countable;
+use gipfl\Json\JsonString;
 use JsonSerializable;
 use stdClass;
 
-class ModifierChain implements JsonSerializable
+class ModifierChain implements JsonSerializable, Countable
 {
     protected array $modifiers = [];
 
@@ -25,7 +27,7 @@ class ModifierChain implements JsonSerializable
         return new static($modifiers);
     }
 
-    protected static function makeModifier(array $modifier): array
+    public static function makeModifier(array $modifier): array
     {
         /** @var Modifier|string $class Just a hint, it's a string */
         $class = __NAMESPACE__ . '\\' . $modifier[1];
@@ -38,7 +40,7 @@ class ModifierChain implements JsonSerializable
     }
 
     /**
-     * @return array of arrays, 0 => property, 1 => modifier
+     * @return array{0: string, 1: Modifier}
      */
     public function getModifiers(): array
     {
@@ -67,6 +69,62 @@ class ModifierChain implements JsonSerializable
         $this->modifiers[] = [$propertyName, $modifier];
     }
 
+    public function replaceModifier(Modifier $modifier, $propertyName, $row)
+    {
+        $this->modifiers[$row] = [$propertyName, $modifier];
+    }
+
+    public function getShortChecksum(): string
+    {
+        $checksum = substr(sha1(JsonString::encode($this->modifiers)), 0, 7);
+        return $checksum;
+    }
+
+    public function equals(ModifierChain $modifierChain): bool
+    {
+        return JsonString::encode($this) === JsonString::encode($modifierChain);
+    }
+
+    public function removeModifier(int $row): ModifierChain
+    {
+        $modifiers = $this->modifiers;
+        unset($modifiers[$row]);
+        $this->modifiers = array_values($modifiers);
+
+        return $this;
+    }
+
+    public function moveUp(int $index): ModifierChain
+    {
+        $modifiers = $this->modifiers;
+        if ($index === 0) {
+            return $this;
+        }
+        $tempNext = $modifiers[$index - 1];
+        $temp = $modifiers[$index];
+        $modifiers[$index - 1] = $temp;
+        $modifiers[$index] = $tempNext;
+        $this->modifiers = $modifiers;
+
+        return $this;
+    }
+
+
+    public function moveDown(int $index): ModifierChain
+    {
+        $modifiers = $this->modifiers;
+        if (! isset($modifiers[$index + 1])) {
+            return $this;
+        }
+        $tempNext = $modifiers[$index + 1];
+        $temp = $modifiers[$index];
+        $modifiers[$index + 1] = $temp;
+        $modifiers[$index] = $tempNext;
+        $this->modifiers = $modifiers;
+
+        return $this;
+    }
+
     #[\ReturnTypeWillChange]
     public function jsonSerialize()
     {
@@ -83,5 +141,10 @@ class ModifierChain implements JsonSerializable
         }
 
         return $result;
+    }
+
+    public function count(): int
+    {
+        return count($this->modifiers);
     }
 }

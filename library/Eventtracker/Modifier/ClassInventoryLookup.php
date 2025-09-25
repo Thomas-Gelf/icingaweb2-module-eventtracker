@@ -11,13 +11,9 @@ class ClassInventoryLookup extends BaseModifier
 
     protected $XXinstanceDescriptionPattern = 'Transforms...';
 
-    /** @var ObjectClassInventory */
-    protected $classes;
+    protected ?ObjectClassInventory $classes = null;
 
-    /**
-     * @return ObjectClassInventory
-     */
-    protected function classes()
+    protected function classes(): ObjectClassInventory
     {
         if ($this->classes === null) {
             // TODO: inject DB. requiredResources?

@@ -2,22 +2,30 @@
 
 namespace Icinga\Module\Eventtracker\Controllers;
 
+use ECSPrefix202509\React\Dns\Model\Message;
 use Exception;
 use gipfl\IcingaWeb2\Link;
 use gipfl\IcingaWeb2\Url;
 use gipfl\Json\JsonDecodeException;
 use gipfl\Json\JsonString;
+use gipfl\Web\InlineForm;
 use gipfl\Web\Widget\Hint;
 use gipfl\ZfDbStore\DbStorableInterface;
 use gipfl\ZfDbStore\NotFoundError;
 use gipfl\ZfDbStore\ZfDbStore;
+use Icinga\Module\Eventtracker\Data\PlainObjectRenderer;
 use Icinga\Module\Eventtracker\Db\ConfigStore;
 use Icinga\Module\Eventtracker\Engine\Downtime\DowntimeRule;
 use Icinga\Module\Eventtracker\Engine\Input\KafkaInput;
+use Icinga\Module\Eventtracker\Modifier\Modifier;
 use Icinga\Module\Eventtracker\Modifier\ModifierChain;
+use Icinga\Module\Eventtracker\Modifier\ModifierRegistry;
+use Icinga\Module\Eventtracker\Modifier\ModifierRuleStore;
 use Icinga\Module\Eventtracker\Modifier\Settings;
 use Icinga\Module\Eventtracker\Web\Dashboard\ConfigurationDashboard;
+use Icinga\Module\Eventtracker\Web\Form\ChannelRuleForm;
 use Icinga\Module\Eventtracker\Web\Form\DowntimeForm;
+use Icinga\Module\Eventtracker\Web\Form\SimulateRuleForm;
 use Icinga\Module\Eventtracker\Web\Form\UuidObjectForm;
 use Icinga\Module\Eventtracker\Web\Table\BaseTable;
 use Icinga\Module\Eventtracker\Web\Table\ChannelRulesTable;
@@ -27,6 +35,7 @@ use Icinga\Module\Eventtracker\Web\Table\HostListMemberTable;
 use Icinga\Module\Eventtracker\Web\WebAction;
 use Icinga\Module\Eventtracker\Web\WebActions;
 use Icinga\Web\Notification;
+use Icinga\Web\Session\SessionNamespace;
 use ipl\Html\Html;
 use ipl\Html\Table;
 use Ramsey\Uuid\Uuid;
@@ -148,7 +157,13 @@ class ConfigurationController extends Controller
         } else {
             $this->addObjectTab($action);
         }
-        $this->content()->add($this->getForm($action));
+        $this->content()->add($this->getForm($action, function () {
+            if ($uuid = $this->getUuid()) {
+                $ns = $this->Window()->getSessionNamespace('eventtracker');
+                $sessionKey = 'channelrules/' . $uuid->toString();
+                $ns->delete($sessionKey);
+            }
+        }));
     }
 
     public function channelrulesAction()
@@ -156,15 +171,93 @@ class ConfigurationController extends Controller
         $this->notForApi();
         $action = $this->actions->get('channels');
         $this->channelTabs()->activate('rules');
-        $this->actions()->add(Link::create($this->translate('Edit'), 'TODO', [
-            'what' => 'ever'
-        ], [
-            'class' => 'icon-edit'
-        ]));
+        $this->actions()->add(Link::create(
+            $this->translate('Add Modifier'),
+            'eventtracker/configuration/channelRules/',
+            [
+                'uuid' => $this->requireUuid(),
+                'action' => 'add'
+            ],
+            [
+                'class' => 'icon-plus'
+            ]
+        ));
+
+        $uuid = $this->requireUuid();
+        $ns = $this->Window()->getSessionNamespace('eventtracker');
+        $sessionKey = 'simulationObject/'. $uuid->toString();
+
         $form = $this->getForm($action); // TODO: w/o form
-        if ($rules = $form->getElementValue('rules')) {
-            $this->showRules($this->requireUuid(), $rules);
+        $modifierRuleStore = new ModifierRuleStore($ns, $uuid, $form);
+        if ($this->params->get('action') === 'add') {
+            $ruleForm = new ChannelRuleForm($modifierRuleStore);
+            $ruleForm->on($ruleForm::ON_SUCCESS, function () use ($ruleForm, $modifierRuleStore) {
+                $rules = $modifierRuleStore->getRules();
+                $rules->addModifier($ruleForm->getModifier(), $ruleForm->getPropertyName());
+                $modifierRuleStore->setModifierRules($rules);
+                $this->redirectNow($this->url()->getUrlWithout('action'));
+            });
+            $ruleForm->handleRequest($this->getServerRequest());
+            if ($ruleForm->hasBeenCancelled()) {
+                $this->redirectNow($this->url()->getUrlWithout('action'));
+            }
+            $this->content()->add($ruleForm);
         }
+        if ($ns->get($sessionKey) !== null) {
+            $this->actions()->add(Link::create(
+                $this->translate('Stop Simulation'),
+                'eventtracker/configuration/channelRules',
+                [
+                    'uuid'   => $this->requireUuid(),
+                    'action' => 'stop_simulation'
+                ]
+            ));
+        } elseif ($this->params->get('action') === 'load_simulation') {
+            $simulationForm = new SimulateRuleForm($ns, $sessionKey);
+            $simulationForm->on($simulationForm::ON_SUCCESS, function () {
+                $this->redirectNow($this->url()->getUrlWithout('action'));
+            });
+            $simulationForm->handleRequest($this->getServerRequest());
+            if ($simulationForm->hasBeenCancelled()) {
+                $this->redirectNow($this->url()->getUrlWithout('action'));
+            }
+
+            $this->content()->add($simulationForm);
+        }
+        if ($this->params->get('action') === 'edit') {
+            var_dump("foobar");
+            $ruleForm = new ChannelRuleForm($modifierRuleStore);
+            $ruleForm->editRow(
+                $this->url()->getParam('row'),
+                $this->url()->getParam('checksum')
+            );
+            $ruleForm->on($ruleForm::ON_SUCCESS, function () {
+                $this->redirectNow($this->url()->getUrlWithout('action'));
+            });
+            $ruleForm->handleRequest($this->getServerRequest());
+            if ($ruleForm->hasBeenCancelled()) {
+                $this->redirectNow($this->url()->getUrlWithout('action'));
+            }
+
+            $this->content()->add($ruleForm);
+        } else {
+            $this->actions()->add(Link::create(
+                $this->translate('Load Simulation'),
+                'eventtracker/configuration/channelRules/',
+                [
+                    'uuid'   => $this->requireUuid(),
+                    'action' => 'load_simulation',
+                ],
+                [
+                    'class' => 'icon-magic'
+                ]
+            ));
+        }
+        if ($this->params->get('action') === 'stop_simulation') {
+            $ns->delete($sessionKey);
+            $this->redirectNow($this->url()->getUrlWithout('action'));
+        }
+        $this->showRules($modifierRuleStore, $ns, $uuid, $form);
     }
 
     public function channelruleAction()
@@ -195,11 +288,11 @@ class ConfigurationController extends Controller
             'label' => $this->translate('Channel Configuration'),
             'url'   => 'eventtracker/configuration/channel',
             'urlParams' => $params,
-        ])/*->add('rules', [
+        ])->add('rules', [
             'label' => $this->translate('Rules'),
             'url'   => 'eventtracker/configuration/channelrules',
             'urlParams' => $params,
-        ])*/;
+        ]);
     }
 
 
@@ -593,17 +686,73 @@ class ConfigurationController extends Controller
         $this->sendJsonSuccess(['message' => sprintf('updated  %s hosts', $cnt)], 201);
     }
 
-    protected function showRules(UuidInterface $uuid, $rules)
-    {
-        try {
-            $modifiers = ModifierChain::fromSerialization(JsonString::decode($rules));
-        } catch (JsonDecodeException $e) {
+    protected function showRules(
+        ModifierRuleStore $modifierRuleStore,
+        SessionNamespace $ns,
+        UuidInterface $uuid,
+        UuidObjectForm $form
+    ) {
+        $form->addElement('submit', 'add_modifier', []);
+        
+        if ($modifierRuleStore->getSessionRules() !== null) {
+            if ($modifierRuleStore->hasBeenModified()) {
+                $newForm = new InlineForm();
+                $newForm->on($newForm::ON_SUCCESS, function () use ($form, $modifierRuleStore) {
+                    $form->populate(['rules' => JsonString::encode($modifierRuleStore->getRules())]);
+                    $form->storeObject();
+                    $modifierRuleStore->deleteSessionRules();
+                    $this->redirectNow($this->url());
+                });
+                $newForm->handleRequest($this->getServerRequest());
+                $newForm->addElement('submit', 'submit', ['label' => $this->translate('Save')]);
+                $message = Hint::warning(
+                    'The order has been modified please safe if you want to preserver the new order'
+                );
+
+                //if ($newForm->hasBeenSubmitted()) {
+                //    $form->populate(['rules' => JsonString::encode($modifierRuleStore->getRules())]);
+                //    $form->storeObject();
+                //    $modifierRuleStore->deleteSessionRules();
+                //    $this->redirectNow($this->url());
+                //}
+                $this->content()->add([$message, $newForm]);
+            }
+        }
+        if ($modifierRuleStore->getRules() === null) {
             return;
         }
+        $modifiers = $modifierRuleStore->getRules();
         $url = Url::fromPath('eventtracker/configuration/channelrule', [
             'uuid' => $uuid->toString()
         ]);
-        $info = new ChannelRulesTable($modifiers, $url, $this->getServerRequest());
+        try {
+            if ($sampleObject = $ns->get('simulationObject/'. $uuid->toString())) {
+                $this->content()->add([
+                    Html::tag('h3', "Original Event"),
+                    Html::tag('pre', [
+                        'class' => 'plain-object'
+                    ], PlainObjectRenderer::render($sampleObject)),
+                ]);
+            }
+            $info = new ChannelRulesTable(
+                $modifiers,
+                $url,
+                $this->getServerRequest(),
+                $modifierRuleStore,
+                $sampleObject,
+            );
+            if ($info->hasModifications()) {
+                $this->redirectNow($this->url());
+            }
+        } catch (\Throwable $e) {
+            $info = [
+                 Hint::error($e),
+                 Html::tag('pre', $modifierRuleStore->getRules()),
+                 Html::tag('pre', $modifierRuleStore->getRules(), JSON_PRETTY_PRINT),
+            ];
+        }
+
+
         $this->content()->add([
             Html::tag('h3', $this->translate('Configured Rules')),
             $info
@@ -684,6 +833,7 @@ class ConfigurationController extends Controller
         } else {
             $form = new $formClass($store);
         }
+        /** @var UuidObjectForm */
         if ($onSuccess) {
             $form->on($form::ON_SUCCESS, $onSuccess);
         }

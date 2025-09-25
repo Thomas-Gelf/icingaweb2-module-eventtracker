@@ -733,7 +733,30 @@ table.common-table table.Differences {
   }
 }
 
+#channel-rules-table {
+  > tbody > tr > td:last-of-type {
+    input {
+      margin-right: 0.2em;
+    }
+    text-align: right;
+    min-width: 8em;
+    a {
+      color: @icinga-blue;
+      padding-left: 0.2em ;
+      display: inline-block;
+      margin-right: 0.2em;
+    }
+    a:hover {
+      color: @text-color-inverted;
+      background: @icinga-blue;
+      border-radius: 3px;
+    }
+  }
+}
 td.collapsible-table-row {
+  div.collapsible-diff {
+    width: 100%;
+  }
   a.control-collapsible > i::before {
     content: '\e81d';
   }
@@ -746,14 +769,19 @@ td.collapsible-table-row {
     }
   }
   position: relative;
-  &.collapsed.hovered div {
-    position: absolute;
-    display: block;
-    margin-left: 2em;
-    margin-top: 1em;
-    background-color: @text-color-inverted;
-    border: 1px solid @gray-light;
-    z-index: 10;
+  &.collapsed {
+    form {
+      display: none;
+    }
+    &.hovered div {
+      position: absolute;
+      display: block;
+      margin-left: 2em;
+      margin-top: 1em;
+      background-color: @text-color-inverted;
+      border: 1px solid @gray-light;
+      z-index: 10;
+    }
   }
 }
 
@@ -995,3 +1023,21 @@ form h3 {
 form span.error {
   color: @color-critical;
 }
+
+tbody tr:first-of-type {
+  form.move-up-form input[type=submit] {
+    pointer-events: none;
+    opacity: 0.5;
+  }
+}
+tbody tr:last-of-type {
+  form.move-down-form input[type=submit] {
+    pointer-events: none;
+    opacity: 0.5;
+  }
+}
+
+.icon-button {
+  font-family: 'ifont', sans-serif;
+}
+

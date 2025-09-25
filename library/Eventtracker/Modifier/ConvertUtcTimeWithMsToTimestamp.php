@@ -2,11 +2,14 @@
 
 namespace Icinga\Module\Eventtracker\Modifier;
 
+use gipfl\Translation\TranslationHelper;
 use ipl\Html\Html;
 use ipl\Html\ValidHtml;
 
 class ConvertUtcTimeWithMsToTimestamp extends BaseModifier
 {
+    use TranslationHelper;
+
     protected static ?string $name = 'Convert UTC time with ms to timestamp';
 
     protected function simpleTransform($value)
@@ -29,7 +32,7 @@ class ConvertUtcTimeWithMsToTimestamp extends BaseModifier
     public function describe(string $propertyName): ValidHtml
     {
         return Html::sprintf(
-            'Convert UTC time (with ms) in %s to a timestamp',
+            $this->translate('Convert UTC time (with ms) in %s to a timestamp'),
             Html::tag('strong', $propertyName)
         );
     }
