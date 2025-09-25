@@ -3,6 +3,7 @@
 namespace Icinga\Module\Eventtracker\Modifier;
 
 use Countable;
+use gipfl\Json\JsonString;
 use JsonSerializable;
 use stdClass;
 
@@ -39,7 +40,7 @@ class ModifierChain implements JsonSerializable, Countable
     }
 
     /**
-     * @return array of arrays, 0 => property, 1 => modifier
+     * @return array{0: string, 1: Modifier}
      */
     public function getModifiers(): array
     {
@@ -68,6 +69,22 @@ class ModifierChain implements JsonSerializable, Countable
         $this->modifiers[] = [$propertyName, $modifier];
     }
 
+    public function replaceModifier(Modifier $modifier, $propertyName, $row)
+    {;
+        $this->modifiers[$row] = [$propertyName, $modifier];
+    }
+
+    public function getShortChecksum(): string
+    {
+        $checksum = substr(sha1(JsonString::encode($this->modifiers)), 0, 7);
+        return $checksum;
+    }
+
+    public function equals(ModifierChain $modifierChain): bool
+    {
+        return JsonString::encode($this) === JsonString::encode($modifierChain);
+    }
+
     public function removeModifier(int $row): ModifierChain
     {
         $modifiers = $this->modifiers;
@@ -91,6 +108,7 @@ class ModifierChain implements JsonSerializable, Countable
 
         return $this;
     }
+
 
     public function moveDown(int $index): ModifierChain
     {
