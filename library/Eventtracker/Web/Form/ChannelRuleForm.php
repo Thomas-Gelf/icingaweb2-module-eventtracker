@@ -2,21 +2,17 @@
 
 namespace Icinga\Module\Eventtracker\Web\Form;
 
+use Exception;
 use gipfl\Translation\TranslationHelper;
 use gipfl\Web\Form;
-use gipfl\Web\InlineForm;
-use gipfl\Web\Widget\Hint;
-use Icinga\Chart\Inline\Inline;
+use gipfl\Web\Form\Decorator\DdDtDecorator;
 use Icinga\Module\Eventtracker\Modifier\Modifier;
 use Icinga\Module\Eventtracker\Modifier\ModifierChain;
 use Icinga\Module\Eventtracker\Modifier\ModifierRegistry;
 use Icinga\Module\Eventtracker\Modifier\ModifierRuleStore;
 use Icinga\Module\Eventtracker\Modifier\Settings;
-use Icinga\Web\Form\Decorator\Autosubmit;
-use Icinga\Web\Notification;
 use ipl\Html\FormElement\SubmitElement;
-use function PHPUnit\Framework\isEmpty;
-use function PHPUnit\Framework\throwException;
+use RuntimeException;
 
 class ChannelRuleForm extends Form
 {
@@ -37,7 +33,7 @@ class ChannelRuleForm extends Form
     public function getModifier(): Modifier
     {
         if ($this->modifier === null) {
-            throw new \RuntimeException('Form has no Modifier');
+            throw new RuntimeException('Form has no Modifier');
         }
 
         return $this->modifier;
@@ -51,8 +47,10 @@ class ChannelRuleForm extends Form
             $this->populate(['modifyProperty' => $modifier[0], 'modifierImplementation' => $modifier[1]->getName()]);
             $this->populate((array) $modifier[1]->getSettings()->jsonSerialize());
         } else {
-            throw new \Exception('Checksum doesn\'t not match checksum from url: '
-                . $compareChecksum . ' != ' . $this->modifierChain->getShortChecksum());
+            throw new Exception(
+                'Checksum doesn\'t not match checksum from url: '
+                . $compareChecksum . ' != ' . $this->modifierChain->getShortChecksum()
+            );
         }
     }
 
@@ -96,7 +94,7 @@ class ChannelRuleForm extends Form
         $class = ModifierRegistry::getClassName($this->getValue('modifierImplementation'));
         $this->modifier = new $class(Settings::fromSerialization($this->getValues()));
 
-        if ($this->row) {
+        if ($this->row !== null) {
             $this->modifierChain->replaceModifier($this->modifier, $this->getPropertyName(), $this->row);
             $this->modifierRuleStore->setModifierRules($this->modifierChain);
         }
@@ -110,11 +108,9 @@ class ChannelRuleForm extends Form
         assert($button instanceof SubmitElement);
         $this->cancelButton = $button;
         $submit = $this->getElement('submit');
-        assert($submit instanceof SubmitElement);
         $decorator = $submit->getWrapper();
-        assert($decorator instanceof Form\Decorator\DdDtDecorator);
-        $dd = $decorator->dd();
-        $dd->add($button);
+        assert($decorator instanceof DdDtDecorator);
+        $decorator->dd()->add($button);
         $this->registerElement($button);
     }
 

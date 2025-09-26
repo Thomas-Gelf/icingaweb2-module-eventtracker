@@ -2,13 +2,10 @@
 
 namespace Icinga\Module\Eventtracker\Controllers;
 
-use ECSPrefix202509\React\Dns\Model\Message;
 use Exception;
 use gipfl\IcingaWeb2\Link;
 use gipfl\IcingaWeb2\Url;
-use gipfl\Json\JsonDecodeException;
 use gipfl\Json\JsonString;
-use gipfl\Web\InlineForm;
 use gipfl\Web\Widget\Hint;
 use gipfl\ZfDbStore\DbStorableInterface;
 use gipfl\ZfDbStore\NotFoundError;
@@ -17,14 +14,13 @@ use Icinga\Module\Eventtracker\Data\PlainObjectRenderer;
 use Icinga\Module\Eventtracker\Db\ConfigStore;
 use Icinga\Module\Eventtracker\Engine\Downtime\DowntimeRule;
 use Icinga\Module\Eventtracker\Engine\Input\KafkaInput;
-use Icinga\Module\Eventtracker\Modifier\Modifier;
-use Icinga\Module\Eventtracker\Modifier\ModifierChain;
-use Icinga\Module\Eventtracker\Modifier\ModifierRegistry;
 use Icinga\Module\Eventtracker\Modifier\ModifierRuleStore;
 use Icinga\Module\Eventtracker\Modifier\Settings;
 use Icinga\Module\Eventtracker\Web\Dashboard\ConfigurationDashboard;
 use Icinga\Module\Eventtracker\Web\Form\ChannelRuleForm;
 use Icinga\Module\Eventtracker\Web\Form\DowntimeForm;
+use Icinga\Module\Eventtracker\Web\Form\DropChannelRuleChangesForm;
+use Icinga\Module\Eventtracker\Web\Form\SaveChannelRulesChangesForm;
 use Icinga\Module\Eventtracker\Web\Form\SimulateRuleForm;
 use Icinga\Module\Eventtracker\Web\Form\UuidObjectForm;
 use Icinga\Module\Eventtracker\Web\Table\BaseTable;
@@ -189,6 +185,12 @@ class ConfigurationController extends Controller
 
         $form = $this->getForm($action); // TODO: w/o form
         $modifierRuleStore = new ModifierRuleStore($ns, $uuid, $form);
+        if ($modifierRuleStore->saveWouldDestroyOtherChanges()) {
+            $this->content()->add(Hint::warning($this->translate(
+                'The configuration for this rules has been changed since you started your modifications.'
+                . ' Be careful, you\'ll override those other changes, in case you save yours.'
+            )));
+        }
         if ($this->params->get('action') === 'add') {
             $ruleForm = new ChannelRuleForm($modifierRuleStore);
             $ruleForm->on($ruleForm::ON_SUCCESS, function () use ($ruleForm, $modifierRuleStore) {
@@ -225,7 +227,6 @@ class ConfigurationController extends Controller
             $this->content()->add($simulationForm);
         }
         if ($this->params->get('action') === 'edit') {
-            var_dump("foobar");
             $ruleForm = new ChannelRuleForm($modifierRuleStore);
             $ruleForm->editRow(
                 $this->url()->getParam('row'),
@@ -696,26 +697,19 @@ class ConfigurationController extends Controller
         
         if ($modifierRuleStore->getSessionRules() !== null) {
             if ($modifierRuleStore->hasBeenModified()) {
-                $newForm = new InlineForm();
-                $newForm->on($newForm::ON_SUCCESS, function () use ($form, $modifierRuleStore) {
-                    $form->populate(['rules' => JsonString::encode($modifierRuleStore->getRules())]);
-                    $form->storeObject();
-                    $modifierRuleStore->deleteSessionRules();
-                    $this->redirectNow($this->url());
-                });
-                $newForm->handleRequest($this->getServerRequest());
-                $newForm->addElement('submit', 'submit', ['label' => $this->translate('Save')]);
+                $saveForm = new SaveChannelRulesChangesForm($modifierRuleStore);
+                $saveForm->on($saveForm::ON_SUCCESS, fn () => $this->redirectNow($this->url()));
+                $saveForm->handleRequest($this->getServerRequest());
+
+                $dropForm = new DropChannelRuleChangesForm($modifierRuleStore);
+                $dropForm->on($dropForm::ON_SUCCESS, fn () => $this->redirectNow($this->url()));
+                $dropForm->handleRequest($this->getServerRequest());
+
                 $message = Hint::warning(
                     'The order has been modified please safe if you want to preserver the new order'
                 );
 
-                //if ($newForm->hasBeenSubmitted()) {
-                //    $form->populate(['rules' => JsonString::encode($modifierRuleStore->getRules())]);
-                //    $form->storeObject();
-                //    $modifierRuleStore->deleteSessionRules();
-                //    $this->redirectNow($this->url());
-                //}
-                $this->content()->add([$message, $newForm]);
+                $this->content()->add([$message, $saveForm, $dropForm]);
             }
         }
         if ($modifierRuleStore->getRules() === null) {
@@ -723,7 +717,7 @@ class ConfigurationController extends Controller
         }
         $modifiers = $modifierRuleStore->getRules();
         $url = Url::fromPath('eventtracker/configuration/channelrule', [
-            'uuid' => $uuid->toString()
+            'uuid' => $uuid->toString(),
         ]);
         try {
             if ($sampleObject = $ns->get('simulationObject/'. $uuid->toString())) {

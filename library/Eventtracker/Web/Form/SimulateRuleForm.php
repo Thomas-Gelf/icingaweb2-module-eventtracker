@@ -4,6 +4,7 @@ namespace Icinga\Module\Eventtracker\Web\Form;
 
 use gipfl\Web\Form;
 use gipfl\Translation\TranslationHelper;
+use gipfl\Web\Form\Decorator\DdDtDecorator;
 use Icinga\Module\Eventtracker\SampleObject;
 use ipl\Html\FormElement\SubmitElement;
 
@@ -11,7 +12,8 @@ class SimulateRuleForm extends Form
 {
     use TranslationHelper;
     protected $ns;
-    protected $sessionKey;
+    protected String $sessionKey;
+    protected ?SubmitElement $cancelButton = null;
 
     public function __construct($ns, $sessionKey)
     {
@@ -52,7 +54,7 @@ class SimulateRuleForm extends Form
         $submit = $this->getElement('submit');
         assert($submit instanceof SubmitElement);
         $decorator = $submit->getWrapper();
-        assert($decorator instanceof Form\Decorator\DdDtDecorator);
+        assert($decorator instanceof DdDtDecorator);
         $dd = $decorator->dd();
         $dd->add($button);
         $this->registerElement($button);

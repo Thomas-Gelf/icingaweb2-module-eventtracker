@@ -8,24 +8,19 @@ use gipfl\IcingaWeb2\Icon;
 use gipfl\IcingaWeb2\IconHelper;
 use gipfl\IcingaWeb2\Link;
 use gipfl\IcingaWeb2\Url;
-use gipfl\Json\JsonString;
 use gipfl\Translation\TranslationHelper;
 use gipfl\Web\Form\Feature\NextConfirmCancel;
 use gipfl\Web\InlineForm;
 use gipfl\Web\Widget\Hint;
 use Icinga\Module\Eventtracker\Data\PlainObjectRenderer;
 use Icinga\Module\Eventtracker\Modifier\ModifierChain;
-use Icinga\Module\Eventtracker\Modifier\ModifierRegistry;
 use Icinga\Module\Eventtracker\Modifier\ModifierRuleStore;
 use Icinga\Module\Eventtracker\Web\Form\ChannelConfigForm;
 use Icinga\Module\Eventtracker\Web\Form\InstanceInlineForm;
-use Icinga\Module\Eventtracker\Web\WebActions;
-use Icinga\Web\Form\Element\Button;
 use ipl\Html\Html;
 use ipl\Html\Table;
-use ipl\Web\Widget\ActionLink;
-use ipl\Web\Widget\ButtonLink;
 use Psr\Http\Message\ServerRequestInterface;
+use function PHPUnit\Framework\equalTo;
 
 class ChannelRulesTable extends Table
 {
