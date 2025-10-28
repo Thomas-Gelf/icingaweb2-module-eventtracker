@@ -119,6 +119,12 @@ class IssuesController extends Controller
         if (isset($row->input_uuid)) {
             $row->input_uuid = Uuid::fromBytes($row->input_uuid)->toString();
         }
+        if (isset($row->downtime_rule_uuid)) {
+            $row->downtime_rule_uuid = Uuid::fromBytes($row->downtime_rule_uuid)->toString();
+        }
+        if (isset($row->downtime_config_uuid)) {
+            $row->downtime_config_uuid = Uuid::fromBytes($row->downtime_config_uuid)->toString();
+        }
         if (isset($row->attributes)) {
             $row->attributes = JsonString::decode($row->attributes);
         }
