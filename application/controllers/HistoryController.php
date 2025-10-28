@@ -128,7 +128,10 @@ class HistoryController extends Controller
             } else {
                 echo ", ";
             }
-            echo JsonString::encode(SerializationHelper::serializeProperties((array) $row), JSON_PRETTY_PRINT);
+            echo JsonString::encode(
+                SerializationHelper::serializeProperties((array)$row),
+                JSON_PRETTY_PRINT | JSON_INVALID_UTF8_SUBSTITUTE
+            );
         }
         if ($firstRow) {
             $this->sendJsonResponseHeaders();
