@@ -81,7 +81,7 @@ trait RestApiMethods
         /** @var $this CompatController */
         try {
             $this->sendJsonResponseHeaders($code);
-            echo JsonString::encode($object, JSON_PRETTY_PRINT) . "\n";
+            echo JsonString::encode($object, JSON_PRETTY_PRINT | JSON_INVALID_UTF8_SUBSTITUTE) . "\n";
             $this->getViewRenderer()->disable();
         } catch (JsonEncodeException $e) {
             $this->sendJsonError($e);
