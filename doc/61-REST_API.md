@@ -230,6 +230,46 @@ The `closedBy` parameter is required for all `close` variants.
 }
 ```
 
+### Acknowledge an Issue
+
+To acknowledge an issue, please provide its UUID in an HTTP POST request. Example:
+
+```http
+POST https://monitoring.example.com/icingaweb2/eventtracker/issue/acknowledge?uuid=0f9ab9e0-600a-4e05-8e13-e48b20b1d37e&owner=John&ticker_ref=ITSM0231
+Authorization: Bearer e756ca41-875f-4f92-991c-706dc07af192
+Accept: application/json
+```
+
+Acknowledging issues via `sender_event_id` is also supported:
+
+```http
+POST https://icinga.example.com/icingaweb2/eventtracker/issue/close?sender_event_id=My%20Job%20Name&owner=me
+Authorization: Bearer e756ca41-875f-4f92-991c-706dc07af192
+Accept: application/json
+```
+
+The `owner` parameter is required for all `acknowledge` variants, the `ticket_ref` parameter is optional.
+
+#### Sample Responses
+
+##### Success (200 Ok)
+
+```json
+{
+  "success": true,
+  "issues": ["0f9ab9e0-600a-4e05-8e13-e48b20b1d37e"]
+}
+```
+
+##### No related issue found (201 Unmodified)
+
+```json
+{
+  "success": true,
+  "error": "Found no issue for the given ticket/issue"
+}
+```
+
 Creating Issues
 ---------------
 

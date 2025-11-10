@@ -55,7 +55,7 @@ class ApiTokenForm extends UuidObjectForm
             'required' => true,
             'multiple' => true,
             'options'  => [
-                'issue/acknowledge' => $this->translate('Acknowledge Issues (not yet)'),
+                'issue/acknowledge' => $this->translate('Acknowledge'),
                 'issue/close' => $this->translate('Close Issues'),
                 'issues/fetch' => $this->translate('Fetch Issues'),
                 'host_list/read' => $this->translate('Read permission for Host list'),

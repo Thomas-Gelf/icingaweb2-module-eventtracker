@@ -283,7 +283,17 @@ class IssueController extends Controller
             throw new NotFoundError('Not found');
         }
 
-        // TODO: implement.
+        $this->runForApi(function () {
+            if (! $this->checkBearerToken('issue/acknowledge')) {
+                return;
+            }
+            $uuids = $this->findApiRequestIssues();
+
+            $this->apiRpcRequestForIssues('issue.acknowledge', 'issues', $uuids, [
+                $this->params->getRequired('owner'),
+                $this->params->get('ticket_ref'),
+            ]);
+        });
     }
 
     /**
@@ -295,24 +305,25 @@ class IssueController extends Controller
             throw new NotFoundError('Not found');
         }
         $this->runForApi(function () {
-            $this->closeForApi();
+            if (! $this->checkBearerToken('issue/close')) {
+                return;
+            }
+            $uuids = $this->findApiRequestIssues(true);
+
+            $this->apiRpcRequestForIssues('issue.close', 'closedIssues', $uuids, [
+                $this->params->getRequired('closedBy')
+            ]);
         });
     }
 
-    public function closeForApi()
+    protected function apiRpcRequestForIssues(string $method, string $resultKey, array $issueUuids, ...$rpcParams)
     {
-        if (! $this->checkBearerToken('issue/close')) {
-            return;
-        }
-        $uuids = $this->findApiRequestIssues();
-        $closedBy = $this->params->getRequired('closedBy');
         $client = $this->remoteClient();
         $requests = [];
-        foreach ($uuids as $uuid) {
-            $requests[$uuid] = $client->request('issue.close', [
+        foreach ($issueUuids as $uuid) {
+            $requests[$uuid] = $client->request($method, array_merge([
                 $uuid,
-                $closedBy
-            ]);
+            ], $rpcParams));
         }
         $result = [];
         foreach (awaitAll($requests) as $uuid => $success) {
@@ -328,16 +339,16 @@ class IssueController extends Controller
             ], 201);
         } else {
             $this->sendJsonResponse((object) [
-                'success'      => true,
-                'closedIssues' => $result
+                'success'  => true,
+                $resultKey => $result
             ]);
         }
     }
 
-    protected function findApiRequestIssues(): array
+    protected function findApiRequestIssues(bool $allowTicketRef = false): array
     {
         $db = $this->db();
-        if ($ticket = $this->params->get('ticket')) {
+        if ($allowTicketRef && ($ticket = $this->params->get('ticket'))) {
             $uuids = $db->fetchCol($db->select()->from('issue', 'issue_uuid')->where('ticket_ref = ?', $ticket));
             foreach ($uuids as $idx => $uuid) {
                 $uuids[$idx] = Uuid::fromBytes($uuid)->toString();

@@ -94,6 +94,29 @@ class RpcNamespaceIssue implements DbBasedComponent, EventEmitterInterface
         return true;
     }
 
+    /**
+     * @param string $issueUuid
+     * @param string $owner
+     * @param string $ticketReference
+     * @return bool
+     */
+    protected function acknowledge(UuidInterface $uuid, string $owner, ?string $ticketReference = null): bool
+    {
+        if ($this->db === null) {
+            throw new RuntimeException('Cannot close the given issue, I have no DB connection');
+        }
+        $db = $this->db;
+        $issue = Issue::load($uuid->getBytes(), $db);
+        $issue->set('status', 'acknowledged');
+        $issue->set('owner', $owner);
+        if ($ticketReference !== null) {
+            $issue->set('ticket_ref', $ticketReference);
+        }
+        $issue->storeToDb($db);
+
+        return true;
+    }
+
     public function initDb(Db $db): ExtendedPromiseInterface
     {
         $this->db = $db;
