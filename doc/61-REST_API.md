@@ -243,7 +243,7 @@ Accept: application/json
 Acknowledging issues via `sender_event_id` is also supported:
 
 ```http
-POST https://icinga.example.com/icingaweb2/eventtracker/issue/close?sender_event_id=My%20Job%20Name&owner=me
+POST https://icinga.example.com/icingaweb2/eventtracker/issue/acknowledge?sender_event_id=My%20Job%20Name&owner=me
 Authorization: Bearer e756ca41-875f-4f92-991c-706dc07af192
 Accept: application/json
 ```
