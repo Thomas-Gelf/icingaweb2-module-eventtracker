@@ -316,7 +316,7 @@ class IssueController extends Controller
         });
     }
 
-    protected function apiRpcRequestForIssues(string $method, string $resultKey, array $issueUuids, ...$rpcParams)
+    protected function apiRpcRequestForIssues(string $method, string $resultKey, array $issueUuids, $rpcParams)
     {
         $client = $this->remoteClient();
         $requests = [];
