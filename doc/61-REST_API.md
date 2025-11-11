@@ -618,6 +618,10 @@ Host List and Host List entry properties
 
 ### Fetch all issue history entries
 
+**HINT**: this is usually not a good idea, as you'll run into memory limits when
+fetching millions of rows. Please always pass timestamp constraints, to be on the
+safe side.
+
 ```http
 GET https://monitoring.example.com/icingaweb2/eventtracker/history/issues
 Authorization: Bearer 108600bf-4f77-4bdc-9a06-4cd04902537c4
