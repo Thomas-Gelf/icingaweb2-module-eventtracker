@@ -9,6 +9,7 @@ use gipfl\ZfDb\Adapter\Pdo\Ibm;
 use gipfl\ZfDb\Adapter\Pdo\Mssql;
 use gipfl\ZfDb\Adapter\Pdo\Mysql;
 use gipfl\ZfDb\Adapter\Pdo\Oci;
+use gipfl\ZfDb\Adapter\Pdo\PdoAdapter;
 use gipfl\ZfDb\Adapter\Pdo\Pgsql;
 use gipfl\ZfDb\Adapter\Pdo\Sqlite;
 use gipfl\ZfDb\Db;
@@ -48,7 +49,7 @@ class ZfDbConnectionFactory
         PDO::ATTR_ERRMODE    => PDO::ERRMODE_EXCEPTION
     ];
 
-    protected static function getDbType(Settings $config)
+    protected static function getDbType(Settings $config): string
     {
         return strtolower($config->get('db', 'mysql'));
     }
@@ -94,7 +95,7 @@ class ZfDbConnectionFactory
         return $db;
     }
 
-    protected static function getMysqlInitCommand(Settings $config)
+    protected static function getMysqlInitCommand(Settings $config): string
     {
         /*
          * Set MySQL server SQL modes to behave as closely as possible to Oracle and PostgreSQL. Note that the
@@ -151,7 +152,11 @@ class ZfDbConnectionFactory
         return $params;
     }
 
-    protected static function getAdapterClass(Settings $config)
+    /**
+     * @param Settings $config
+     * @return class-string<PdoAdapter>
+     */
+    protected static function getAdapterClass(Settings $config): string
     {
         $dbType = static::getDbType($config);
         if (array_key_exists($dbType, self::DB_ADAPTERS)) {
@@ -164,7 +169,7 @@ class ZfDbConnectionFactory
         );
     }
 
-    protected static function getDefaultPort($dbType)
+    protected static function getDefaultPort($dbType): ?int
     {
         if (array_key_exists($dbType, self::DEFAULT_PORTS)) {
             return self::DEFAULT_PORTS[$dbType];
@@ -173,7 +178,7 @@ class ZfDbConnectionFactory
         return null;
     }
 
-    protected static function getMySqlSslParams(Settings $config)
+    protected static function getMySqlSslParams(Settings $config): array
     {
         $params = [];
         if ($config->get('use_ssl')) {
@@ -201,10 +206,8 @@ class ZfDbConnectionFactory
 
     /**
      * Get offset from the current default timezone to GMT
-     *
-     * @return string
      */
-    protected static function defaultTimezoneOffset()
+    protected static function defaultTimezoneOffset(): string
     {
         $tz = new DateTimeZone(date_default_timezone_get());
         $offset = $tz->getOffset(new DateTime());
