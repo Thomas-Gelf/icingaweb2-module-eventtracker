@@ -40,13 +40,14 @@ class ZfDbConnectionFactory
 
     const DEFAULT_ADAPTER_OPTIONS = [
         Db::AUTO_QUOTE_IDENTIFIERS => false,
-        Db::CASE_FOLDING           => Db::CASE_LOWER
+        Db::CASE_FOLDING           => Db::CASE_LOWER,
     ];
 
     const DEFAULT_PDO_OPTIONS = [
         PDO::ATTR_TIMEOUT    => 10,
         PDO::ATTR_CASE       => PDO::CASE_LOWER,
-        PDO::ATTR_ERRMODE    => PDO::ERRMODE_EXCEPTION
+        PDO::ATTR_ERRMODE    => PDO::ERRMODE_EXCEPTION,
+        PDO::MYSQL_ATTR_USE_BUFFERED_QUERY => false,
     ];
 
     protected static function getDbType(Settings $config): string
