@@ -117,21 +117,38 @@ class HistoryController extends Controller
 
     protected function sendQueryResultAsResponse(Select $query)
     {
-        $firstRow = true;
         $statement = $this->db()->query($query);
+        $this->getViewRenderer()->disable();
+        $firstRow = true;
+        $cnt = 0;
+        $flushes = 0;
+        $strings = [];
         while ($row = $statement->fetch()) {
             unset($row->activities);
             if ($firstRow) {
                 $this->sendJsonResponseHeaders();
                 echo '{ "objects": [';
+                if (! ob_get_level()) {
+                    ob_start();
+                }
                 $firstRow = false;
-            } else {
-                echo ", ";
             }
-            echo JsonString::encode(
+            $strings[] = JsonString::encode(
                 SerializationHelper::serializeProperties((array)$row),
                 JSON_PRETTY_PRINT | JSON_INVALID_UTF8_SUBSTITUTE
             );
+            $cnt++;
+            if ($cnt === 100) {
+                if ($flushes > 0) {
+                    echo ', ';
+                }
+                echo implode(', ', $strings);
+                $cnt = 0;
+                $strings = [];
+                $flushes++;
+                ob_end_flush();
+                ob_start();
+            }
         }
         if ($firstRow) {
             $this->sendJsonResponseHeaders();
@@ -139,7 +156,9 @@ class HistoryController extends Controller
         } else {
             echo "]}\n";
         }
-        $this->getViewRenderer()->disable();
+        if (ob_get_level()) {
+            ob_end_flush();
+        }
         exit;
     }
     protected function prepareQueryString(
