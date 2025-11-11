@@ -168,8 +168,6 @@ class HistoryController extends Controller
         ?int   $from = null,
         ?int   $to = null
     ): Select {
-        $test = $this->db()->select();
-        $test = $this->db()->select()->from($table, $columns);
         $query = $this->db()->select()->from($table, $columns ?? '*');
         if ($from) {
             $query->where("$tsColumn >= ?", $from);
