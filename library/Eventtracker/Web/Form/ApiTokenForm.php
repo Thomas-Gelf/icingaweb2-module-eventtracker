@@ -55,20 +55,21 @@ class ApiTokenForm extends UuidObjectForm
             'required' => true,
             'multiple' => true,
             'options'  => [
-                'issue/acknowledge' => $this->translate('Acknowledge'),
-                'issue/close' => $this->translate('Close Issues'),
-                'issues/fetch' => $this->translate('Fetch Issues'),
-                'host_list/read' => $this->translate('Read permission for Host list'),
-                'host_list/write' => $this->translate('Write permission for Host list'),
-                'history/read' => $this->translate('Read permission for History'),
-                'problemhandling/read' => $this->translate('Read permission for problem handling'),
+                'issue/acknowledge'     => $this->translate('Acknowledge'),
+                'issue/close'           => $this->translate('Close Issues'),
+                'issues/fetch'          => $this->translate('Fetch Issues'),
+                'host_list/read'        => $this->translate('Read permission for Host list'),
+                'host_list/write'       => $this->translate('Write permission for Host list'),
+                'history/read'          => $this->translate('Read permission for History'),
+                'reporting/show'        => $this->translate('Allow to fetch Reports'),
+                'problemhandling/read'  => $this->translate('Read permission for problem handling'),
                 'problemhandling/write' => $this->translate('Write permission for problem handling'),
             ],
         ]);
         $this->addButtons();
     }
 
-    public function getValues()
+    public function getValues(): array
     {
         $values = parent::getValues();
         if ($this->storing) {

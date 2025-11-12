@@ -47,6 +47,10 @@ $this->providePermission(
     'eventtracker/operator',
     $this->translate('Operators are allowed to modify issues (Priority, Owner...)')
 );
+$this->providePermission(
+    'eventtracker/reporting',
+    $this->translate('Allow to access Reports')
+);
 $this->provideRestriction(
     'eventtracker/ignoreInputs',
     $this->translate('Comma-separated list of Input UUIDs to ignore')
