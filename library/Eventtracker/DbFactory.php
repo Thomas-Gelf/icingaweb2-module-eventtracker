@@ -2,17 +2,16 @@
 
 namespace Icinga\Module\Eventtracker;
 
-use gipfl\ZfDb\Adapter\Adapter as Db;
+use gipfl\ZfDb\Adapter\Pdo\PdoAdapter;
 use Icinga\Application\Config;
 use Icinga\Module\Eventtracker\Config\IcingaResource;
 use Icinga\Module\Eventtracker\Db\ZfDbConnectionFactory;
 
 class DbFactory
 {
-    /** @var Db */
-    protected static $db;
+    protected static ?PdoAdapter $db = null;
 
-    public static function db(): Db
+    public static function db(): PdoAdapter
     {
         if (self::$db === null) {
             self::$db = ZfDbConnectionFactory::connection(

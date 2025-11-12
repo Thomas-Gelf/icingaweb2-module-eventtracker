@@ -4,8 +4,7 @@ namespace Icinga\Module\Eventtracker\Controllers;
 
 use gipfl\IcingaWeb2\CompatController;
 use gipfl\Json\JsonString;
-use gipfl\ZfDb\Adapter\Adapter;
-use gipfl\ZfDb\Adapter\Adapter as Db;
+use gipfl\ZfDb\Adapter\Pdo\PdoAdapter;
 use gipfl\ZfDb\Adapter\Pdo\Mssql;
 use Icinga\Authentication\Auth;
 use Icinga\Exception\NotFoundError;
@@ -18,8 +17,7 @@ use Ramsey\Uuid\Uuid;
 
 abstract class Controller extends CompatController
 {
-    /** @var Db */
-    private $db;
+    private ?PdoAdapter $db = null;
 
     /**
      * @throws NotFoundError
@@ -33,10 +31,7 @@ abstract class Controller extends CompatController
         }
     }
 
-    /**
-     * @return Db
-     */
-    protected function db()
+    protected function db(): PdoAdapter
     {
         if ($this->db === null) {
             $this->db = DbFactory::db();
@@ -66,7 +61,7 @@ abstract class Controller extends CompatController
     }
 
     /**
-     * @return Adapter|Mssql
+     * @return PdoAdapter|Mssql
      */
     protected function getScomDb()
     {
