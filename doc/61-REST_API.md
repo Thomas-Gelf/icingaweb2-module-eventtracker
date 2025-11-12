@@ -682,3 +682,49 @@ GET https://monitoring.example.com/icingaweb2/eventtracker/history/actions
 Authorization: Bearer 108600bf-4f77-4bdc-9a06-4cd04902537c4
 Accept: application/json
 ```
+
+## Reporting
+
+It is possible to fetch aggregated data for reporting purposes.
+
+### Fetch Report: History Summary
+
+```http
+GET https://monitoring.example.com/icingaweb2/eventtracker/reporting/history-summary?start=2025-11-10&end=2025-11-12&aggregation=daily
+Authorization: Bearer 108600bf-4f77-4bdc-9a06-4cd04902537c4
+Accept: application/json
+```
+
+#### Example response:
+```json
+{
+    "objects": {
+        "2025-11-10": {
+            "cnt_total": 2548,
+            "cnt_with_owner": 0,
+            "cnt_with_ticket_ref": 0,
+            "cnt_owner_no_ticket_ref": 0
+        },
+        "2025-11-11": {
+            "cnt_total": 1219,
+            "cnt_with_owner": 0,
+            "cnt_with_ticket_ref": 0,
+            "cnt_owner_no_ticket_ref": 0
+        },
+        "2025-11-12": {
+            "cnt_total": 383,
+            "cnt_with_owner": 0,
+            "cnt_with_ticket_ref": 0,
+            "cnt_owner_no_ticket_ref": 0
+        }
+    }
+}
+```
+
+The following parameters are optional:
+
+| Parameter   | Description                                                                     |
+|-------------|---------------------------------------------------------------------------------|
+| aggregation | Aggregation type (hourly, daily, weekly, weekday, monthly                       |
+| start       | Day on which your report should start (YYYY-mm-dd, defaults to "now - 1 month") |
+| end         | Day on which your report should end (YYYY-mm-dd, defaults to "now")             |
