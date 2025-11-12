@@ -78,7 +78,7 @@ class ReportingController extends Controller
     protected function sendHistorySummary()
     {
         $report = $this->requireReport();
-        $this->sendJsonResponse($report->fetchIndexed($report->select()));
+        $this->sendJsonResponse(['objects' => $report->fetchIndexed($report->select())]);
     }
 
     protected function requireReport(): HistorySummaries
