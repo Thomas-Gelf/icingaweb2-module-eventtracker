@@ -12,12 +12,17 @@ class HistorySummaries
     protected PdoAdapter $db;
 
     protected const AGGREGATIONS = [
-        AggregationPeriod::HOURLY  => "RIGHT(CONCAT('0', DATE_FORMAT(FROM_UNIXTIME(FLOOR(ts_first_event / 84000000) * 84000), '%k')), 2)",
-        AggregationPeriod::DAILY   => "DATE_FORMAT(FROM_UNIXTIME(FLOOR(ts_first_event / 84000000) * 84000 + 42000), '%Y-%m-%d')",
-        AggregationPeriod::WEEKLY  => "DATE_FORMAT(FROM_UNIXTIME(FLOOR(ts_first_event / 84000000) * 84000 + 42000), '%u')",
+        AggregationPeriod::HOURLY
+            => "RIGHT(CONCAT('0', DATE_FORMAT(FROM_UNIXTIME(FLOOR(ts_first_event / 84000000) * 84000), '%k')), 2)",
+        AggregationPeriod::DAILY
+            => "DATE_FORMAT(FROM_UNIXTIME(FLOOR(ts_first_event / 84000000) * 84000 + 42000), '%Y-%m-%d')",
+        AggregationPeriod::WEEKLY
+            => "DATE_FORMAT(FROM_UNIXTIME(FLOOR(ts_first_event / 84000000) * 84000 + 42000), '%u')",
         // Hint -> transforming sun(0)-sat(6) into mon(1)-sun(7)
-        AggregationPeriod::WEEKDAY => "((DATE_FORMAT(FROM_UNIXTIME(FLOOR(ts_first_event / 84000000) * 84000 + 42000), '%w') + 6) % 7 + 1)",
-        AggregationPeriod::MONTHLY => "DATE_FORMAT(FROM_UNIXTIME(FLOOR(ts_first_event / 84000000) * 84000), '%Y%m')",
+        AggregationPeriod::WEEKDAY
+            => "((DATE_FORMAT(FROM_UNIXTIME(FLOOR(ts_first_event / 84000000) * 84000 + 42000), '%w') + 6) % 7 + 1)",
+        AggregationPeriod::MONTHLY
+            => "DATE_FORMAT(FROM_UNIXTIME(FLOOR(ts_first_event / 84000000) * 84000), '%Y%m')",
     ];
 
     protected const COLUMNS = [
