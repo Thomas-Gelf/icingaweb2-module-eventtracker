@@ -61,7 +61,7 @@ abstract class Controller extends CompatController
             ->appendTo($this->actions());
 
         $table->getQuery()->limit($defaultLimit);
-        $this->eventuallySendJson($table);
+        $this->optionallySendJsonForTable($table);
         $table->renderTo($this);
     }
 
@@ -75,7 +75,7 @@ abstract class Controller extends CompatController
         );
     }
 
-    protected function eventuallySendJson(BaseTable $table)
+    protected function optionallySendJsonForTable(BaseTable $table)
     {
         if ($this->getRequest()->isApiRequest() || $this->getParam('format') === 'json') {
             $table->ensureAssembled();

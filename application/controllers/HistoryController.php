@@ -59,7 +59,7 @@ class HistoryController extends Controller
         $table->getQuery()->limit(50);
         (new AdditionalTableActions($table, Auth::getInstance(), $this->url()))
             ->appendTo($this->actions());
-        $this->eventuallySendJson($table);
+        $this->optionallySendJsonForTable($table);
         $table->renderTo($this);
     }
 
@@ -77,7 +77,7 @@ class HistoryController extends Controller
         $table->getQuery()->limit(50);
         (new AdditionalTableActions($table, Auth::getInstance(), $this->url()))
             ->appendTo($this->actions());
-        $this->eventuallySendJson($table);
+        $this->optionallySendJsonForTable($table);
         $table->renderTo($this);
     }
 
@@ -92,7 +92,7 @@ class HistoryController extends Controller
         $table->getQuery()->limit(50);
         (new AdditionalTableActions($table, Auth::getInstance(), $this->url()))
             ->appendTo($this->actions());
-        $this->eventuallySendJson($table);
+        $this->optionallySendJsonForTable($table);
         $table->renderTo($this);
     }
 
@@ -238,7 +238,7 @@ class HistoryController extends Controller
         $table->getQuery()->limit(50);
         (new AdditionalTableActions($table, Auth::getInstance(), $this->url()))
             ->appendTo($this->actions());
-        $this->eventuallySendJson($table);
+        $this->optionallySendJsonForTable($table);
         $table->renderTo($this);
     }
 
