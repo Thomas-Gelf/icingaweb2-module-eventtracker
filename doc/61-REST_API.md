@@ -723,8 +723,25 @@ Accept: application/json
 
 The following parameters are optional:
 
-| Parameter   | Description                                                                     |
-|-------------|---------------------------------------------------------------------------------|
-| aggregation | Aggregation type (hourly, daily, weekly, weekday, monthly                       |
-| start       | Day on which your report should start (YYYY-mm-dd, defaults to "now - 1 month") |
-| end         | Day on which your report should end (YYYY-mm-dd, defaults to "now")             |
+| Parameter   | Description                                                                              |
+|-------------|------------------------------------------------------------------------------------------|
+| aggregation | Aggregation type: hourly (default), daily, weekly, weekday, monthly, defaults to "daily" |
+| start       | Day on which your report should start: YYYY-mm-dd, defaults to "now - 1 month"           |
+| end         | Day on which your report should end: YYYY-mm-dd, defaults to "now"                       |
+
+
+### Fetch Report: Top Talkers
+
+```http
+GET https://monitoring.example.com/icingaweb2/eventtracker/reporting/top-talkers?start=2025-11-10&end=2025-11-12&aggregation=host
+Authorization: Bearer 108600bf-4f77-4bdc-9a06-4cd04902537c4
+Accept: application/json
+```
+
+Same as the above, but the aggregation is based on the object type. The followi
+
+| Parameter   | Description                                                                          |
+|-------------|--------------------------------------------------------------------------------------|
+| aggregation | Aggregation type: host_name (default), object_name, object_class, problem_identifier |
+| start       | Day on which your report should start: YYYY-mm-dd, defaults to "now - 1 month"       |
+| end         | Day on which your report should end: YYYY-mm-dd, defaults to "now"                   |

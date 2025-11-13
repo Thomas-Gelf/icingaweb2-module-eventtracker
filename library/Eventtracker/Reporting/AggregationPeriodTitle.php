@@ -11,16 +11,16 @@ class AggregationPeriodTitle
     use TranslationHelper;
 
     protected static ?LocalDateFormat $dateFormatter = null;
-    protected string $period;
+    protected string $aggregation;
 
     public function __construct(string $aggregation)
     {
-        $this->period = $aggregation;
+        $this->aggregation = $aggregation;
     }
 
     public function getTranslated($key): string
     {
-        switch ($this->period) {
+        switch ($this->aggregation) {
             case AggregationPeriod::HOURLY:
                 return sprintf('%02d:00 - %02d-00', (int) $key - 1, (int) $key);
             case AggregationPeriod::WEEKLY:
@@ -32,7 +32,7 @@ class AggregationPeriodTitle
             case AggregationPeriod::MONTHLY:
                 return $this->getMonthName($key);
             default:
-                throw new RuntimeException("Invalid aggregation: $this->period");
+                throw new RuntimeException("Invalid aggregation: $this->aggregation");
         }
     }
 
