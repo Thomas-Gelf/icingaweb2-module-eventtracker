@@ -9,7 +9,8 @@ use Icinga\Module\Eventtracker\DbFactory;
 use Icinga\Module\Eventtracker\Issue;
 use Icinga\Module\Eventtracker\Issues;
 use Icinga\Module\Eventtracker\Scom\ScomSync;
-use React\Promise\ExtendedPromiseInterface;
+
+use React\Promise\PromiseInterface;
 
 use function React\Promise\resolve;
 
@@ -88,10 +89,9 @@ class SyncCommand extends Command
     }
 
     /**
-     * @return \React\Promise\FulfilledPromise
      * @throws \Icinga\Exception\ConfigurationError
      */
-    public function runIdo(): ExtendedPromiseInterface
+    public function runIdo(): PromiseInterface
     {
         $ido = IdoDb::fromMonitoringModule();
         $sync = new IcingaCiSync(DbFactory::db(), $ido);
@@ -111,7 +111,7 @@ class SyncCommand extends Command
      * @return \React\Promise\FulfilledPromise
      * @throws \Icinga\Exception\ConfigurationError
      */
-    public function runIdoState(): ExtendedPromiseInterface
+    public function runIdoState(): PromiseInterface
     {
         $ido = IdoDb::fromMonitoringModule();
         $sync = new IcingaStateSync(DbFactory::db(), $ido);
@@ -120,7 +120,7 @@ class SyncCommand extends Command
         return resolve(null);
     }
 
-    public function runExpirations(): ExtendedPromiseInterface
+    public function runExpirations(): PromiseInterface
     {
         $db = DbFactory::db();
         $issues = new Issues($db);
@@ -136,7 +136,7 @@ class SyncCommand extends Command
         return resolve(null);
     }
 
-    public function runHostlists(): ExtendedPromiseInterface
+    public function runHostlists(): PromiseInterface
     {
         $configured = $this->Config()->getSection('director-host-lists')->toArray();
         if (empty($configured)) {

@@ -37,7 +37,7 @@ class IcingaCliRpc extends IcingaCli
     }
 
     /**
-     * @return PromiseInterface <Connection>
+     * @return PromiseInterface<JsonRpcConnection>
      */
     public function rpc()
     {

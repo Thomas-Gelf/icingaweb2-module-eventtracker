@@ -13,11 +13,10 @@ use Psr\Log\LoggerInterface;
 use React\ChildProcess\Process;
 use React\EventLoop\Loop;
 use React\EventLoop\TimerInterface;
-use React\Promise\ExtendedPromiseInterface;
 use React\Promise\Promise;
+use React\Promise\PromiseInterface;
 
 use function array_shift;
-use function React\Promise\resolve;
 
 class JobRunner implements DbBasedComponent
 {
@@ -97,11 +96,9 @@ class JobRunner implements DbBasedComponent
         }
         $this->timer = Loop::addPeriodicTimer($this->checkInterval, $check);
         $this->scheduleTimer = Loop::addPeriodicTimer(7, $schedule); // TODO: can this be combined?
-
-        return resolve(null);
     }
 
-    public function stopDb(): ExtendedPromiseInterface
+    public function stopDb(): PromiseInterface
     {
         $this->scheduledTasks = [];
         if ($this->timer !== null) {

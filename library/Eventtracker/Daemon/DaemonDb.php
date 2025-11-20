@@ -16,7 +16,7 @@ use Psr\Log\LoggerInterface;
 use React\EventLoop\Loop;
 use React\EventLoop\TimerInterface;
 use React\Promise\Deferred;
-use React\Promise\ExtendedPromiseInterface;
+use React\Promise\PromiseInterface;
 use RuntimeException;
 use SplObjectStorage;
 
@@ -50,9 +50,7 @@ class DaemonDb
     protected ?array $dbConfig;
 
     protected ?RetryUnless $pendingReconnection = null;
-
-    /** @var ExtendedPromiseInterface|null */
-    protected $pendingDisconnect;
+    protected ?PromiseInterface $pendingDisconnect = null;
     protected ?TimerInterface $refreshTimer = null;
     protected ?TimerInterface $schemaCheckTimer = null;
 
@@ -117,7 +115,7 @@ class DaemonDb
         }
     }
 
-    protected function establishConnection($config): ExtendedPromiseInterface
+    protected function establishConnection($config): PromiseInterface
     {
         if ($this->db !== null) {
             $this->logger->error('Trying to establish a connection while being connected');
@@ -227,7 +225,7 @@ class DaemonDb
         }
     }
 
-    protected function reconnect(): ExtendedPromiseInterface
+    protected function reconnect(): PromiseInterface
     {
         $promise = $this->disconnect()->then(function () {
             return $this->connect();
@@ -236,14 +234,10 @@ class DaemonDb
             exit(1);
         });
 
-        assert($promise instanceof ExtendedPromiseInterface);
         return $promise;
     }
 
-    /**
-     * @return \React\Promise\ExtendedPromiseInterface
-     */
-    public function connect()
+    public function connect(): PromiseInterface
     {
         if ($this->db === null) {
             if ($this->dbConfig) {
@@ -254,7 +248,7 @@ class DaemonDb
         return resolve(null);
     }
 
-    protected function stopRegisteredComponents(): ExtendedPromiseInterface
+    protected function stopRegisteredComponents(): PromiseInterface
     {
         $pending = new Deferred();
         $pendingComponents = new SplObjectStorage();
@@ -273,12 +267,12 @@ class DaemonDb
         return $pending->promise();
     }
 
-    public function disconnect(): ExtendedPromiseInterface
+    public function disconnect(): PromiseInterface
     {
         if (! $this->db) {
             return resolve(null);
         }
-        if ($this->pendingDisconnect instanceof ExtendedPromiseInterface) {
+        if ($this->pendingDisconnect instanceof PromiseInterface) {
             return $this->pendingDisconnect;
         }
 
@@ -297,7 +291,6 @@ class DaemonDb
             $this->db = null;
             $this->pendingDisconnect = null;
         });
-        assert($pending instanceof ExtendedPromiseInterface);
 
         return $pending;
     }

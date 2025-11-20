@@ -7,6 +7,7 @@ use Icinga\Module\Eventtracker\Db\ConfigStore;
 use Icinga\Module\Eventtracker\Engine\Downtime\DowntimeRunner;
 use Icinga\Module\Eventtracker\Engine\InputRunner;
 use Psr\Log\LoggerInterface;
+use React\Promise\PromiseInterface;
 
 use function React\Promise\resolve;
 
@@ -40,10 +41,7 @@ class InputAndChannelRunner implements DbBasedComponent
         return $this->runner;
     }
 
-    /**
-     * @return \React\Promise\ExtendedPromiseInterface
-     */
-    public function stopDb()
+    public function stopDb(): PromiseInterface
     {
         if ($this->runner) {
             $this->runner->stop();

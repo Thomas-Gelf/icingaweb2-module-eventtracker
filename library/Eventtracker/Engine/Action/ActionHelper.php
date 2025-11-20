@@ -46,8 +46,9 @@ class ActionHelper
                 ActionHistory::persist($action, $issue, false, (string) $reason, $db);
             });
         }
-
-        return all($promises);
+        timeout(all($promises), 15)->then(null, function (Throwable $reason) use ($logger) {
+            $logger->error($reason);
+        });
     }
 
     protected static function isSkippedByProblemHandling(Issue $issue, Adapter $db): bool
@@ -76,7 +77,7 @@ class ActionHelper
         return self::$problemHandling;
     }
 
-    protected static function forgetProblemHandling()
+    protected static function forgetProblemHandling(): void
     {
         self::$problemHandling = null;
     }

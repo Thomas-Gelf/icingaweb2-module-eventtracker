@@ -20,13 +20,11 @@ use Psr\Log\LoggerInterface;
 use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\UuidInterface;
 use React\Promise\Deferred;
-use React\Promise\ExtendedPromiseInterface;
 use React\Promise\PromiseInterface;
 use RuntimeException;
 use stdClass;
 
 use function React\Promise\resolve;
-use function React\Promise\Timer\timeout;
 
 class RpcNamespaceEvent implements DbBasedComponent, EventEmitterInterface
 {
@@ -60,7 +58,7 @@ class RpcNamespaceEvent implements DbBasedComponent, EventEmitterInterface
         $this->counters = new Counters();
     }
 
-    protected function initializeActions()
+    protected function initializeActions(): void
     {
         $actions = (new ConfigStore($this->db, $this->logger))->loadActions(['enabled' => 'y']);
         /** @var Action $action */
@@ -210,7 +208,7 @@ class RpcNamespaceEvent implements DbBasedComponent, EventEmitterInterface
         return resolve(null);
     }
 
-    public function stopDb(): ExtendedPromiseInterface
+    public function stopDb(): PromiseInterface
     {
         $this->db = null;
         $this->stopActions();

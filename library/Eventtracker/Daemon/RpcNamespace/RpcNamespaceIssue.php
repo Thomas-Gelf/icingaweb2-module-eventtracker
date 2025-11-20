@@ -11,7 +11,7 @@ use Icinga\Module\Eventtracker\IssueHistory;
 use Psr\Log\LoggerInterface;
 use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\UuidInterface;
-use React\Promise\ExtendedPromiseInterface;
+use React\Promise\PromiseInterface;
 use RuntimeException;
 
 use function React\Promise\resolve;
@@ -118,14 +118,12 @@ class RpcNamespaceIssue implements DbBasedComponent, EventEmitterInterface
         return true;
     }
 
-    public function initDb(Db $db): ExtendedPromiseInterface
+    public function initDb(PdoAdapter $db): void
     {
         $this->db = $db;
-
-        return resolve(null);
     }
 
-    public function stopDb(): ExtendedPromiseInterface
+    public function stopDb(): PromiseInterface
     {
         $this->db = null;
 
