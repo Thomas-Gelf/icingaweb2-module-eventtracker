@@ -24,7 +24,7 @@ class NoDecorator extends BaseHtmlElement implements FormElementDecorator
 
     protected $dd;
 
-    /** @var FormElement */
+    /** @var ?FormElement */
     protected $element;
 
     /** @var HtmlDocument */

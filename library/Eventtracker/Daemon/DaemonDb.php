@@ -9,6 +9,7 @@ use gipfl\IcingaCliDaemon\DbResourceConfigWatch;
 use gipfl\IcingaCliDaemon\RetryUnless;
 use gipfl\ZfDb\Adapter\Adapter as ZfDb;
 use gipfl\ZfDb\Adapter\Pdo\Mysql;
+use gipfl\ZfDb\Adapter\Pdo\PdoAdapter;
 use Icinga\Application\Icinga;
 use Icinga\Module\Eventtracker\Db\ZfDbConnectionFactory;
 use Icinga\Module\Eventtracker\Modifier\Settings;
@@ -36,9 +37,7 @@ class DaemonDb
     public const ON_SCHEMA_CHANGE = 'schemaChange';
     const TABLE_NAME = 'daemon_info';
     protected LoggerInterface $logger;
-
-    /** @var ZfDb|Mysql */
-    protected $db;
+    protected ?PdoAdapter $db = null;
 
     protected DaemonProcessDetails $details;
 
@@ -139,8 +138,9 @@ class DaemonDb
         return $this->pendingReconnection->run(Loop::get());
     }
 
-    protected function getMigrations(Mysql $db): Migrations
+    protected function getMigrations(PdoAdapter $db): Migrations
     {
+        assert($db instanceof Mysql);
         return new Migrations($db, Icinga::app()->getModuleManager()->getModuleDir(
             'eventtracker',
             '/schema'
@@ -280,9 +280,7 @@ class DaemonDb
         $this->pendingDisconnect = $this->stopRegisteredComponents();
 
         try {
-            if ($this->db) {
-                $this->db->closeConnection();
-            }
+            $this->db->closeConnection();
         } catch (Exception $e) {
             $this->logger->error('Failed to disconnect: ' . $e->getMessage());
         }

@@ -4,21 +4,16 @@ namespace Icinga\Module\Eventtracker;
 
 use gipfl\Json\JsonString;
 use gipfl\ZfDb\Adapter\Adapter as Db;
+use gipfl\ZfDb\Select;
 use Icinga\Application\Config;
+use stdClass;
 
 class IcingaCi
 {
-    protected static $tableName = 'icinga_ci';
+    protected static string $tableName = 'icinga_ci';
+    protected static string $tableNameVars = 'icinga_ci_var';
 
-    protected static $tableNameVars = 'icinga_ci_var';
-
-    /**
-     * @param Db $db
-     * @param string $hostname
-     * @param string|null $service
-     * @return bool
-     */
-    public static function exists(Db $db, $hostname, $service = null)
+    public static function exists(Db $db, string $hostname, ?string $service = null): bool
     {
         $query = $db->select()
             ->from(self::$tableName, 'COUNT(*)')
@@ -31,40 +26,40 @@ class IcingaCi
         return $db->fetchOne($query) > 0;
     }
 
-    public static function eventuallyLoad(Db $db, $hostname, $service = null)
+    public static function loadOptional(Db $db, $hostname, $service = null): ?stdClass
     {
         if ($hostname === null) {
             return null;
         }
-        $object = static::eventuallyFetchCi($db, $hostname, $service);
+        $object = static::fetchOptionalCi($db, $hostname, $service);
         if ($object) {
             return $object;
         } else {
             $domain = Config::module('eventtracker')->get('ido-sync', 'search_domain');
             if ($domain) {
                 $domain = \trim($domain, '.');
-                return static::eventuallyFetchCi($db, "$hostname.$domain", $service);
+                return static::fetchOptionalCi($db, "$hostname.$domain", $service);
             }
         }
 
         return null;
     }
 
-    public static function eventuallyLoadForIssue(Db $db, Issue $issue)
+    public static function loadOptionalForIssue(Db $db, Issue $issue): ?stdClass
     {
         $hostname = $issue->get('host_name');
         $service = $issue->get('object_name');
-        $object = static::eventuallyLoad($db, $hostname, $service);
+        $object = static::loadOptional($db, $hostname, $service);
         if ($object) {
             return $object;
         } elseif ($service === null) {
             return null;
         } else {
-            return static::eventuallyLoad($db, $hostname);
+            return static::loadOptional($db, $hostname);
         }
     }
 
-    protected static function eventuallyFetchCi(Db $db, $hostname, $service = null)
+    protected static function fetchOptionalCi(Db $db, $hostname, $service = null): ?stdClass
     {
         $query = self::prepareCiQuery($db)->where('host_name = ?', $hostname);
 
@@ -83,7 +78,7 @@ class IcingaCi
         }
     }
 
-    protected static function fetchCi(Db $db, $id)
+    protected static function fetchCi(Db $db, $id): ?stdClass
     {
         $query = self::prepareCiQuery($db)->where('object_id = ?', $id);
 
@@ -96,7 +91,7 @@ class IcingaCi
         }
     }
 
-    protected static function prepareCiQuery(Db $db)
+    protected static function prepareCiQuery(Db $db): Select
     {
         return $db->select()->from(self::$tableName, [
             'object_id',
@@ -109,7 +104,7 @@ class IcingaCi
         ]);
     }
 
-    protected static function fetchCiVars(Db $db, $id)
+    protected static function fetchCiVars(Db $db, $id): stdClass
     {
         $query = $db->select()->from(self::$tableNameVars, [
             'varname',

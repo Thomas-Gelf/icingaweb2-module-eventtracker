@@ -10,9 +10,6 @@ use ipl\Html\Html;
 
 class ActivityTable extends BaseTable
 {
-    protected $defaultAttributes = [
-        'common-table'
-    ];
     protected $issue;
 
     public function __construct($db, Issue $issue)

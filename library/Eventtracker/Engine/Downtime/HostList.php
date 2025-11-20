@@ -31,7 +31,7 @@ class HostList
 
     public static function load(UuidInterface $uuid, Adapter $db): HostList
     {
-        $self = new static($uuid);
+        $self = new HostList($uuid);
         $self->loadHosts($db);
         return $self;
     }

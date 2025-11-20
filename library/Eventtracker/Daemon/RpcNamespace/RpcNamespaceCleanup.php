@@ -64,7 +64,7 @@ class RpcNamespaceCleanup
     public function simulateDeleteIssuesRequest($filter): PromiseInterface
     {
         $filter = DbCleanupFilter::fromSerialization($filter);
-        $this->logger->notice(json_encode($filter) . var_export($this->runQueries, 1));
+        $this->logger->notice(json_encode($filter) . var_export($this->runQueries, true));
         if ($this->runQueries) {
             await(\React\Promise\Timer\sleep(10));
             return $this->runCleanup('issue', $filter, true);
@@ -125,16 +125,17 @@ class RpcNamespaceCleanup
             }
             $this->pendingCleanup = null;
         });
-        $cli->run()->then(function () use ($method) {
+        $cli->run()->then(function () {
             // $this->logger->notice('Process exited');
-        }, function (Exception $e) use ($arguments) {
+        }, function (Exception $e) use ($arguments, $method) {
             $this->logger->error(sprintf(
-                'Cleanup sub-process (%s) failed: %s',
+                'Cleanup sub-process (%s) failed for %s: %s',
                 implode(', ', $arguments),
+                $method,
                 $e->getMessage()
             ));
         });
-        /** @var JsonRpcConnection $rpc */
+
         return $this->pendingCleanup = $cli->rpc()->then(function (JsonRpcConnection $rpc) {
             // we proxy sub-process logs
             $handler = new NamespacedPacketHandler();

@@ -24,13 +24,13 @@ abstract class BaseTable extends ZfQueryBasedTable
     /** @var TableColumn[] */
     private $chosenColumns;
 
-    /** @var bool */
+    /** @var ?bool */
     private $isInitialized = false;
 
-    /** @var Url */
+    /** @var ?Url */
     private $baseUrl;
 
-    /** @var string */
+    /** @var ?string */
     private $sortParam;
 
     /** @var array */

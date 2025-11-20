@@ -7,29 +7,22 @@ use Icinga\Module\Eventtracker\Web\Form;
 
 class LinkLikeForm extends Form
 {
-    /** @var string */
-    protected $linkLabel;
-
-    /** @var string|null */
-    protected $linkTitle;
-
-    /** @var string|null */
-    protected $linkIcon;
+    protected string $linkLabel;
+    protected ?string $linkTitle = null;
+    protected ?string $linkIcon = null;
 
     /**
-     * TestForm constructor.
-     * @param string|$linkLabel
-     * @param null $linkTitle
-     * @param string|null $linkIcon
+     * @param ?string $linkTitle
+     * @param ?string $linkIcon
      */
-    public function __construct($linkLabel, $linkTitle = null, $linkIcon = null)
+    public function __construct(string $linkLabel, ?string $linkTitle = null, ?string $linkIcon = null)
     {
-        $this->linkLabel = (string) $linkLabel;
+        $this->linkLabel = $linkLabel;
         if ($linkTitle !== null) {
-            $this->linkTitle = (string) $linkTitle;
+            $this->linkTitle = $linkTitle;
         }
         if ($linkIcon !== null) {
-            $this->linkIcon = (string) $linkIcon;
+            $this->linkIcon = $linkIcon;
         }
         $this->setMethod('POST');
         $this->addAttributes(['class' => 'inline']);

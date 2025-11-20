@@ -11,9 +11,9 @@ class File
 {
     use PropertyHelpers;
 
-    protected static $tableName = 'file';
+    protected static string $tableName = 'file';
 
-    protected $properties = [
+    protected array $properties = [
         'checksum'  => null,
         'data'      => null,
         'size'      => null,
@@ -61,6 +61,14 @@ class File
         );
     }
 
+    /**
+     * Hint: required by PropertyHelpers
+     */
+    public function isNew(): bool
+    {
+        return false;
+    }
+
     public static function loadByIssueUuidAndChecksum(
         UuidInterface $uuid,
         string $checksum,
@@ -90,7 +98,7 @@ class File
 
     protected static function createFileFromRow($row): self
     {
-        $file = new static;
+        $file = new File;
         $file->properties['issue_uuid'] = null;
         $file->properties['filename'] = null;
         $file->setProperties($row);

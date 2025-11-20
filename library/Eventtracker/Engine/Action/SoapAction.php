@@ -25,25 +25,14 @@ class SoapAction extends SimpleTaskConstructor implements Action
 
     protected $paused = true;
 
-    /** @var string */
-    protected $url;
+    protected string $url;
+    protected string $username;
+    protected string $password;
+    protected string $methodName;
+    protected ?string $ackMessage;
+    protected Settings $serviceSettings;
 
-    /** @var string */
-    protected $username;
-
-    /** @var string */
-    protected $password;
-
-    /** @var string */
-    protected $methodName;
-
-    /** @var ?string */
-    protected $ackMessage;
-
-    /** @var Settings */
-    protected $serviceSettings;
-
-    public function applySettings(Settings $settings)
+    public function applySettings(Settings $settings): void
     {
         $this->setSettings($settings);
         $settings = Settings::fromSerialization($settings->jsonSerialize());
@@ -60,12 +49,12 @@ class SoapAction extends SimpleTaskConstructor implements Action
         return new SoapFormExtension();
     }
 
-    public static function getLabel()
+    public static function getLabel(): string
     {
         return StaticTranslator::get()->translate('SOAP');
     }
 
-    public static function getDescription()
+    public static function getDescription(): string
     {
         return StaticTranslator::get()->translate(
             'Trigger a SOAP operation'

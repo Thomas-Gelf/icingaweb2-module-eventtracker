@@ -62,7 +62,7 @@ class ObjectUtils
      * and a key vars.disk.sda given as [ 'vars', 'disk', 'sda' ] this would
      * return { size => '255GB' }
      *
-     * @param  string $val  The value to extract data from
+     * @param  object $val  The value to extract data from
      * @param  array  $keys A list of nested keys pointing to desired data
      *
      * @return mixed
@@ -110,7 +110,7 @@ class ObjectUtils
                 throw new InvalidArgumentException(sprintf(
                     'Data is not nested, cannot access %s: %s',
                     $var,
-                    var_export($row, 1)
+                    var_export($row, true)
                 ));
             }
 
@@ -166,7 +166,7 @@ class ObjectUtils
             throw new InvalidArgumentException(sprintf(
                 'Data is not nested, cannot unset %s: %s',
                 $key,
-                var_export($object, 1)
+                var_export($object, true)
             ));
         }
 

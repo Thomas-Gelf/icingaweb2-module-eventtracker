@@ -176,8 +176,6 @@ class InputRunner implements LoggerAwareInterface
             $issue,
             $this->store->getDb(),
             $this->logger
-        )->otherwise(function (Throwable $reason) {
-            $this->logger->error($reason);
-        }));
+        ));
     }
 }

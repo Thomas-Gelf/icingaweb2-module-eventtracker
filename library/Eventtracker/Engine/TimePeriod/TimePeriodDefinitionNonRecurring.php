@@ -3,6 +3,8 @@
 namespace Icinga\Module\Eventtracker\Engine\TimePeriod;
 
 use DateInterval;
+use DateTime;
+use DateTimeImmutable;
 use DateTimeInterface;
 
 class TimePeriodDefinitionNonRecurring implements TimePeriodDefinition
@@ -78,6 +80,7 @@ class TimePeriodDefinitionNonRecurring implements TimePeriodDefinition
             if ($slot->end === null) {
                 break;
             }
+            /** @var DateTimeImmutable $start */
             $start = clone $slot->end;
             $start = $start->add(new DateInterval('PT1S'));
         }
@@ -104,6 +107,7 @@ class TimePeriodDefinitionNonRecurring implements TimePeriodDefinition
         if ($this->duration === null) {
             $end = $this->notAfter ? clone $this->notAfter : null;
         } else {
+            /** @var DateTimeImmutable $end */
             $end = clone $start;
             $end = $end->add($this->duration);
             if ($this->notAfter !== null) {

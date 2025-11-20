@@ -15,7 +15,7 @@ class IcingaCliRunner
     /** @var array|null */
     protected $env;
 
-    public function __construct($binary)
+    final public function __construct($binary)
     {
         $this->binary = $binary;
     }
@@ -34,11 +34,7 @@ class IcingaCliRunner
         return new static($argv[0]);
     }
 
-    /**
-     * @param mixed array|...$arguments
-     * @return Process
-     */
-    public function command($arguments = null)
+    public function command(?array $arguments = null): Process
     {
         if (! is_array($arguments)) {
             $arguments = func_get_args();

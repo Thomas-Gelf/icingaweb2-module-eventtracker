@@ -524,16 +524,13 @@ EOT
 
     /**
      * Split ts fields into date/time
-     *
-     * @param iterable $values
-     * @return void
      */
     public function populate($values)
     {
         $values = (array) $values;
         foreach ($this->tsCombinations as $key) {
             if (isset($values[$key])) {
-                $time = floor($values[$key] / 1000);
+                $time = (int) floor($values[$key] / 1000);
                 $values[$key . '_date'] = date('Y-m-d', $time);
                 $values[$key . '_time'] = date('H:i', $time);
                 unset($values[$key]);
@@ -541,8 +538,8 @@ EOT
         }
         foreach ($this->timeProperties as $key) {
             if (isset($values[$key]) && is_int($values[$key])) {
-                $minutes = floor($values[$key] / 3600);
-                $seconds = floor($values[$key] % 3600) / 60;
+                $minutes = (int) floor($values[$key] / 3600);
+                $seconds = (int) floor($values[$key] % 3600) / 60;
                 $values[$key] = sprintf("%02d:%02d", $minutes, $seconds);
             }
         }
@@ -609,7 +606,7 @@ EOT
             }
         }
 
-        parent::populate($values);
+        return parent::populate($values);
     }
 
     protected function addTsCombination($name, $options)
@@ -653,6 +650,7 @@ EOT
         if (substr($this->getElementValue('recurrence_type'), 0, 1) === '@') {
             $properties['time_definition'] = $this->getElementValue('recurrence_type');
         }
+        assert($rule instanceof DowntimeRule);
         $rule->setProperties($properties);
         $rule->recalculateConfigUuid();
         $store = new ZfDbStore($this->store->getDb());

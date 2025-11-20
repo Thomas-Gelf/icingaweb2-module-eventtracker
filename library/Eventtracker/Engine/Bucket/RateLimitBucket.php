@@ -25,8 +25,9 @@ class RateLimitBucket extends SimpleTaskConstructor implements BucketInterface
 
     /** @var TimerInterface[] */
     protected array $timers = [];
+    protected $paused = true;
 
-    public function applySettings(Settings $settings)
+    public function applySettings(Settings $settings): void
     {
         $this->setSettings($settings);
     }
@@ -51,12 +52,12 @@ class RateLimitBucket extends SimpleTaskConstructor implements BucketInterface
         return new RateLimitFormExtension();
     }
 
-    public static function getLabel()
+    public static function getLabel(): string
     {
         return StaticTranslator::get()->translate('Rate Limit');
     }
 
-    public static function getDescription()
+    public static function getDescription(): string
     {
         return StaticTranslator::get()->translate(
             'Create an Issue only once in the given time frame, when reaching a certain amount of events'

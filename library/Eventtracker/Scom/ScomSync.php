@@ -58,7 +58,7 @@ class ScomSync
         $classes = new ObjectClassInventory($db);
         $senderId = $this->getSenderId();
         $factory = new ScomEventFactory($senderId, $classes);
-        $receiver = new EventReceiver($db);
+        $receiver = new EventReceiver();
 
         $issuesFromScom = [];
         $cntIgnored = 0;

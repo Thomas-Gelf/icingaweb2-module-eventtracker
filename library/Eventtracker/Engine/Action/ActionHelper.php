@@ -9,21 +9,22 @@ use Icinga\Module\Eventtracker\Engine\EnrichmentHelper;
 use Icinga\Module\Eventtracker\Issue;
 use Psr\Log\LoggerInterface;
 use React\EventLoop\Loop;
-use React\Promise\ExtendedPromiseInterface;
 use Throwable;
+
 use function React\Promise\all;
+use function React\Promise\Timer\timeout;
 
 class ActionHelper
 {
     /** @var array<string, string>|null */
-    protected static $problemHandling = null;
+    protected static ?array $problemHandling = null;
 
     public static function processIssue(
         array $actions,
         Issue $issue,
         Adapter $db,
         LoggerInterface $logger
-    ): ExtendedPromiseInterface {
+    ): void {
         $promises = [];
         $loggingSuffix =  ' for issue ' . $issue->getNiceUuid();
         /** @var Action $action */

@@ -2,7 +2,7 @@
 
 namespace Icinga\Module\Eventtracker\Engine;
 
-use ipl\Html\Form;
+use gipfl\Web\Form;
 
 interface FormExtension
 {

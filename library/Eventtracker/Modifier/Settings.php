@@ -18,11 +18,10 @@ class Settings implements JsonSerializable
 
     /**
      * @param stdClass|array $object
-     * @return static
      */
-    public static function fromSerialization($object)
+    public static function fromSerialization($object): Settings
     {
-        $self = new static;
+        $self = new Settings();
         foreach ((array) $object as $name => $value) {
             $self->set($name, $value);
         }

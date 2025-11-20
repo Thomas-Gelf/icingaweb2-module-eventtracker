@@ -82,6 +82,7 @@ class UuidObjectForm extends Form
         $this->registerElement($button);
         $label = $this->getObjectLabel();
         $labelReally = sprintf($this->translate('YES, I really want to delete %s'), $label);
+        assert($button instanceof SubmitElement);
         if ($button->hasBeenPressed()) {
             $dd->remove($button);
             $this->remove($button);

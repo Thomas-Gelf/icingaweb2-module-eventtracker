@@ -80,11 +80,15 @@ class MssqlProcessesTable extends BaseTable
             'page_server_reads',
         ];
         foreach ($cols as $key => $col) {
+            $this->addAvailableColumn($this->createColumn($col));
+            /*
+            // Alternative, if we allow aliases:
             if (is_int($key)) {
                 $this->addAvailableColumn($this->createColumn($col));
             } else {
                 $this->addAvailableColumn($this->createColumn($key, null, $col));
             }
+            */
         }
     }
 }

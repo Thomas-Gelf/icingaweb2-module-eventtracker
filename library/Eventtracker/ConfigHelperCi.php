@@ -8,10 +8,10 @@ class ConfigHelperCi
 {
     public static function fillPlaceHoldersForIssue($string, Issue $issue, ZfDb $db)
     {
-        $ci = IcingaCi::eventuallyLoadForIssue($db, $issue);
+        $ci = IcingaCi::loadOptionalForIssue($db, $issue);
         if ($ci) {
             if ($ci->object_type === 'service') {
-                if ($host = IcingaCi::eventuallyLoad($db, $issue->get('host_name'))) {
+                if ($host = IcingaCi::loadOptional($db, $issue->get('host_name'))) {
                     $ci->host = $host;
                 }
             }

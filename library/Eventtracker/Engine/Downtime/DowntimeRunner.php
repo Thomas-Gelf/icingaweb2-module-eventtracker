@@ -121,6 +121,7 @@ class DowntimeRunner implements DbBasedComponent
             if ($hostList = $this->store->getHostList($hostListUuid)) {
                 return $hostList->hasHost($issue->get('host_name'));
             } else {
+                // Will not happen, Hostlist should always load
                 $this->logger->error(sprintf(
                     'Referenced host list %s has not been loaded',
                     Uuid::fromBytes($hostListUuid)->toString()

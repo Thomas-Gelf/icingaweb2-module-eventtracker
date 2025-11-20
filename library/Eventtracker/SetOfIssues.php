@@ -15,13 +15,12 @@ use Ramsey\Uuid\Uuid as RamseyUuid;
 
 class SetOfIssues implements Countable
 {
-    /** DbAdapter $db */
-    protected $db;
+    protected DbAdapter $db;
 
     /** @var Issue[] */
-    protected $issues = [];
+    protected array $issues = [];
 
-    public function __construct(DbAdapter $db, $issues = [])
+    final public function __construct(DbAdapter $db, $issues = [])
     {
         $this->db = $db;
         foreach ($issues as $issue) {
@@ -50,7 +49,7 @@ class SetOfIssues implements Countable
                     $sub = $part->filters()[0];
                     if ($sub instanceof FilterExpression) {
                         $expression = $sub->getExpression();
-                        $this->issues[] = Issue::load(Uuid::toBinary($expression), $this->db);
+                        $this->issues[] = Issue::load(RamseyUuid::fromString($expression)->getBytes(), $this->db);
                     } else {
                         throw new InvalidArgumentException('Could not extract Issue Set from URL');
                     }

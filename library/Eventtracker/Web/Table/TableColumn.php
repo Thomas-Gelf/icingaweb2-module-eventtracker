@@ -9,7 +9,7 @@ abstract class TableColumn
     /** @var string */
     private $alias;
 
-    /** @var string */
+    /** @var array|string */
     private $column;
 
     /** @var string */
@@ -70,7 +70,7 @@ abstract class TableColumn
     }
 
     /**
-     * @return string
+     * @return array|string
      */
     public function getColumn()
     {
@@ -78,7 +78,7 @@ abstract class TableColumn
     }
 
     /**
-     * @param string $column
+     * @param array|string $column
      * @return TableColumn
      */
     public function setColumn($column)

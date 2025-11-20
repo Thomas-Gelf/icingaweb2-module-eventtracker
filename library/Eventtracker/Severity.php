@@ -6,16 +6,16 @@ use InvalidArgumentException;
 
 class Severity
 {
-    const DEBUG         = 'debug';
-    const INFORMATIONAL = 'informational';
-    const NOTICE        = 'notice';
-    const WARNING       = 'warning';
-    const ERROR         = 'error';
-    const CRITICAL      = 'critical';
-    const ALERT         = 'alert';
-    const EMERGENCY     = 'emergency';
+    public const DEBUG         = 'debug';
+    public const INFORMATIONAL = 'informational';
+    public const NOTICE        = 'notice';
+    public const WARNING       = 'warning';
+    public const ERROR         = 'error';
+    public const CRITICAL      = 'critical';
+    public const ALERT         = 'alert';
+    public const EMERGENCY     = 'emergency';
 
-    const ENUM_LIST = [
+    public const ENUM_LIST = [
         self::DEBUG         => self::DEBUG,
         self::INFORMATIONAL => self::INFORMATIONAL,
         self::NOTICE        => self::NOTICE,

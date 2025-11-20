@@ -4,6 +4,7 @@ namespace Icinga\Module\Eventtracker\Check;
 
 use gipfl\Cli\Screen;
 use InvalidArgumentException;
+
 use function array_key_exists;
 use function ctype_digit;
 use function is_int;
@@ -12,19 +13,19 @@ use function strtoupper;
 
 class PluginState
 {
-    const STATE_OK = 0;
-    const STATE_WARNING = 1;
-    const STATE_CRITICAL = 2;
-    const STATE_UNKNOWN = 3;
+    public const STATE_OK = 0;
+    public const STATE_WARNING = 1;
+    public const STATE_CRITICAL = 2;
+    public const STATE_UNKNOWN = 3;
 
-    const NUMERIC_TO_NAME = [
+    protected const NUMERIC_TO_NAME = [
         self::STATE_OK       => 'OK',
         self::STATE_WARNING  => 'WARNING',
         self::STATE_CRITICAL => 'CRITICAL',
         self::STATE_UNKNOWN  => 'UNKNOWN',
     ];
 
-    const NAME_TO_NUMERIC = [
+    protected const NAME_TO_NUMERIC = [
         'OK'       => self::STATE_OK,
         'WARNING'  => self::STATE_WARNING,
         'CRITICAL' => self::STATE_CRITICAL,
@@ -38,9 +39,9 @@ class PluginState
         self::STATE_UNKNOWN  => 'purple',
     ];
 
-    protected $state;
+    protected int $state;
 
-    public function __construct($state = self::STATE_OK)
+    final public function __construct($state = self::STATE_OK)
     {
         $this->state = self::getNumeric($state);
     }
@@ -50,37 +51,37 @@ class PluginState
         $this->state = self::getWorst($this->state, $state);
     }
 
-    public function getExitCode()
+    public function getExitCode(): int
     {
         return $this->state;
     }
 
-    public function toString()
+    public function toString(): string
     {
         return self::getColorized($this->state);
     }
 
-    public function __toString()
+    public function __toString(): string
     {
         return $this->toString();
     }
 
-    public static function ok()
+    public static function ok(): PluginState
     {
         return new static(self::STATE_OK);
     }
 
-    public static function warning()
+    public static function warning(): PluginState
     {
         return new static(self::STATE_WARNING);
     }
 
-    public static function critical()
+    public static function critical(): PluginState
     {
         return new static(self::STATE_CRITICAL);
     }
 
-    public static function unknown()
+    public static function unknown(): PluginState
     {
         return new static(self::STATE_UNKNOWN);
     }
@@ -106,7 +107,7 @@ class PluginState
         return Screen::factory()->colorize(self::getName($state), self::STATE_TO_ANSI_COLOR[$state]);
     }
 
-    public static function getNumeric($state)
+    public static function getNumeric($state): int
     {
         if ((is_int($state) || ctype_digit($state)) && array_key_exists((int) $state, self::NUMERIC_TO_NAME)) {
             return (int) $state;
@@ -120,7 +121,7 @@ class PluginState
         throw new InvalidArgumentException("$state is not a valid Check Plugin state");
     }
 
-    public static function getName($state)
+    public static function getName($state): string
     {
         return self::NUMERIC_TO_NAME[self::getNumeric($state)];
     }

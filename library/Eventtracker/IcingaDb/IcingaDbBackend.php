@@ -23,7 +23,7 @@ class IcingaDbBackend
             ->filter(Filter::equal('host.name', $hostname));
 
         $this->applyRestrictions($query);
-        /** @var Host $host */
+        /** @var ?Host $host */
         $host = $query->first();
         if ($host === null) {
             throw new NotFoundError(t('Host not found'));
@@ -44,7 +44,7 @@ class IcingaDbBackend
 
         $this->applyRestrictions($query);
 
-        /** @var Service $service */
+        /** @var ?Service $service */
         $service = $query->first();
         if ($service === null) {
             throw new NotFoundError(t('Service not found'));

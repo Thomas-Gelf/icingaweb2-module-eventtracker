@@ -6,7 +6,8 @@ use InvalidArgumentException;
 
 abstract class SimpleRegistry implements Registry
 {
-    protected $implementations = [];
+    /** @var array<string, class-string<Task>> */
+    protected array $implementations = [];
 
     public function getInstance($identifier): Task
     {
@@ -27,7 +28,6 @@ abstract class SimpleRegistry implements Registry
     public function listImplementations(): array
     {
         $implementations = [];
-        /** @var $class Task */
         foreach ($this->implementations as $key => $class) {
             $implementations[$key] = $class::getLabel();
         }

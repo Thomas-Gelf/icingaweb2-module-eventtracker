@@ -24,7 +24,7 @@ class ModifierChain implements JsonSerializable, Countable
         foreach ($serializedModifiers as $modifier) {
             $modifiers[] = static::makeModifier($modifier);
         }
-        return new static($modifiers);
+        return new ModifierChain($modifiers);
     }
 
     public static function makeModifier(array $modifier): array

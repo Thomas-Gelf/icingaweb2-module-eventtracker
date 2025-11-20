@@ -3,9 +3,9 @@
 namespace Icinga\Module\Eventtracker\Web\Form\Input;
 
 use gipfl\Translation\TranslationHelper;
+use gipfl\Web\Form;
 use Icinga\Module\Eventtracker\Engine\FormExtension;
 use Icinga\Module\Eventtracker\Web\Widget\Documentation;
-use ipl\Html\Form;
 use ipl\Html\Html;
 use Ramsey\Uuid\Uuid;
 

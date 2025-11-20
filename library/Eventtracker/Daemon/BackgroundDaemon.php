@@ -41,7 +41,7 @@ class BackgroundDaemon implements EventEmitterInterface
     /** @var DaemonDb */
     protected $daemonDb;
 
-    /** @var DaemonProcessState */
+    /** @var ?DaemonProcessState */
     protected $processState;
 
     /** @var DaemonProcessDetails */
@@ -116,7 +116,11 @@ class BackgroundDaemon implements EventEmitterInterface
             try {
                 $uuid = \bin2hex(Uuid::uuid4()->getBytes());
             } catch (Exception $e) {
-                $uuid = 'deadc0de' . \substr(\md5(\getmypid()), 0, 24);
+                $pid = getmypid();
+                if ($pid === false) {
+                    $pid = '<unknown>';
+                }
+                $uuid = 'deadc0de' . \substr(\md5((string) $pid), 0, 24);
             }
         }
         $processDetails = new DaemonProcessDetails($uuid);

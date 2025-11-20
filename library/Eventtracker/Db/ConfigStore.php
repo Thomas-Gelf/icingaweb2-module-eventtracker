@@ -5,6 +5,7 @@ namespace Icinga\Module\Eventtracker\Db;
 use gipfl\Json\JsonDecodeException;
 use gipfl\Json\JsonString;
 use gipfl\ZfDb\Adapter\Adapter;
+use gipfl\ZfDb\Adapter\Pdo\PdoAdapter;
 use Icinga\Module\Eventtracker\Engine\Action;
 use Icinga\Module\Eventtracker\Engine\Action\ActionRegistry;
 use Icinga\Module\Eventtracker\Engine\Bucket\BucketInterface;
@@ -22,17 +23,16 @@ use Psr\Log\NullLogger;
 use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\UuidInterface;
 use RuntimeException;
+use Throwable;
 
 class ConfigStore
 {
-    protected $db;
+    protected PdoAdapter $db;
+    protected ?LoggerInterface $logger = null;
 
-    protected $serializedProperties = ['settings', 'rules', 'input_uuids'];
+    protected array $serializedProperties = ['settings', 'rules', 'input_uuids'];
 
-    /** @var LoggerInterface */
-    protected $logger;
-
-    public function __construct(Adapter $db, ?LoggerInterface $logger = null)
+    public function __construct(PdoAdapter $db, ?LoggerInterface $logger = null)
     {
         $this->db = $db;
         if ($logger === null) {
@@ -41,20 +41,25 @@ class ConfigStore
         $this->logger = $logger;
     }
 
-    public function loadInputs($filter = [])
+    /**
+     * @param array<string, mixed> $filter
+     * @return array<string, Input>
+     */
+    public function loadInputs(array $filter = []): array
     {
         $inputs = [];
         foreach ($this->fetchObjects('input', $filter) as $row) {
             $row->uuid = Uuid::fromBytes($row->uuid);
             $inputs[$row->uuid->toString()] = $this->initializeTaskFromDbRow($row, new InputRegistry(), Input::class);
         }
+        /** @var Input[] $inputs */
 
         return $inputs;
     }
 
     protected function initializeTaskFromDbRow($row, Registry $registry, $contract): Task
     {
-        /** @var class-string|Task $implementation */
+        /** @var class-string<Task> $implementation */
         $implementation = $registry->getClassName($row->implementation);
         $interfaces = class_implements($implementation);
         if (isset($interfaces[$contract])) {
@@ -118,19 +123,23 @@ class ConfigStore
         return $buckets;
     }
 
-    public function loadActions($filter = []): array
+    /**
+     * @return Action[]
+     */
+    public function loadActions(array $filter = []): array
     {
         $actions = [];
         foreach ($this->fetchObjects('action', $filter) as $row) {
             $row->uuid = Uuid::fromBytes($row->uuid);
             /** @var Action $action */
             try {
+                /** @var Action $action */
                 $action = $this->initializeTaskFromDbRow($row, new ActionRegistry(), Action::class);
                 $actions[$row->uuid->toString()] = $action
                     ->setActionDescription($row->description)
                     ->setEnabled($row->enabled === 'y')
                     ->setFilter($row->filter);
-            } catch (\Exception $e) {
+            } catch (Throwable $e) {
                 $this->logger->error('Failed to initialize ' . $row->label . ': ' . $e->getMessage());
                 continue;
             }

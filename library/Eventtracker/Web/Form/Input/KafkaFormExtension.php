@@ -3,8 +3,8 @@
 namespace Icinga\Module\Eventtracker\Web\Form\Input;
 
 use gipfl\Translation\TranslationHelper;
+use gipfl\Web\Form;
 use Icinga\Module\Eventtracker\Engine\FormExtension;
-use ipl\Html\Form;
 
 class KafkaFormExtension implements FormExtension
 {

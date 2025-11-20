@@ -6,10 +6,17 @@ use Icinga\Module\Eventtracker\Priority;
 use ipl\Html\FormElement\SelectElement;
 use ipl\Html\FormElement\SubmitElement;
 
+/**
+ * @deprecated Is not able to deal with multiple issues
+ */
 class ChangePriorityForm extends InlineIssueForm
 {
+    protected $issue;
+
     protected function assemble()
     {
+        // Hint: this is a hack, to get no complaints, unless we fix or drop this
+        $this->issue = $this->issues[0];
         $next = new SubmitElement('next', [
             'class' => 'link-button',
             'label' => $this->issue->get('priority'),

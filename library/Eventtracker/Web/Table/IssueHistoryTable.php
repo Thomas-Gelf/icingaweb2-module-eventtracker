@@ -56,7 +56,7 @@ class IssueHistoryTable extends BaseTable
     {
         if ($this->lastDay !== $timestamp) {
             $this->nextHeader()->add(
-                $this::th($timestamp, [
+                $this::th((string) $timestamp, [
                     'colspan' => $colspan,
                     'class'   => 'table-header-day'
                 ])

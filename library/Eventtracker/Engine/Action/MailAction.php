@@ -34,7 +34,7 @@ class MailAction extends SimpleTaskConstructor implements Action
     protected bool $stripTags = false;
     protected bool $paused = true;
 
-    public function applySettings(Settings $settings)
+    public function applySettings(Settings $settings): void
     {
         $this->from = $settings->getRequired('from');
         $this->to = $settings->getRequired('to');
@@ -50,12 +50,12 @@ class MailAction extends SimpleTaskConstructor implements Action
         return new MailFormExtension();
     }
 
-    public static function getLabel()
+    public static function getLabel(): string
     {
         return StaticTranslator::get()->translate('Mail');
     }
 
-    public static function getDescription()
+    public static function getDescription(): string
     {
         return StaticTranslator::get()->translate(
             'Send a mail'

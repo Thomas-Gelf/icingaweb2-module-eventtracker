@@ -24,9 +24,6 @@ abstract class ToggleFlagList extends BaseHtmlElement
     /** @var ?Select */
     private $originalQuery;
 
-    /** @var ?Select */
-    private $query;
-
     protected $iconMain = 'angle-double-down';
 
     protected $iconModified = 'flapping';
@@ -40,7 +37,6 @@ abstract class ToggleFlagList extends BaseHtmlElement
     public function applyToQuery(Select $query)
     {
         $this->originalQuery = $query;
-        $this->query = clone $query;
 
         return $this;
     }

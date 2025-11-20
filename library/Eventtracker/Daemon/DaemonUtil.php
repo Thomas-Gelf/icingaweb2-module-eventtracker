@@ -4,13 +4,10 @@ namespace Icinga\Module\Eventtracker\Daemon;
 
 class DaemonUtil
 {
-    /**
-     * @return int
-     */
-    public static function timestampWithMilliseconds()
+    public static function timestampWithMilliseconds(): int
     {
         $mTime = explode(' ', microtime());
 
-        return (int) round($mTime[0] * 1000) + (int) $mTime[1] * 1000;
+        return (int) round((int) $mTime[0] * 1000) + (int) $mTime[1] * 1000;
     }
 }

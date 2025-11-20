@@ -9,6 +9,7 @@ use gipfl\Format\LocalDateFormat;
 use gipfl\Format\LocalTimeFormat;
 use Icinga\Date\DateFormatter;
 use ipl\Html\Html;
+use ipl\Html\ValidHtml;
 
 class Time
 {
@@ -41,7 +42,7 @@ class Time
         ], static::ago($ms));
     }
 
-    public static function info($ms)
+    public static function info($ms): ValidHtml
     {
         $t = new LocalTimeFormat();
         $d = new LocalDateFormat();
@@ -69,8 +70,8 @@ class Time
     {
         $time = DateTimeImmutable::createFromFormat('U.u', sprintf(
             '%s.%s000',
-            substr($timestampMs, 0, -3),
-            substr($timestampMs, -3)
+            substr((string) $timestampMs, 0, -3),
+            substr((string) $timestampMs, -3)
         ), $timeZone);
         if ($time === false) {
             throw new \RuntimeException(sprintf(

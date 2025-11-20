@@ -10,7 +10,9 @@ use Ramsey\Uuid\Uuid;
 
 class EnrichmentHelper
 {
-    /** @var array<string, string>|null */
+    /*
+    // Unused.
+    // @var array<string, string>|null
     protected static $problemHandling = null;
 
     public static function forgetProblemHandling()
@@ -38,7 +40,10 @@ class EnrichmentHelper
         if (! isset(self::$problemHandling[$problemIdentifier])) {
             return false;
         }
+
+        // And now?
     }
+    */
 
     public static function enrichIssue(Issue $issue, Adapter $db): object
     {

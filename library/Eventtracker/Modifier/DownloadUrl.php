@@ -54,7 +54,7 @@ class DownloadUrl extends BaseModifier
         try {
             return file_get_contents($value, false, stream_context_create($context));
         } catch (\Exception $e) {
-            return $e->getMessage() . "\r\n" . print_r($context, 1);
+            return $e->getMessage() . "\r\n" . print_r($context, true);
         }
     }
 

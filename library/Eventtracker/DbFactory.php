@@ -14,9 +14,11 @@ class DbFactory
     public static function db(): PdoAdapter
     {
         if (self::$db === null) {
-            self::$db = ZfDbConnectionFactory::connection(
+            $db = ZfDbConnectionFactory::connection(
                 IcingaResource::requireResourceConfig(Config::module('eventtracker')->get('db', 'resource'), 'db')
             );
+            assert($db instanceof PdoAdapter);
+            self::$db = $db;
         }
 
         return self::$db;

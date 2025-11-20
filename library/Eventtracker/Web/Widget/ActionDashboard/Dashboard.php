@@ -1,10 +1,13 @@
 <?php
 
-namespace Icinga\Module\Central\Web\Widget;
+namespace Icinga\Module\Eventtracker\Web\Widget\ActionDashboard;
 
 use ipl\Html\Html;
 use ipl\Html\HtmlDocument;
 
+/**
+ * @deprecated Unused?
+ */
 class Dashboard extends HtmlDocument
 {
     protected $title;
@@ -20,6 +23,7 @@ class Dashboard extends HtmlDocument
     public function __construct($title, $dashlets = [])
     {
         $this->title = $title;
+        $this->dashlets = $dashlets;
     }
 
     public function getTitle()

@@ -555,7 +555,7 @@ class IssueHeader extends BaseHtmlElement
         }
 
         $take = new TakeIssueForm($issue, $db);
-        $take->on('success', function () use ($issue, $db) {
+        $take->on('success', function () {
             $this->response->redirectAndExit($this->url());
         });
         $take->handleRequest($this->request);
@@ -591,6 +591,7 @@ class IssueHeader extends BaseHtmlElement
     }
 
     // TODO: Unused.
+    /*
     protected function addHookedActions(Issue $issue, ?BaseHtmlElement $target = null)
     {
         if ($target === null) {
@@ -598,6 +599,7 @@ class IssueHeader extends BaseHtmlElement
         }
         $target->add($this->getHookedActions($issue));
     }
+    */
 
     protected function getHookedActions(Issue $issue)
     {

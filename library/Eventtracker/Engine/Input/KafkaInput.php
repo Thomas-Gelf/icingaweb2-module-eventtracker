@@ -29,7 +29,7 @@ class KafkaInput extends SimpleTaskConstructor implements Input
     protected ?string $groupId; // Consumer Group ID
     protected bool $stopping = false;
 
-    public function applySettings(Settings $settings)
+    public function applySettings(Settings $settings): void
     {
         $this->topic = $settings->getRequired('topic');
         $this->groupId = $settings->getRequired('group_id');
@@ -44,24 +44,24 @@ class KafkaInput extends SimpleTaskConstructor implements Input
         return new KafkaFormExtension();
     }
 
-    public static function getLabel()
+    public static function getLabel(): string
     {
         return StaticTranslator::get()->translate('Kafka Consumer');
     }
 
-    public static function getDescription()
+    public static function getDescription(): string
     {
         return StaticTranslator::get()->translate(
             'Consumes a Kafka Topic'
         );
     }
 
-    public function run()
+    public function run(): void
     {
         $this->start();
     }
 
-    public function start()
+    public function start(): void
     {
         if ($this->process) {
             return;
@@ -71,7 +71,7 @@ class KafkaInput extends SimpleTaskConstructor implements Input
         $this->initiateEventHandlers($this->process);
     }
 
-    public function stop()
+    public function stop(): void
     {
         if ($this->process) {
             $this->stopping = true;
@@ -80,7 +80,7 @@ class KafkaInput extends SimpleTaskConstructor implements Input
         }
     }
 
-    public function pause()
+    public function pause(): void
     {
         if ($this->process) {
             $this->process->stdout->pause();
@@ -88,7 +88,7 @@ class KafkaInput extends SimpleTaskConstructor implements Input
         }
     }
 
-    public function resume()
+    public function resume(): void
     {
         if ($this->process) {
             $this->process->stdout->resume();
@@ -98,7 +98,7 @@ class KafkaInput extends SimpleTaskConstructor implements Input
         }
     }
 
-    protected function initiateEventHandlers(Process $process)
+    protected function initiateEventHandlers(Process $process): void
     {
         $process->on('exit', function ($code, $term) {
             $this->process = null;
@@ -138,7 +138,7 @@ class KafkaInput extends SimpleTaskConstructor implements Input
         $process->stdout->pipe($reader);
     }
 
-    protected function processLine($line)
+    protected function processLine(string $line): void
     {
         if ($line === '') {
             $this->logger->info('Ignoring empty line');
@@ -152,7 +152,7 @@ class KafkaInput extends SimpleTaskConstructor implements Input
         }
     }
 
-    protected function processSpecialLine($line)
+    protected function processSpecialLine(string $line): void
     {
         if (substr($line, 0, 7) === 'ERROR: ') {
             $this->emit(InputRunner::ON_ERROR, [new RuntimeException(rtrim(substr($line, 7)))]);
@@ -173,13 +173,13 @@ class KafkaInput extends SimpleTaskConstructor implements Input
         return $process;
     }
 
-    protected function addExtraParam(&$params, $key, $value)
+    protected function addExtraParam(&$params, $key, $value): void
     {
         $params[] = '-X';
         $params[] = "$key=$value";
     }
 
-    protected function addExtraParams(&$params, $extra)
+    protected function addExtraParams(&$params, $extra): void
     {
         foreach ($extra as $key => $value) {
             $this->addExtraParam($params, $key, $value);

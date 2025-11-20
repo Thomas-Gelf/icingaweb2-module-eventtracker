@@ -5,7 +5,7 @@ namespace Icinga\Module\Eventtracker\Daemon\RpcNamespace;
 use Evenement\EventEmitterInterface;
 use Evenement\EventEmitterTrait;
 use gipfl\Json\JsonString;
-use gipfl\ZfDb\Adapter\Adapter as Db;
+use gipfl\ZfDb\Adapter\Pdo\PdoAdapter;
 use Icinga\Module\Eventtracker\Daemon\DbBasedComponent;
 use Icinga\Module\Eventtracker\Daemon\InputAndChannelRunner;
 use Icinga\Module\Eventtracker\Db\ConfigStore;
@@ -39,7 +39,7 @@ class RpcNamespaceEvent implements DbBasedComponent, EventEmitterInterface
 
     public const ACTION_TIMEOUT = 15;
 
-    protected ?Db $db = null;
+    protected ?PdoAdapter $db = null;
     protected Counters $counters;
     /** @var Action[] */
     protected array $actions = [];
@@ -104,7 +104,7 @@ class RpcNamespaceEvent implements DbBasedComponent, EventEmitterInterface
     }
 
     /**
-     * @param UuidInterface $uuid
+     * @param UuidInterface $uuid Intentional type mismatch for RPC
      * @param stdClass $event
      * @return PromiseInterface
      * @api
@@ -194,18 +194,16 @@ class RpcNamespaceEvent implements DbBasedComponent, EventEmitterInterface
         }
 
         if ($issue->hasBeenCreatedNow()) {
-            $actions = ActionHelper::processIssue($this->actions, $issue, $this->db, $this->logger);
-            timeout($actions, 15);
+            ActionHelper::processIssue($this->actions, $issue, $this->db, $this->logger);
         }
 
         return $issue;
     }
 
-    public function initDb(Db $db): ExtendedPromiseInterface
+    public function initDb(PdoAdapter $db): void
     {
         $this->db = $db;
         $this->initializeActions();
-        return resolve(null);
     }
 
     public function stopDb(): PromiseInterface

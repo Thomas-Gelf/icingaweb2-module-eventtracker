@@ -43,6 +43,9 @@ class TimeSlot implements JsonSerialization
         ];
     }
 
+    /**
+     * @return TimeSlot|static
+     */
     public static function fromSerialization($any): TimeSlot
     {
         return new TimeSlot(

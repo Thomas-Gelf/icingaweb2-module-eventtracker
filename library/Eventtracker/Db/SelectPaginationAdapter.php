@@ -63,6 +63,7 @@ class SelectPaginationAdapter implements Paginatable
     public function limit($count = null, $offset = null)
     {
         $this->query->limit($count, $offset);
+        return $this;
     }
 
     public function hasLimit()
@@ -81,6 +82,8 @@ class SelectPaginationAdapter implements Paginatable
             $limit,
             $this->getOffset()
         );
+
+        return $limit;
     }
 
     public function hasOffset()
@@ -122,5 +125,7 @@ class SelectPaginationAdapter implements Paginatable
             $this->getLimit(),
             $offset
         );
+
+        return $offset;
     }
 }

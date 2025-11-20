@@ -2,7 +2,7 @@
 
 namespace Icinga\Module\Eventtracker\Daemon;
 
-use gipfl\ZfDb\Adapter\Adapter as Db;
+use gipfl\ZfDb\Adapter\Pdo\PdoAdapter;
 use Icinga\Module\Eventtracker\Db\ConfigStore;
 use Icinga\Module\Eventtracker\Engine\Downtime\DowntimeRunner;
 use Icinga\Module\Eventtracker\Engine\InputRunner;
@@ -23,17 +23,12 @@ class InputAndChannelRunner implements DbBasedComponent
         $this->logger = $logger;
     }
 
-    /**
-     * @return \React\Promise\ExtendedPromiseInterface
-     */
-    public function initDb(Db $db)
+    public function initDb(PdoAdapter $db): void
     {
         $store = new ConfigStore($db, $this->logger);
         $this->runner = new InputRunner($store, $this->downtimeRunner, $this->logger);
         $this->runner->setLogger($this->logger);
         $this->runner->start();
-
-        return resolve(null);
     }
 
     public function getInputRunner(): ?InputRunner

@@ -3,8 +3,8 @@
 namespace Icinga\Module\Eventtracker\Web\Form\Bucket;
 
 use gipfl\Translation\TranslationHelper;
+use gipfl\Web\Form;
 use Icinga\Module\Eventtracker\Engine\FormExtension;
-use ipl\Html\Form;
 
 class RateLimitFormExtension implements FormExtension
 {

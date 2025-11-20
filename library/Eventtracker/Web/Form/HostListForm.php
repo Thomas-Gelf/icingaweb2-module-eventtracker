@@ -36,7 +36,7 @@ class HostListForm extends UuidObjectForm
         );
     }
 
-    protected function storeObject()
+    public function storeObject()
     {
         $db = $this->store->getDb();
         $result = parent::storeObject();

@@ -9,26 +9,15 @@ use RuntimeException;
 
 class FrozenMemoryFile implements File, JsonSerialization
 {
-    /** @var string */
-    protected $checksum;
+    protected string $checksum;
+    protected string $filename;
+    protected string $data;
+    protected string $mimeType;
+    protected int $size;
 
-    /** @var string */
-    protected $data;
-
-    /** @var resource */
-    protected $f;
-
-    /** @var string */
-    protected $filename;
-
-    /** @var string */
-    protected $mimeType;
-
-    /** @var int */
-    protected $size;
-
-    /** @var array */
-    protected $stat;
+    final protected function __construct()
+    {
+    }
 
     /**
      * Create a new frozen memory file from binary data encoded with base64
@@ -44,7 +33,6 @@ class FrozenMemoryFile implements File, JsonSerialization
     {
         $f = fopen('php://memory', 'w+');
         if ($f === false) {
-            // TODO(lippserd): Is it even possible for fopen("php://memory") to fail?
             throw new RuntimeException("Can't open php://memory stream");
         }
 
@@ -72,17 +60,14 @@ class FrozenMemoryFile implements File, JsonSerialization
     /**
      * Create a new frozen memory file from binary data encoded with base64
      *
-     * @param string $filename
-     * @param string $data
-     *
      * @return static
      *
      * @throws InvalidArgumentException If decoding fails
      * @throws RuntimeException If the initial opening or writing to the memory file fails
      */
-    public static function fromBase64($filename, $data): self
+    public static function fromBase64(string $filename, string $data): self
     {
-        $decoded = base64_decode($data);
+        $decoded = base64_decode($data, true);
         if ($decoded === false) {
             throw new InvalidArgumentException("Can't decode base64");
         }

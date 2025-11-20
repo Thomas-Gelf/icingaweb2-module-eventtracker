@@ -29,7 +29,9 @@ class ShortenString extends BaseModifier
             case 'center':
                 $concat = ' ... ';
                 $availableLength = ($length - strlen($concat)) / 2;
-                return substr($value, 0, ceil($availableLength)) . $concat . substr($value, floor($availableLength));
+                return substr($value, 0, (int) ceil($availableLength))
+                    . $concat
+                    . substr($value, (int) floor($availableLength));
             default:
                 throw new InvalidArgumentException('strip="$strip" is not a valid setting');
         }

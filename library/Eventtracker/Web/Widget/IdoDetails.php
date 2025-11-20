@@ -15,6 +15,8 @@ use Icinga\Module\Monitoring\Object\MonitoredObject;
 use Icinga\Module\Monitoring\Object\Service;
 use ipl\Html\BaseHtmlElement;
 use ipl\Html\Html;
+use stdClass;
+use Throwable;
 
 class IdoDetails extends BaseHtmlElement
 {
@@ -25,23 +27,12 @@ class IdoDetails extends BaseHtmlElement
     protected $defaultAttributes = [
     ];
 
-    /** @var Issue */
-    protected $issue;
-
-    /** @var ZfDb */
-    protected $db;
-
-    /** @var MonitoringBackend */
-    protected $ido;
-
-    /** @var Host */
-    protected $host;
-
-    /** @var Service */
-    protected $service;
-
-    /** @var \stdClass */
-    protected $icingaCi;
+    protected Issue $issue;
+    protected ZfDb $db;
+    protected ?MonitoringBackend $ido = null;
+    protected ?Host $host = null;
+    protected ?Service $service = null;
+    protected ?stdClass $icingaCi = null;
 
     public function __construct(
         Issue $issue,
@@ -52,7 +43,7 @@ class IdoDetails extends BaseHtmlElement
         $this->issue = $issue;
         try {
             $this->ido = MonitoringBackend::instance();
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             return;
         }
         $this->db = $db;
@@ -66,7 +57,7 @@ class IdoDetails extends BaseHtmlElement
      * @deprecated
      * @return bool
      */
-    public function hasHost()
+    public function hasHost(): bool
     {
         return $this->host !== null;
     }
@@ -97,7 +88,7 @@ class IdoDetails extends BaseHtmlElement
         $db = $this->db;
         $ido = $this->ido;
 
-        if ($ci = IcingaCi::eventuallyLoad($db, $hostname, $objectName)) {
+        if ($ci = IcingaCi::loadOptional($db, $hostname, $objectName)) {
             $this->icingaCi = $ci;
             $service = new Service($ido, $hostname, $objectName);
             $host = new Host($ido, $hostname);
@@ -107,7 +98,7 @@ class IdoDetails extends BaseHtmlElement
             if ($host->fetch()) {
                 $this->host = $host;
             }
-        } elseif ($ci = IcingaCi::eventuallyLoad($db, $hostname)) {
+        } elseif ($ci = IcingaCi::loadOptional($db, $hostname)) {
             $this->icingaCi = $ci;
             $host = new Host($ido, $hostname);
             if ($host->fetch()) {
@@ -154,7 +145,7 @@ class IdoDetails extends BaseHtmlElement
         return $actions;
     }
 
-    protected function assemble()
+    protected function assemble(): void
     {
         if (($ci = $this->icingaCi) && $this->host) {
             $details = new NameValuePreFormatted();

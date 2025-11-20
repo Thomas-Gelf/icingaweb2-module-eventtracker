@@ -161,7 +161,7 @@ class DowntimePeriodRunner implements EventEmitterInterface, DbBasedComponent
             $this->addRule($uuid, $rule, $now);
         }
         foreach ($removed as $uuid => $rule) {
-            $this->removeRule($uuid, $rule);
+            $this->removeRule($uuid);
         }
 
         $this->recheckDefinitions($now);

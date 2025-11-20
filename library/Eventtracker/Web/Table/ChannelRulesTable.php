@@ -15,12 +15,10 @@ use gipfl\Web\Widget\Hint;
 use Icinga\Module\Eventtracker\Data\PlainObjectRenderer;
 use Icinga\Module\Eventtracker\Modifier\ModifierChain;
 use Icinga\Module\Eventtracker\Modifier\ModifierRuleStore;
-use Icinga\Module\Eventtracker\Web\Form\ChannelConfigForm;
 use Icinga\Module\Eventtracker\Web\Form\InstanceInlineForm;
 use ipl\Html\Html;
 use ipl\Html\Table;
 use Psr\Http\Message\ServerRequestInterface;
-use function PHPUnit\Framework\equalTo;
 
 class ChannelRulesTable extends Table
 {
@@ -37,14 +35,8 @@ class ChannelRulesTable extends Table
     protected Url $url;
     protected ServerRequestInterface $request;
     protected ModifierRuleStore $modifierRuleStore;
-    private ?object $sampleObject;
-
-    public function getModifierChain(): ModifierChain
-    {
-        return $this->modifierChain;
-    }
-    private ChannelConfigForm $form;
     private bool $hasBeenModified = false;
+    private ?object $sampleObject;
 
     public function __construct(
         ModifierChain $modifierChain,
@@ -58,6 +50,11 @@ class ChannelRulesTable extends Table
         $this->request = $request;
         $this->sampleObject = $sampleObject;
         $this->modifierRuleStore = $modifierRuleStore;
+    }
+
+    public function getModifierChain(): ModifierChain
+    {
+        return $this->modifierChain;
     }
 
     public function isHasBeenModified(): bool

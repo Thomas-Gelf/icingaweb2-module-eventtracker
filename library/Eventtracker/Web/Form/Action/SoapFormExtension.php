@@ -3,13 +3,12 @@
 namespace Icinga\Module\Eventtracker\Web\Form\Action;
 
 use gipfl\Translation\TranslationHelper;
+use gipfl\Web\Form;
 use gipfl\Web\Widget\Hint;
 use Icinga\Module\Eventtracker\Engine\FormExtension;
 use Icinga\Module\Eventtracker\Soap\SoapClient;
 use Icinga\Module\Eventtracker\Soap\SoapClientDefinitionParser;
-use Icinga\Module\Eventtracker\Soap\SoapMethodMeta;
 use Icinga\Module\Eventtracker\Soap\SoapParamMeta;
-use ipl\Html\Form;
 use ipl\Html\Html;
 
 class SoapFormExtension implements FormExtension

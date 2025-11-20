@@ -4,7 +4,7 @@ namespace Icinga\Module\Eventtracker\Daemon\RpcNamespace;
 
 use Evenement\EventEmitterInterface;
 use Evenement\EventEmitterTrait;
-use gipfl\ZfDb\Adapter\Adapter as Db;
+use gipfl\ZfDb\Adapter\Pdo\PdoAdapter;
 use Icinga\Module\Eventtracker\Daemon\DbBasedComponent;
 use Icinga\Module\Eventtracker\Issue;
 use Icinga\Module\Eventtracker\IssueHistory;
@@ -20,7 +20,7 @@ class RpcNamespaceIssue implements DbBasedComponent, EventEmitterInterface
 {
     use EventEmitterTrait;
 
-    protected ?Db $db = null;
+    protected ?PdoAdapter $db = null;
     protected LoggerInterface $logger;
 
     public function __construct(LoggerInterface $logger)

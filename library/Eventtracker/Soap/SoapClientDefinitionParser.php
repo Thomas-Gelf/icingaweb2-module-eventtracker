@@ -150,7 +150,7 @@ class SoapClientDefinitionParser
     {
         $pattern = '/^([a-z_][a-z_0-9]*)\s([a-z_][a-z0-9]*)\((.+?)\)$/ui';
         if (! preg_match($pattern, $string, $match)) {
-            return throw new \RuntimeException('Unable to parse SOAP method string: ' . $string);
+            throw new \RuntimeException('Unable to parse SOAP method string: ' . $string);
         }
 
         return new SoapMethodMeta(

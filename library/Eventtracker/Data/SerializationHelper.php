@@ -49,9 +49,6 @@ class SerializationHelper
         return $value;
     }
 
-    /**
-     * @param array|stdClass $properties
-     */
     public static function serializeProperties(array $properties): object
     {
         foreach ($properties as $property => &$value) {

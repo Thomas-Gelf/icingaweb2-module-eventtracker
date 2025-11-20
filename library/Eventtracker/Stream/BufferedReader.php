@@ -40,9 +40,10 @@ class BufferedReader implements WritableStreamInterface
         return $this->writable;
     }
 
-    public function write($data)
+    public function write($data): bool
     {
         $this->append($data);
+        return true;
     }
 
     public function end($data = null)

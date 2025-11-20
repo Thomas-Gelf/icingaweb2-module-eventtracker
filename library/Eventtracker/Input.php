@@ -10,7 +10,7 @@ class Input
 {
     use PropertyHelpers;
 
-    protected static $tableName = 'input';
+    protected static string $tableName = 'input';
 
     protected $properties = [
         'uuid'           => null,
@@ -18,6 +18,11 @@ class Input
         'implementation' => null,
         'settings'       => null
     ];
+
+    public function getUuid(): UuidInterface
+    {
+        return \Ramsey\Uuid\Uuid::fromBytes($this->get('uuid'));
+    }
 
     public static function byId(UuidInterface $id, Db $db): ?self
     {
@@ -32,9 +37,17 @@ class Input
         return static::create($row);
     }
 
+    /**
+     * Hint: required by PropertyHelpers
+     */
+    public function isNew(): bool
+    {
+        return false;
+    }
+
     protected static function create($properties): self
     {
-        $sender = new static;
+        $sender = new Input();
         $sender->setProperties($properties);
         $sender->setStored();
 

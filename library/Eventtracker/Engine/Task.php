@@ -13,22 +13,22 @@ interface Task extends EventEmitterInterface, LoggerAwareInterface
 
     public function getUuid(): UuidInterface;
 
-    public function getName();
+    public function getName(): string;
 
     public function getSettings(): Settings;
 
-    public function applySettings(Settings $settings);
+    public function applySettings(Settings $settings): void;
 
-    public function run();
+    public function run(): void;
 
-    public function start();
-    public function stop();
-    public function pause();
-    public function resume();
+    public function start(): void;
+    public function stop(): void;
+    public function pause(): void;
+    public function resume(): void;
 
     public static function getFormExtension(): FormExtension;
 
-    public static function getLabel();
+    public static function getLabel(): string;
 
-    public static function getDescription();
+    public static function getDescription(): string;
 }

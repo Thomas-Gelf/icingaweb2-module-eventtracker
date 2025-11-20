@@ -119,6 +119,9 @@ class DbCleanupFilter implements JsonSerialization
         return $this->keepSeverity;
     }
 
+    /**
+     * @return DbCleanupFilter|static
+     */
     public static function fromSerialization($any): DbCleanupFilter
     {
         if (! is_object($any)) {

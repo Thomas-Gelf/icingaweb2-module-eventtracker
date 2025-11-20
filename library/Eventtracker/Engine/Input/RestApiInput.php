@@ -20,7 +20,7 @@ class RestApiInput extends SimpleTaskConstructor implements Input
 
     protected ?string $token = null;
 
-    public function applySettings(Settings $settings)
+    public function applySettings(Settings $settings): void
     {
         $this->token = $settings->getRequired('token');
 
@@ -32,12 +32,12 @@ class RestApiInput extends SimpleTaskConstructor implements Input
         return new RestApiFormExtension();
     }
 
-    public static function getLabel()
+    public static function getLabel(): string
     {
         return StaticTranslator::get()->translate('REST API Token');
     }
 
-    public static function getDescription()
+    public static function getDescription(): string
     {
         return StaticTranslator::get()->translate(
             'Accepts REST REQUESTS via POST eventracker/event'
@@ -49,24 +49,24 @@ class RestApiInput extends SimpleTaskConstructor implements Input
         $this->emit(InputRunner::ON_EVENT, [$object]);
     }
 
-    public function run()
+    public function run(): void
     {
         $this->start();
     }
 
-    public function start()
+    public function start(): void
     {
     }
 
-    public function stop()
+    public function stop(): void
     {
     }
 
-    public function pause()
+    public function pause(): void
     {
     }
 
-    public function resume()
+    public function resume(): void
     {
     }
 }

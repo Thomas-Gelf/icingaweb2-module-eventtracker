@@ -3,7 +3,7 @@
 namespace Icinga\Module\Eventtracker;
 
 use gipfl\ZfDb\Adapter\Adapter as Db;
-use gipfl\ZfDb\Adapter\Exception as DbException;
+use gipfl\ZfDb\Exception\DbException;
 
 class ObjectClassInventory
 {

@@ -9,14 +9,13 @@ use Zend_Db_Select as ZfSelect;
 
 class CountQuery
 {
-    /** @var Select|ZfSelect */
+    /** @var Select|ZfSelect|SimpleQuery */
     private $query;
 
-    private $maxRows;
+    private ?int $maxRows = null;
 
     /**
-     * ZfCountQuery constructor.
-     * @param Select|ZfSelect $query
+     * @param Select|ZfSelect|SimpleQuery|mixed $query
      */
     public function __construct($query)
     {
@@ -42,7 +41,7 @@ class CountQuery
         }
     }
 
-    protected function hasOneOf($parts)
+    protected function hasOneOf($parts): bool
     {
         foreach ($parts as $part) {
             if ($this->hasPart($part)) {
@@ -53,13 +52,13 @@ class CountQuery
         return false;
     }
 
-    protected function hasPart($part)
+    protected function hasPart($part): bool
     {
         $values = $this->query->getPart($part);
         return ! empty($values);
     }
 
-    protected function needsSubQuery()
+    protected function needsSubQuery(): bool
     {
         if ($this->query instanceof SimpleQuery) {
             return false;

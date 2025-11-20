@@ -5,16 +5,15 @@ namespace Icinga\Module\Eventtracker\Web\Form;
 // stolen from ru*bn/storage
 class UploadedFile
 {
-    /** @var string */
-    public $name;
-    /** @var string */
-    public $type; // Mime type as given by the browser
-    /** @var ?int */
-    public $error = null;
-    /** @var string */
-    public $tmp_name;
-    /** @var int */
-    public $size;
+    public string $name;
+    public string $type; // Mime type as given by the browser
+    public ?int $error = null;
+    public string $tmp_name;
+    public int $size;
+
+    final protected function __construct()
+    {
+    }
 
     public function getErrorMessage(): string
     {

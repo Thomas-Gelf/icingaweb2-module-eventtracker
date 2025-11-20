@@ -42,7 +42,7 @@ class ConfigurationHistoryTable extends BaseTable
     {
         if ($this->lastDay !== $timestamp) {
             $this->nextHeader()->add(
-                $this::th($timestamp, [
+                $this::th((string) $timestamp, [
                     'colspan' => $colspan,
                     'class' => 'table-header-day'
                 ])
@@ -55,7 +55,6 @@ class ConfigurationHistoryTable extends BaseTable
 
     protected function initialize()
     {
-
         $this->addAvailableColumns([
             $this->createColumn('ts_modification', $this->translate('Time'), [
                 'ts_modification' => 'ch.ts_modification',

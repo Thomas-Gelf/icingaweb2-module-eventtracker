@@ -30,9 +30,17 @@ class Sender
         return static::create($row);
     }
 
+    /**
+     * Hint: required by PropertyHelpers
+     */
+    public function isNew(): bool
+    {
+        return false;
+    }
+
     protected static function create($properties): self
     {
-        $sender = new static;
+        $sender = new Sender();
         $sender->setProperties($properties);
         $sender->setStored();
 

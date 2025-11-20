@@ -2,7 +2,7 @@
 
 namespace Icinga\Module\Eventtracker\Daemon;
 
-use gipfl\ZfDb\Adapter\Adapter as DbAdapter;
+use gipfl\ZfDb\Adapter\Pdo\PdoAdapter;
 use gipfl\ZfDb\Select as DbSelect;
 use Icinga\Application\Config;
 use Icinga\Module\Eventtracker\Config\IcingaResource;
@@ -16,30 +16,22 @@ use RuntimeException;
  */
 class IdoDb
 {
-    /** @var DbAdapter */
-    protected $db;
+    protected PdoAdapter $db;
 
     /** @var string */
     protected $lastHostsChecksum;
 
-    /**
-     * IdoDb constructor.
-     * @param DbAdapter $db
-     */
-    public function __construct(DbAdapter $db)
+    public function __construct(PdoAdapter $db)
     {
         $this->db = $db;
     }
 
-    /**
-     * @return DbAdapter
-     */
-    public function getDb()
+    public function getDb(): PdoAdapter
     {
         return $this->db;
     }
 
-    public function coreIsRunning()
+    public function coreIsRunning(): bool
     {
         $query = $this->db
             ->select()
@@ -284,17 +276,11 @@ class IdoDb
         }
     }
 
-    /**
-     * Instantiate with a given Icinga Web 2 resource name
-     *
-     * @param $name
-     * @return static
-     */
-    public static function fromResourceName($name)
+    public static function fromResourceName(string $name): IdoDb
     {
-        return new static(
-            ZfDbConnectionFactory::connection(static::getResourceConfig($name))
-        );
+        /** @var PdoAdapter $db */
+        $db = ZfDbConnectionFactory::connection(static::getResourceConfig($name));
+        return new IdoDb($db);
     }
 
     protected static function getResourceConfig($name)
@@ -309,10 +295,8 @@ class IdoDb
 
     /**
      * Borrow the database connection from the monitoring module
-     *
-     * @return static
      */
-    public static function fromMonitoringModule()
+    public static function fromMonitoringModule(): IdoDb
     {
         return static::fromResourceName(static::getIdoBackendResourceName());
     }

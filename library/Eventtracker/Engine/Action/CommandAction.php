@@ -21,6 +21,7 @@ use React\Promise\CancellablePromiseInterface;
 use React\Promise\Deferred;
 use React\Promise\PromiseInterface;
 use SplObjectStorage;
+
 use function React\Promise\resolve;
 
 class CommandAction extends SimpleTaskConstructor implements Action
@@ -33,12 +34,12 @@ class CommandAction extends SimpleTaskConstructor implements Action
     protected ?SplObjectStorage $promises = null;
     protected bool $paused = true;
 
-    protected function initialize()
+    protected function initialize(): void
     {
         $this->promises = new SplObjectStorage();
     }
 
-    public function applySettings(Settings $settings)
+    public function applySettings(Settings $settings): void
     {
         $this->command = $settings->getRequired('command');
 
@@ -50,29 +51,29 @@ class CommandAction extends SimpleTaskConstructor implements Action
         return new CommandFormExtension();
     }
 
-    public static function getLabel()
+    public static function getLabel(): string
     {
         return StaticTranslator::get()->translate('Command');
     }
 
-    public static function getDescription()
+    public static function getDescription(): string
     {
         return StaticTranslator::get()->translate(
             'Execute a command'
         );
     }
 
-    public function run()
+    public function run(): void
     {
         $this->start();
     }
 
-    public function start()
+    public function start(): void
     {
         $this->resume();
     }
 
-    public function stop()
+    public function stop(): void
     {
         $this->pause();
         if ($this->promises !== null) {
@@ -84,12 +85,12 @@ class CommandAction extends SimpleTaskConstructor implements Action
         }
     }
 
-    public function pause()
+    public function pause(): void
     {
         $this->paused = true;
     }
 
-    public function resume()
+    public function resume(): void
     {
         $this->paused = false;
     }

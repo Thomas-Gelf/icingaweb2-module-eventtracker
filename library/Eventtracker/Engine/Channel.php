@@ -159,7 +159,6 @@ class Channel implements LoggerAwareInterface
     {
         $this->rules->process($object);
         $db = DbFactory::db();
-        $receiver = new EventReceiver($db, ! $this->isDaemonized());
         $this->getEnforcedModifiers($inputUuid)->process($object);
         // $object->sender_event_id = Uuid::uuid4()->toString();
 
@@ -197,6 +196,7 @@ class Channel implements LoggerAwareInterface
             $issue = $this->storeProcessedEvent($db, $event);
         } else {
             // We are not in the main daemon
+            $receiver = new EventReceiver();
             $issue = $receiver->processEvent($event);
         }
         if ($issue) {

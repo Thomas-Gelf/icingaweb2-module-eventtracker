@@ -34,6 +34,7 @@ class IssuesTable extends BaseTable
     protected $noHeader = false;
 
     protected $disablePrio = true;
+    protected bool $usTime = true;
 
     public function setNoHeader($setNoHeader = true)
     {
@@ -198,8 +199,7 @@ class IssuesTable extends BaseTable
 
     protected function formatTime($timestamp)
     {
-        $usTime = true;
-        if ($usTime) {
+        if ($this->usTime) {
             return Time::usFormatter($timestamp);
         } else {
             return Time::agoFormatted($timestamp);

@@ -6,8 +6,7 @@ use Icinga\Data\Filter\Filter;
 
 trait ActionProperties
 {
-    /** @var string */
-    protected $description;
+    protected ?string $description = null;
 
     /** @var bool */
     protected $enabled;

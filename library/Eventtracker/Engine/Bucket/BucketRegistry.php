@@ -6,7 +6,8 @@ use Icinga\Module\Eventtracker\Engine\SimpleRegistry;
 
 class BucketRegistry extends SimpleRegistry
 {
-    protected $implementations = [
+    /** @var array<string, class-string<BucketInterface>> */
+    protected array $implementations = [
         'RateLimit' => RateLimitBucket::class,
     ];
 }

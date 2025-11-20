@@ -18,7 +18,7 @@ class EventReceiver
      * Hint: this is a compatibility layer for other modules. DB is no longer required,
      *       and actions will always run in the daemon
      */
-    public function __construct($db = null, $runActions = null)
+    public function __construct(/*$db = null, $runActions = null*/)
     {
     }
 

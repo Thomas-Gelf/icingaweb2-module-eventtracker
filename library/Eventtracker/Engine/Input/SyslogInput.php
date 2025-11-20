@@ -26,7 +26,7 @@ class SyslogInput extends SimpleTaskConstructor implements Input
     protected ?string $socket = null;
     protected ?UnixServer $server = null;
 
-    public function applySettings(Settings $settings)
+    public function applySettings(Settings $settings): void
     {
         // socket_type: unix, udp;
         //   unix -> socket_path
@@ -51,24 +51,24 @@ class SyslogInput extends SimpleTaskConstructor implements Input
         return new SyslogFormExtension();
     }
 
-    public static function getLabel()
+    public static function getLabel(): string
     {
         return StaticTranslator::get()->translate('Syslog Receiver');
     }
 
-    public static function getDescription()
+    public static function getDescription(): string
     {
         return StaticTranslator::get()->translate(
             'Accepts Syslog on either a UDP or a UNIX socket'
         );
     }
 
-    public function run()
+    public function run(): void
     {
         $this->start();
     }
 
-    public function start()
+    public function start(): void
     {
         if ($this->server) {
             return;
@@ -78,7 +78,7 @@ class SyslogInput extends SimpleTaskConstructor implements Input
         $this->initiateEventHandlers($this->server);
     }
 
-    public function stop()
+    public function stop(): void
     {
         if ($this->server) {
             $this->server->close();
@@ -89,14 +89,14 @@ class SyslogInput extends SimpleTaskConstructor implements Input
         }
     }
 
-    public function pause()
+    public function pause(): void
     {
         if ($this->server) {
             $this->server->pause();
         }
     }
 
-    public function resume()
+    public function resume(): void
     {
         if ($this->server) {
             $this->server->resume();

@@ -23,8 +23,8 @@ class DbUtil
     }
 
     /**
-     * @param string|array $binary
-     * @return Expr|Expr[]
+     * @param string|array|null $binary
+     * @return Expr|Expr[]|null
      */
     public static function quoteBinary($binary, Adapter $db)
     {

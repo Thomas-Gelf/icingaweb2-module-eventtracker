@@ -13,13 +13,12 @@ class Documentation
 {
     use TranslationHelper;
 
-    /** @var ApplicationBootstrap */
-    protected $app;
+    protected ApplicationBootstrap $app;
+    protected Auth $auth;
 
-    /** @var Auth */
-    protected $auth;
+    protected bool $linkToGithub = false;
 
-    public function __construct(ApplicationBootstrap $app, Auth $auth)
+    final public function __construct(ApplicationBootstrap $app, Auth $auth)
     {
         $this->app = $app;
         $this->auth = $auth;
@@ -39,7 +38,6 @@ class Documentation
                 $title
             );
         }
-        $linkToGitHub = false;
         $baseParams = [
             'class' => 'icon-book',
             'title' => $title,
@@ -54,7 +52,7 @@ class Documentation
         }
 
         $baseParams['target'] = '_blank';
-        if ($linkToGitHub) {
+        if ($this->linkToGithub) {
             return Html::tag('a', [
                 'href' => $this->githubDocumentationUrl($module, $chapter),
             ] + $baseParams, $label);

@@ -6,7 +6,7 @@ use gipfl\Process\ProcessKiller;
 use gipfl\Process\ProcessList;
 use gipfl\Protocol\JsonRpc\Handler\NamespacedPacketHandler;
 use gipfl\Protocol\JsonRpc\JsonRpcConnection;
-use gipfl\ZfDb\Adapter\Adapter as Db;
+use gipfl\ZfDb\Adapter\Pdo\PdoAdapter;
 use Icinga\Application\Config;
 use Icinga\Application\Icinga;
 use Psr\Log\LoggerInterface;
@@ -22,7 +22,7 @@ class JobRunner implements DbBasedComponent
 {
     protected ProcessList $running;
     protected LoggerInterface $logger;
-    protected ?Db $db = null;
+    protected ?PdoAdapter $db = null;
     protected ?LogProxy $logProxy = null;
     protected ?TimerInterface $timer = null;
     protected ?TimerInterface $scheduleTimer = null;
@@ -62,11 +62,7 @@ class JobRunner implements DbBasedComponent
         return $tasks;
     }
 
-    /**
-     * @param Db $db
-     * @return ExtendedPromiseInterface
-     */
-    public function initDb(Db $db)
+    public function initDb(PdoAdapter $db): void
     {
         $this->db = $db;
         $check = function () {
