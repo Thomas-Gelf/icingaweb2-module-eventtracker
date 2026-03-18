@@ -25,6 +25,7 @@ trait IssuesFilterHelper
         $this->columnFilter($table, $sub, 'owner', 'owners', $this->translate('Owners: %s'));
         $this->columnFilter($table, $sub, 'label', 'inputs', $this->translate('Input: %s'));
         $this->columnFilter($table, $sub, 'sender_name', 'senders', $this->translate('Sender: %s'));
+        $this->attributesFilter($table);
         if (! $this->showCompact()) {
             $this->actions()->add($main);
         }
@@ -121,6 +122,16 @@ trait IssuesFilterHelper
                     ['data-base-target' => '_next']
                 )
             );
+        }
+    }
+
+    protected function attributesFilter(Table $table)
+    {
+        foreach ($this->params->toArray() as $pair) {
+            if (preg_match('/^attributes\.([a-zA-Z_-]+)/', $pair[0], $match)) {
+                $query = $table->getQuery();
+                $query->where("JSON_EXTRACT(attributes, '$." . $match[1] . "') = ?", (int) $pair[1]);
+            }
         }
     }
 }
