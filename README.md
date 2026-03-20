@@ -171,7 +171,7 @@ Custom Attribute based Aggregations
 -----------------------------------
 
 You can configure Summaries/Aggregations based on custom Attributes. Create
-`customSummaries.ini` with content as follows:
+`customSummaries.ini` in `/etc/icingaweb2/modules/eventtracker` with content as follows:
 
 ```ini
 [team]
