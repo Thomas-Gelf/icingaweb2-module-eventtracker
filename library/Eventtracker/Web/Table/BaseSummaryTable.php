@@ -41,7 +41,7 @@ abstract class BaseSummaryTable extends BaseTable
             $this->createColumn($this->getMainColumnAlias(), $this->getMainColumnTitle(), $this->getMainColumn())
                 ->setRenderer(function ($row) use ($column) {
                     return Link::create(
-                        self::zeroSplitLongStrings($this->noLabelIfNone($row->$column)),
+                        self::zeroSplitLongStrings($this->noLabelIfNone($this->decodeRowValue($row->$column))),
                         $this->urlForRow($row)
                     );
                 }),
@@ -57,12 +57,22 @@ abstract class BaseSummaryTable extends BaseTable
         ]);
     }
 
+    protected function decodeRowValue(?string $value): ?string
+    {
+        return $value;
+    }
+
     protected function urlForRow($row): Url
     {
         $column = $this->getMainColumnAlias();
         return Url::fromPath('eventtracker/issues', [
-            $column => $row->$column
+            $this->getFilterParamName() => $this->decodeRowValue($row->$column)
         ]);
+    }
+
+    protected function getFilterParamName(): string
+    {
+        return $this->getMainColumnAlias();
     }
 
     public function prepareQuery()

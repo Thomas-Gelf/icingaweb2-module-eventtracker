@@ -167,6 +167,27 @@ The following settings are currently available:
 ; disabled = no
 ```
 
+Custom Attribute based Aggregations
+-----------------------------------
+
+You can configure Summaries/Aggregations based on custom Attributes. Create
+`customSummaries.ini` with content as follows:
+
+```ini
+[team]
+label = Team
+
+[os]
+label = "Operating System"
+attribute = "os"
+
+[pid]
+label = "Sender PID"
+attribute = syslog_sender_pid
+
+```
+In case you skip the attribute, the section title will be used as attribute.
+
 Changes
 -------
 

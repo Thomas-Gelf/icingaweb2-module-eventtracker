@@ -130,7 +130,7 @@ trait IssuesFilterHelper
         foreach ($this->params->toArray() as $pair) {
             if (preg_match('/^attributes\.([a-zA-Z_-]+)/', $pair[0], $match)) {
                 $query = $table->getQuery();
-                $query->where("JSON_EXTRACT(attributes, '$." . $match[1] . "') = ?", (int) $pair[1]);
+                $query->where("JSON_EXTRACT(attributes, '$." . $match[1] . "') = ?", $pair[1]);
             }
         }
     }
