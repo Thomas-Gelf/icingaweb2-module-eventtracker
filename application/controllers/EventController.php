@@ -62,11 +62,11 @@ class EventController extends Controller
                 JsonString::decode($body)
             ])
         );
+        $response = [
+            'success' => $accepted,
+        ];
         if ($accepted) {
-            $response = [
-                'success' => $accepted,
-                'message' => 'Event accepted'
-            ];
+            $response['message'] =  'Event accepted';
         } else {
             $response['error'] =  'Request not accepted';
         }
