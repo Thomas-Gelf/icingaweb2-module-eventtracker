@@ -328,7 +328,8 @@ Body: {
 
 ```json
 {
-    "success": true
+    "success": true,
+    "message": "Event accepted"
 }
 ```
 
