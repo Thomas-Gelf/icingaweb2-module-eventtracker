@@ -67,8 +67,7 @@ class EventController extends Controller
                 'success' => $accepted,
                 'message' => 'Event accepted'
             ];
-        }
-        if (!$accepted) {
+        } else {
             $response['error'] =  'Request not accepted';
         }
 
