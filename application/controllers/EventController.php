@@ -64,6 +64,7 @@ class EventController extends Controller
         );
         $response = [
             'success' => $accepted,
+            'message' => 'Event accepted'
         ];
         if (!$accepted) {
             $response['error'] =  'Request not accepted';
