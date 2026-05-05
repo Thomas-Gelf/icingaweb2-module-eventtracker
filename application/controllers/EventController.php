@@ -63,8 +63,11 @@ class EventController extends Controller
             ])
         );
         $response = [
-            'success' => $accepted ? 'Event accepted' : 'Request valid, found no related Channel'
+            'success' => $accepted,
         ];
+        if (!$accepted) {
+            $response['error'] =  'Request not accepted';
+        }
 
         $this->sendJsonResponse($response);
     }
