@@ -22,7 +22,7 @@ class AggregationPeriodTitle
     {
         switch ($this->aggregation) {
             case AggregationPeriod::HOURLY:
-                return sprintf('%02d:00 - %02d-00', (int) $key - 1, (int) $key);
+                return sprintf('%02d:00 - %02d-00', (int) $key, (int) $key + 1);
             case AggregationPeriod::WEEKLY:
                 return sprintf($this->translate('CW %s'), (int) $key);
             case AggregationPeriod::WEEKDAY:
