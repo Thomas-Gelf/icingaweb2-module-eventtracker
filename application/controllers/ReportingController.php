@@ -128,7 +128,7 @@ class ReportingController extends Controller
     protected function reportingTabs(): Tabs
     {
         return $this->tabs()->add('historySummary', [
-            'url' => 'eventtracker/report/history-summary',
+            'url' => 'eventtracker/reporting/history-summary',
             'label' => $this->translate('Issue History')
         ])->add('topTalkers', [
             'url' => 'eventtracker/reporting/top-talkers',
