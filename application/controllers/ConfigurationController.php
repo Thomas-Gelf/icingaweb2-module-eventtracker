@@ -1020,7 +1020,7 @@ class ConfigurationController extends Controller
     protected function sendJsonSuccess(array $properties, $code = 200)
     {
         $this->sendJsonResponse([
-                'success' => 'true',
+                'success' => true,
             ] + $properties, $code);
     }
 }

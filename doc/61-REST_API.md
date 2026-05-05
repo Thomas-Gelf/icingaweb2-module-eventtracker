@@ -307,6 +307,31 @@ chain. An Event should have the following properties afterward
 | `acknowledge`        | Optional boolean value, allows the sender to acknowledge an issue with the same custom (or generated) sender_event_id                                                                                   |
 | `clear`              | Optional boolean value, allows the sender to clear (close) an issue with the same custom (or generated) sender_event_id                                                                                 |
 
+### Creating Event
+this endpoint will create a new event with the given properties
+
+```http
+POST https://monitoring.example.com/icingaweb2/eventtracker/event
+Authorization: Bearer 108600bf-4f77-4bdc-9a06-4cd04902537c
+Accept: application/json
+Body: {
+  "host_name": "some.example.com",
+  "object_name": "Some Job",
+  "object_class": "Job Errors",
+  "severity": "warning",
+  "problem_identifier": "Backup Job",
+  "message": "Job failed: Backup Job"
+}
+```
+
+#### Example response:
+
+```json
+{
+    "success": true
+}
+```
+
 ### Perl Example
 
 Our ```contrib``` directory contains a small library, ```EventTracker.pm``` and
@@ -444,7 +469,7 @@ Accept: application/json
 
 ```json
 {
-    "success": "true",
+    "success": true,
     "message": "added hostlist Hosts in Downtime"
 }
 ```
@@ -471,7 +496,7 @@ Accept: application/json
 
 ```json
 {
-    "success": "true",
+    "success": true,
     "message": "added  2 hostlists"
 }
 ```
@@ -504,7 +529,7 @@ Accept: application/json'
 #### Example response:
 ```json
 {
-    "success": "true",
+    "success": true,
     "message": "updated  3 hosts"
 }
 ```
@@ -523,7 +548,7 @@ Accept: application/json
 #### Example response:
 ```json
 {
-    "success": "true",
+    "success": true,
     "message": "deleted host list member Windows Hosts"
 }
 ```
@@ -547,7 +572,7 @@ Accept: application/json
 #### Example response:
 ```json
 {
-    "success": "true",
+    "success": true,
     "message": "added host app1.example.com to hostlist Linux Hosts"
 }
 ```
@@ -580,7 +605,7 @@ Accept: application/json
 
 ```json
 {
-    "success": "true",
+    "success": true,
     "message": "added  3 hosts"
 }
 ```
