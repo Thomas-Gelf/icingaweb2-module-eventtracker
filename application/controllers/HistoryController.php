@@ -75,6 +75,7 @@ class HistoryController extends Controller
         $db = $this->db();
         $table = new IssueHistoryTable($db, $this->url());
         $table->getQuery()->limit(50);
+        $this->applyFilters($table);
         (new AdditionalTableActions($table, Auth::getInstance(), $this->url()))
             ->appendTo($this->actions());
         $this->optionallySendJsonForTable($table);
@@ -108,6 +109,7 @@ class HistoryController extends Controller
                 $from = $this->params->get('fromTimestampMs');
                 $to = $this->params->get('toTimestampMs');
                 $query = $this->prepareQueryString($table, $tsColumn, $columns, $from, $to);
+                $this->attributesFilter($query);
                 $this->sendQueryResultAsResponse($query);
             });
         }
@@ -154,6 +156,7 @@ class HistoryController extends Controller
             $this->sendJsonResponseHeaders();
             echo '{ "objects": []}' . "\n";
         } else {
+            echo implode(', ', $strings);
             echo "]}\n";
         }
         if (ob_get_level()) {
