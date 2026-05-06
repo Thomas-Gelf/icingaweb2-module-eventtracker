@@ -3,6 +3,7 @@
 namespace Icinga\Module\Eventtracker\Controllers;
 
 use gipfl\IcingaWeb2\Link;
+use gipfl\ZfDb\Select;
 use ipl\Html\BaseHtmlElement;
 use ipl\Html\Html;
 use ipl\Html\Table;
@@ -25,7 +26,7 @@ trait IssuesFilterHelper
         $this->columnFilter($table, $sub, 'owner', 'owners', $this->translate('Owners: %s'));
         $this->columnFilter($table, $sub, 'label', 'inputs', $this->translate('Input: %s'));
         $this->columnFilter($table, $sub, 'sender_name', 'senders', $this->translate('Sender: %s'));
-        $this->attributesFilter($table);
+        $this->attributesFilter($table->getQuery());
         if (! $this->showCompact()) {
             $this->actions()->add($main);
         }
@@ -125,11 +126,10 @@ trait IssuesFilterHelper
         }
     }
 
-    protected function attributesFilter(Table $table)
+    protected function attributesFilter(Select $query)
     {
         foreach ($this->params->toArray() as $pair) {
             if (preg_match('/^attributes\.([a-zA-Z_-]+)/', $pair[0], $match)) {
-                $query = $table->getQuery();
                 $query->where("JSON_EXTRACT(attributes, '$." . $match[1] . "') = ?", $pair[1]);
             }
         }
