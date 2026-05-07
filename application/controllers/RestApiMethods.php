@@ -8,6 +8,7 @@ use gipfl\IcingaWeb2\Zf1\Db\FilterRenderer;
 use gipfl\Json\JsonEncodeException;
 use gipfl\Json\JsonString;
 use gipfl\Web\Widget\Hint;
+use gipfl\ZfDb\Expr;
 use gipfl\ZfDb\Select;
 use Icinga\Data\Filter\Filter;
 use Icinga\Data\Filter\FilterChain;
@@ -155,7 +156,13 @@ trait RestApiMethods
         $query->columns($columns ?? '*');
         $filter = Filter::fromQueryString($url->getQueryString());
         foreach ($filter->listFilteredColumns() as $column) {
-            self::assertValidColumnName($column, $validColumns);
+            if (preg_match('/^attributes\.([a-zA-Z_]+)/', $column, $match)) {
+                $query->columns([
+                    'attributes_' . $match[1] => new Expr("JSON_EXTRACT(attributes, '$." . $match[1] . "')")
+                ]);
+            } else {
+                self::assertValidColumnName($column, $validColumns);
+            }
         }
         self::tweakFilterValues($filter);
         FilterRenderer::applyToQuery($filter, $query);
@@ -166,6 +173,8 @@ trait RestApiMethods
         if ($filter instanceof FilterExpression) {
             if (preg_match('/_uuid$/', $filter->getColumn())) {
                 $filter->setExpression(Uuid::fromString($filter->getExpression())->getBytes());
+            } elseif (preg_match('/^attributes\.([a-zA-Z_]+)/', $filter->getColumn(), $match)) {
+                $filter->setColumn('attributes_' . $match[1]);
             }
         } elseif ($filter instanceof FilterChain) {
             foreach ($filter->filters() as $subFilter) {
