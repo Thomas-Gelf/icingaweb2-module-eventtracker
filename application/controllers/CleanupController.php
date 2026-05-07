@@ -10,7 +10,6 @@ use Icinga\Web\Notification;
 class CleanupController extends Controller
 {
     use AsyncControllerHelper;
-    use IssuesFilterHelper;
 
     public function init()
     {

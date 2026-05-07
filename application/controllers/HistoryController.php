@@ -13,7 +13,9 @@ use Icinga\Authentication\Auth;
 use Icinga\Module\Eventtracker\ConfigHistory;
 use Icinga\Module\Eventtracker\Data\PlainObjectRenderer;
 use Icinga\Module\Eventtracker\Data\SerializationHelper;
+use Icinga\Module\Eventtracker\Filter\FilterControls;
 use Icinga\Module\Eventtracker\Filter\FilterHelper;
+use Icinga\Module\Eventtracker\Filter\SimpleFilterHandler;
 use Icinga\Module\Eventtracker\Issue;
 use Icinga\Module\Eventtracker\Web\Table\ActionHistoryTable;
 use Icinga\Module\Eventtracker\Web\Table\ConfigurationHistoryTable;
@@ -26,7 +28,6 @@ use ipl\Html\Html;
 
 class HistoryController extends Controller
 {
-    use IssuesFilterHelper;
     use RestApiMethods;
 
     protected $requiresAuthentication = false;
@@ -77,7 +78,10 @@ class HistoryController extends Controller
         $db = $this->db();
         $table = new IssueHistoryTable($db, $this->url());
         $table->getQuery()->limit(50);
-        $this->applyFilters($table);
+        $filterControls = new FilterControls($this->url(), $this->showCompact(), $this->actions());
+        $filterControls->prepareFilterControls();
+        $filterHandler = new SimpleFilterHandler($this->params);
+        $filterHandler->applyToTable($table);
         (new AdditionalTableActions($table, Auth::getInstance(), $this->url()))
             ->appendTo($this->actions());
         $this->optionallySendJsonForTable($table);
