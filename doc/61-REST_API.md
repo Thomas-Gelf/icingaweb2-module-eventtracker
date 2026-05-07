@@ -142,6 +142,15 @@ Accept: application/json
 ]
 ```
 
+It's also possible to filter for seperate attributes of an issue by providing the json key of the attribute. 
+For multiple attributes you can provide the filter several times.
+
+```http
+GET https://monitoring.example.com/eventtracker/issues?attributes.team=Operating
+Authorization: Bearer e756ca41-875f-4f92-991c-706dc07af192 
+Accept: application/json
+```
+
 It's perfectly legal to combine multiple filter properties. Asterisks (`*`) can
 be used for wildcard matches, brackets are possible, use pipe (`|`) symbols for
 logical `OR`, ampersand (`&`) for logical `AND`:
