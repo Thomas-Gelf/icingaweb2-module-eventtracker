@@ -4,6 +4,7 @@ namespace Icinga\Module\Eventtracker\Controllers;
 
 use gipfl\IcingaWeb2\Link;
 use gipfl\ZfDb\Select;
+use Icinga\Module\Eventtracker\Filter\FilterHelper;
 use ipl\Html\BaseHtmlElement;
 use ipl\Html\Html;
 use ipl\Html\Table;
@@ -129,8 +130,8 @@ trait IssuesFilterHelper
     protected function attributesFilter(Select $query)
     {
         foreach ($this->params->toArray() as $pair) {
-            if (preg_match('/^attributes\.([a-zA-Z_-]+)/', $pair[0], $match)) {
-                $query->where("JSON_EXTRACT(attributes, '$." . $match[1] . "') = ?", $pair[1]);
+            if ($column = FilterHelper::extractOptionalAttributesColumn($pair[0])) {
+                $query->where("JSON_EXTRACT(attributes, '$." . $column . "') = ?", $pair[1]);
             }
         }
     }

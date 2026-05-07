@@ -639,4 +639,8 @@ class Issue implements JsonSerialization
 
         return true;
     }
+    public static function listValidProperties(): array
+    {
+        return array_keys((new Issue())->getDefaultProperties());
+    }
 }

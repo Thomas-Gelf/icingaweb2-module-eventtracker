@@ -13,6 +13,8 @@ use Icinga\Authentication\Auth;
 use Icinga\Module\Eventtracker\ConfigHistory;
 use Icinga\Module\Eventtracker\Data\PlainObjectRenderer;
 use Icinga\Module\Eventtracker\Data\SerializationHelper;
+use Icinga\Module\Eventtracker\Filter\FilterHelper;
+use Icinga\Module\Eventtracker\Issue;
 use Icinga\Module\Eventtracker\Web\Table\ActionHistoryTable;
 use Icinga\Module\Eventtracker\Web\Table\ConfigurationHistoryTable;
 use Icinga\Module\Eventtracker\Web\Table\IssueHistoryTable;
@@ -109,7 +111,7 @@ class HistoryController extends Controller
                 $from = $this->params->get('fromTimestampMs');
                 $to = $this->params->get('toTimestampMs');
                 $query = $this->prepareQueryString($table, $tsColumn, $columns, $from, $to);
-                $this->attributesFilter($query);
+                FilterHelper::applyColumnAndFilterParams($query, $this->url(), Issue::listValidProperties());
                 $this->sendQueryResultAsResponse($query);
             });
         }

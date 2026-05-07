@@ -142,8 +142,13 @@ Accept: application/json
 ]
 ```
 
-It's also possible to filter for seperate attributes of an issue by providing the json key of the attribute. 
+It's also possible to filter for separate attributes of an issue by providing the json key of the attribute. 
 For multiple attributes you can provide the filter several times.
+
+    [!WARNING]
+    This processses a full-text search and should be used carefully. Also make sure to always combine this with a
+    `from` or `to` timestamp parameter
+
 
 ```http
 GET https://monitoring.example.com/eventtracker/issues?attributes.team=Operating
@@ -709,6 +714,13 @@ GET https://monitoring.example.com/icingaweb2/eventtracker/history/issues?column
 Authorization: Bearer 108600bf-4f77-4bdc-9a06-4cd04902537c4
 Accept: application/json
 ```
+
+### Fetch all issue history entries with the given attribute
+
+    [!WARNING]
+    This processses a full-text search and should be used carefully. Also make sure to always combine this with a
+    `from` or `to` timestamp parameter
+
 
 ### Fetch all action history entries
 
