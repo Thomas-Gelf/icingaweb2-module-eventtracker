@@ -6,20 +6,22 @@ use gipfl\Json\JsonString;
 use Icinga\Authentication\Auth;
 use Icinga\Module\Eventtracker\Auth\RestrictionHelper;
 use Icinga\Module\Eventtracker\Db\EventSummaryBySeverity;
+use Icinga\Module\Eventtracker\Filter\FilterControls;
 use Icinga\Module\Eventtracker\Filter\FilterHelper;
+use Icinga\Module\Eventtracker\Filter\SimpleFilterHandler;
 use Icinga\Module\Eventtracker\Issue;
 use Icinga\Module\Eventtracker\Web\Table\IssuesTable;
 use Icinga\Module\Eventtracker\Web\Widget\AdditionalTableActions;
 use Icinga\Module\Eventtracker\Web\Widget\SeverityFilter;
 use Icinga\Module\Eventtracker\Web\Widget\ToggleSeverities;
 use Icinga\Module\Eventtracker\Web\Widget\ToggleStatus;
+use Icinga\Module\Eventtracker\Web\Widget\ToggleTableView;
 use Icinga\Web\Widget\Tabextension\DashboardAction;
 use ipl\Html\Html;
 use Ramsey\Uuid\Uuid;
 
 class IssuesController extends Controller
 {
-    use IssuesFilterHelper;
     use RestApiMethods;
 
     protected $requiresAuthentication = false;
@@ -48,7 +50,10 @@ class IssuesController extends Controller
 
         $table = new IssuesTable($db, $this->url());
         RestrictionHelper::applyInputFilters($table->getQuery(), $this->Auth());
-        $this->applyFilters($table);
+        $filterControls = new FilterControls($this->url(), $this->showCompact(), $this->actions());
+        $filterControls->prepareFilterControls();
+        $filterHandler = new SimpleFilterHandler($this->params);
+        $filterHandler->applyToTable($table);
         if (! $this->url()->getParam('sort')) {
             $this->url()->setParam('sort', 'severity DESC');
         }
@@ -73,13 +78,13 @@ class IssuesController extends Controller
             }
             $this->addSingleTab('Issues');
             $this->setTitle('Event Tracker');
-            if ($this->hasAppliedFilters()) {
+            if ($filterControls->hasAppliedFilters()) {
                 $this->controls()->addTitle('Filtered Issues', $summary);
             } else {
                 $this->controls()->addTitle('Current Issues', $summary);
             }
             $this->actions()->add($filters);
-            $this->actions()->add($this->createViewToggle());
+            $this->actions()->add(new ToggleTableView($this->url()));
             $table->getQuery()->limit(1000);
             (new AdditionalTableActions($table, Auth::getInstance(), $this->url()))
                 ->appendTo($this->actions());
