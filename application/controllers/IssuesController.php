@@ -6,6 +6,7 @@ use gipfl\Json\JsonString;
 use Icinga\Authentication\Auth;
 use Icinga\Module\Eventtracker\Auth\RestrictionHelper;
 use Icinga\Module\Eventtracker\Db\EventSummaryBySeverity;
+use Icinga\Module\Eventtracker\Filter\FilterHelper;
 use Icinga\Module\Eventtracker\Issue;
 use Icinga\Module\Eventtracker\Web\Table\IssuesTable;
 use Icinga\Module\Eventtracker\Web\Widget\AdditionalTableActions;
@@ -98,17 +99,12 @@ class IssuesController extends Controller
         }
 
         $query = $this->db()->select()->from(['i' => 'issue'], []);
-        self::applyColumnAndFilterParams($query, $this->url(), $this->listValidIssueProperties());
+        FilterHelper::applyColumnAndFilterParams($query, $this->url(), Issue::listValidProperties());
         $result = $this->db()->fetchAll($query);
         foreach ($result as $row) {
             self::fixIssueResultRow($row);
         }
         $this->sendJsonResponse($result);
-    }
-
-    protected function listValidIssueProperties(): array
-    {
-        return array_keys((new Issue())->getDefaultProperties());
     }
 
     protected static function fixIssueResultRow($row)
