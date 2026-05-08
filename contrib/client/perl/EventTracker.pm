@@ -76,8 +76,18 @@ sub send_event {
     my $client = LWP::UserAgent->new;
     $client->ssl_opts(%ssl_opts);
     my $response = $client->request($self->prepare_rest_request($uri, $token, $event));
-    die "Can't create Ticket: ", $response->status_line
-       unless $response->is_success;
+
+    if (!$response->is_success) {
+        my $error_msg = $response->status_line;
+        eval {
+            my $json = $self->find_json->new->decode($response->content);
+            if ($json && $json->{'error'}) {
+                $error_msg .= ": " . $json->{'error'};
+            }
+        };
+        die "Can't create Ticket: $error_msg";
+    }
+
     my $result = $self->find_json->new->decode($response->content);
     if ($result->{'error'}) {
         if ($result->{'trace'}) {
@@ -85,7 +95,7 @@ sub send_event {
             $trace =~ s/\\n/\n/g;
             print $trace;
         }
-        die "Can't create Ticket: ", $result->{'error'}
+        die "Can't create Ticket: ", $result->{'error'};
     }
 
     return $result->{'success'};
