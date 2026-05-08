@@ -31,7 +31,7 @@ class FilterControls
         return !empty($this->appliedFilters);
     }
 
-    public function prepareFilterControls()
+    public function prepareFilterControls(bool $isHistory = false)
     {
         $isCompact = $this->isCompact;
         $main = Html::tag('ul', ['class' => 'nav']);
@@ -40,20 +40,41 @@ class FilterControls
             'class' => 'icon-angle-double-down'
         ]), $sub]));
 
-        $this->addFilterControl($sub, 'host_name', 'hosts', $this->translate('Hosts %s'), $isCompact);
-        $this->addFilterControl($sub, 'object_class', 'classes', $this->translate('Classes: %s'), $isCompact);
-        $this->addFilterControl($sub, 'object_name', 'objects', $this->translate('Objects: %s'), $isCompact);
-        $this->addFilterControl($sub, 'owner', 'owners', $this->translate('Owners: %s'), $isCompact);
-        $this->addFilterControl($sub, 'label', 'inputs', $this->translate('Input: %s'), $isCompact);
-        $this->addFilterControl($sub, 'sender_name', 'senders', $this->translate('Sender: %s'), $isCompact);
+        $this->addFilterControl($sub, 'host_name', 'hosts', $this->translate('Hosts %s'), $isCompact, $isHistory);
+        $this->addFilterControl(
+            $sub,
+            'object_class',
+            'classes',
+            $this->translate('Classes: %s'),
+            $isCompact,
+            $isHistory
+        );
+        $this->addFilterControl(
+            $sub,
+            'object_name',
+            'objects',
+            $this->translate('Objects: %s'),
+            $isCompact,
+            $isHistory
+        );
+        $this->addFilterControl($sub, 'owner', 'owners', $this->translate('Owners: %s'), $isCompact, $isHistory);
+        $this->addFilterControl($sub, 'label', 'inputs', $this->translate('Input: %s'), $isCompact, $isHistory);
+        $this->addFilterControl($sub, 'sender_name', 'senders', $this->translate('Sender: %s'), $isCompact, $isHistory);
 
         if (! $this->isCompact) {
             $this->actionBar->add($main);
         }
     }
 
-    protected function addFilterControl(BaseHtmlElement $parent, $column, $type, $title, $isCompact)
-    {
+    protected function addFilterControl(
+        BaseHtmlElement $parent,
+        $column,
+        $type,
+        $title,
+        $isCompact,
+        bool $isHistory = false
+    ) {
+        $historySummaryUrl = Url::fromPath("/icingaweb2/eventtracker/historysummary/$type");
         $li = Html::tag('li');
         $parent->add($li);
         $parent = $li;
@@ -63,26 +84,48 @@ class FilterControls
             if ($isCompact) {
                 return;
             }
-            $parent->add(
-                Link::create(
-                    sprintf($title, $value),
-                    $this->url->without($column),
-                    null,
-                    ['data-base-target' => '_self']
-                )
-            );
+            if ($isHistory) {
+                $parent->add(
+                    Link::create(
+                        sprintf($title, $value),
+                        $historySummaryUrl,
+                        null,
+                        ['data-base-target' => '_self']
+                    )
+                );
+            } else {
+                $parent->add(
+                    Link::create(
+                        sprintf($title, $value),
+                        'eventtracker/summary' . "/$type",
+                        null,
+                        ['data-base-target' => '_self']
+                    )
+                );
+            }
         } else {
             if ($isCompact) {
                 return;
             }
-            $parent->add(
-                Link::create(
-                    sprintf($title, $this->translate('all')),
-                    "eventtracker/summary/$type",
-                    null,
-                    ['data-base-target' => '_next']
-                )
-            );
+            if ($isHistory) {
+                $parent->add(
+                    Link::create(
+                        sprintf($title, $this->translate('all')),
+                        $historySummaryUrl,
+                        null,
+                        ['data-base-target' => '_next']
+                    )
+                );
+            } else {
+                $parent->add(
+                    Link::create(
+                        sprintf($title, $this->translate('all')),
+                        'eventtracker/summary' . "/$type",
+                        null,
+                        ['data-base-target' => '_next']
+                    )
+                );
+            }
         }
     }
 }

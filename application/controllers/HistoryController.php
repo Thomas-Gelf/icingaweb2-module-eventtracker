@@ -79,7 +79,7 @@ class HistoryController extends Controller
         $table = new IssueHistoryTable($db, $this->url());
         $table->getQuery()->limit(50);
         $filterControls = new FilterControls($this->url(), $this->showCompact(), $this->actions());
-        $filterControls->prepareFilterControls();
+        $filterControls->prepareFilterControls(true);
         $filterHandler = new SimpleFilterHandler($this->params);
         $filterHandler->applyToTable($table);
         (new AdditionalTableActions($table, Auth::getInstance(), $this->url()))

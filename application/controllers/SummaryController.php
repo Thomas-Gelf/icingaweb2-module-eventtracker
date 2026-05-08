@@ -2,6 +2,7 @@
 
 namespace Icinga\Module\Eventtracker\Controllers;
 
+use gipfl\ZfDb\Select;
 use Icinga\Module\Eventtracker\Status;
 use Icinga\Module\Eventtracker\Web\Table\BaseSummaryTable;
 use Icinga\Module\Eventtracker\Web\Table\HostNameSummaryTable;
@@ -15,59 +16,61 @@ use ipl\Html\Html;
 
 class SummaryController extends Controller
 {
+    protected string $tableName = 'issue';
+
+    protected bool $isHistory = false;
     public function classesAction()
     {
-        $this->addTitleWithType($this->translate('Object Class'));
+        $this->addTitleForType($this->translate('Object Class'));
         $this->setAutorefreshInterval(10);
-        (new ObjectClassSummaryTable($this->db()))->renderTo($this);
-        $this->tabs(new SummaryTabs())->activate('classes');
+        (new ObjectClassSummaryTable($this->db(), $this->tableName))->renderTo($this);
+        $this->tabs(new SummaryTabs($this->isHistory))->activate('classes');
     }
 
     public function objectsAction()
     {
-        $this->addTitleWithType($this->translate('Object Name'));
+        $this->addTitleForType($this->translate('Object Name'));
         $this->setAutorefreshInterval(10);
-        (new ObjectNameSummaryTable($this->db()))->renderTo($this);
-        $this->tabs(new SummaryTabs())->activate('objects');
+        (new ObjectNameSummaryTable($this->db(), $this->tableName))->renderTo($this);
+        $this->tabs(new SummaryTabs($this->isHistory))->activate('objects');
     }
-
     public function hostsAction()
     {
-        $this->addTitleWithType($this->translate('Hostname'));
+        $this->addTitleForType($this->translate('Hostname'));
         $this->setAutorefreshInterval(10);
-        (new HostNameSummaryTable($this->db()))->renderTo($this);
-        $this->tabs(new SummaryTabs())->activate('hosts');
+        (new HostNameSummaryTable($this->db(), $this->tableName))->renderTo($this);
+        $this->tabs(new SummaryTabs($this->isHistory))->activate('hosts');
     }
 
     public function ownersAction()
     {
-        $this->addTitleWithType($this->translate('Owner'));
+        $this->addTitleForType($this->translate('Owner'));
         $this->setAutorefreshInterval(10);
-        (new OwnerSummaryTable($this->db()))->renderTo($this);
-        $this->tabs(new SummaryTabs())->activate('owners');
+        (new OwnerSummaryTable($this->db(), $this->tableName))->renderTo($this);
+        $this->tabs(new SummaryTabs($this->isHistory))->activate('owners');
     }
 
     public function inputsAction()
     {
-        $this->addTitleWithType($this->translate('Input'));
+        $this->addTitleForType($this->translate('Input'));
         $this->setAutorefreshInterval(10);
-        (new InputSummaryTable($this->db()))->renderTo($this);
-        $this->tabs(new SummaryTabs())->activate('inputs');
+        (new InputSummaryTable($this->db(), $this->tableName))->renderTo($this);
+        $this->tabs(new SummaryTabs($this->isHistory))->activate('inputs');
     }
 
     public function sendersAction()
     {
-        $this->addTitleWithType($this->translate('Sender'));
+        $this->addTitleForType($this->translate('Sender'));
         $this->setAutorefreshInterval(10);
-        (new SenderSummaryTable($this->db()))->renderTo($this);
-        $this->tabs(new SummaryTabs())->activate('senders');
+        (new SenderSummaryTable($this->db(), $this->tableName))->renderTo($this);
+        $this->tabs(new SummaryTabs($this->isHistory))->activate('senders');
     }
 
     public function top10Action()
     {
         if (! $this->showCompact()) {
-            $this->tabs(new SummaryTabs())->activate('top10');
-            $this->addTitle($this->translate('Top Issue Summary by:'));
+            $this->tabs(new SummaryTabs($this->isHistory))->activate('top10');
+            $this->addTitle($this->getTop10Title());
         }
 
         $db = $this->db();
@@ -76,12 +79,12 @@ class SummaryController extends Controller
             'class' => 'summary-tables'
         ]);
         $tables = [
-            $this->translate('Object Class') => new ObjectClassSummaryTable($db),
-            $this->translate('Object Name')  => new ObjectNameSummaryTable($db),
-            $this->translate('Hostname')     => new HostNameSummaryTable($db),
-            $this->translate('Owner')        => new OwnerSummaryTable($db),
-            $this->translate('Input')        => new InputSummaryTable($db),
-            $this->translate('Sender (Old)') => new SenderSummaryTable($db),
+            $this->translate('Object Class') => new ObjectClassSummaryTable($db, $this->tableName),
+            $this->translate('Object Name')  => new ObjectNameSummaryTable($db, $this->tableName),
+            $this->translate('Hostname')     => new HostNameSummaryTable($db, $this->tableName),
+            $this->translate('Owner')        => new OwnerSummaryTable($db, $this->tableName),
+            $this->translate('Input')        => new InputSummaryTable($db, $this->tableName),
+            $this->translate('Sender (Old)') => new SenderSummaryTable($db, $this->tableName),
         ];
         /** @var BaseSummaryTable $table */
         foreach ($tables as $title => $table) {
@@ -90,18 +93,31 @@ class SummaryController extends Controller
                 $table->setAttribute('data-base-target', '_next');
             }
             $table->setAttribute('data-base-target', '_next');
-            $table->getQuery()->limit(10)->where('i.status = ?', Status::OPEN);
+            $table->getQuery()->limit(10);
+            $this->applyStatusLimit($table->getQuery());
             $main->add(Html::tag('div', $table));
         }
         $this->content()->add($main);
     }
 
-    protected function addTitleWithType($type)
+    protected function applyStatusLimit(Select $select): void
     {
-        $this->addTitle(sprintf(
-            $this->translate('Issue Summary by %s'),
-            $type
-        ));
+        $select->where('i.status = ?', Status::OPEN);
+    }
+
+    protected function addTitleForType(string $type): void
+    {
+        $this->addTitle($this->getTitleForType($type));
+    }
+
+    protected function getTitleForType(string $type): string
+    {
+        return sprintf($this->translate('Issue Summary by %s'), $type);
+    }
+
+    protected function getTop10Title(): string
+    {
+        return sprintf($this->translate('Top Issue Summary by:'));
     }
 
     protected function showCompact()

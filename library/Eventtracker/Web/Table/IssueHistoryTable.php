@@ -16,6 +16,10 @@ class IssueHistoryTable extends BaseTable
 {
     use TranslationHelper;
 
+    protected $joinedSenders = false;
+
+    protected $joinedInputs = false;
+
     protected $searchColumns = [
         'i.host_name',
         'i.object_name',
@@ -50,15 +54,15 @@ class IssueHistoryTable extends BaseTable
     }
 
     /**
-     * @param  int $timestamp
+     * @param int $timestamp
      */
     protected function renderDayIfNew($timestamp, $colspan = 2)
     {
         if ($this->lastDay !== $timestamp) {
             $this->nextHeader()->add(
-                $this::th((string) $timestamp, [
+                $this::th((string)$timestamp, [
                     'colspan' => $colspan,
-                    'class'   => 'table-header-day'
+                    'class' => 'table-header-day'
                 ])
             );
 
@@ -69,7 +73,7 @@ class IssueHistoryTable extends BaseTable
 
     protected function formatTsHeader($ts)
     {
-        $timestamp = (int) ($ts / 1000);
+        $timestamp = (int)($ts / 1000);
         $now = time();
         $formatter = new LocalDateFormat();
         if ($timestamp > ($now - 120)) {
@@ -202,6 +206,31 @@ class IssueHistoryTable extends BaseTable
     public function prepareQuery()
     {
         $query = $this->db()->select()->from(['i' => 'issue_history'], []);
+        $columns = $this->getRequiredDbColumns();
+        if (array_key_exists('sender_name', $columns)) {
+            $query->join(['s' => 'sender'], 's.id = i.sender_id', []);
+            $this->joinedSenders = true;
+        }
         return $query->columns($this->getRequiredDbColumns());
+    }
+
+    public function joinSenders()
+    {
+        if ($this->joinedSenders === false) {
+            $this->getQuery()->join(['s' => 'sender'], 's.id = i.sender_id', []);
+            $this->joinedSenders = true;
+        }
+
+        return $this;
+    }
+
+    public function joinInputs()
+    {
+        if ($this->joinedInputs === false) {
+            $this->getQuery()->join(['inp' => 'input'], 'inp.uuid = i.input_uuid', []);
+            $this->joinedInputs = true;
+        }
+
+        return $this;
     }
 }
