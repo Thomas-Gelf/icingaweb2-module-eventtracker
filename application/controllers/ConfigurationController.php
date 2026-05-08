@@ -205,15 +205,24 @@ class ConfigurationController extends Controller
             }
             $this->content()->add($ruleForm);
         }
+        $simulationLink = Link::create(
+            $this->translate('Load Simulation'),
+            'eventtracker/configuration/channelRules',
+            [
+                'uuid' => $this->requireUuid(),
+                'action' => 'load_simulation'
+            ],
+            [
+                'class' => 'icon-magic'
+            ]
+        );
         if ($ns->get($sessionKey) !== null) {
-            $this->actions()->add(Link::create(
-                $this->translate('Stop Simulation'),
-                'eventtracker/configuration/channelRules',
-                [
-                    'uuid'   => $this->requireUuid(),
-                    'action' => 'stop_simulation'
-                ]
-            ));
+            $simulationLink->setContent($this->translate('Stop Simulation'));
+            $simulationLink->setUrl('eventtracker/configuration/channelRules', [
+                'uuid' => $this->requireUuid(),
+                'action' => 'stop_simulation'
+            ]);
+            $simulationLink->setAttribute('class', 'icon-cancel');
         } elseif ($this->params->get('action') === 'load_simulation') {
             $simulationForm = new SimulateRuleForm($ns, $sessionKey);
             $simulationForm->on($simulationForm::ON_SUCCESS, function () {
@@ -242,17 +251,7 @@ class ConfigurationController extends Controller
 
             $this->content()->add($ruleForm);
         } else {
-            $this->actions()->add(Link::create(
-                $this->translate('Load Simulation'),
-                'eventtracker/configuration/channelRules/',
-                [
-                    'uuid'   => $this->requireUuid(),
-                    'action' => 'load_simulation',
-                ],
-                [
-                    'class' => 'icon-magic'
-                ]
-            ));
+            $this->actions()->add($simulationLink);
         }
         if ($this->params->get('action') === 'stop_simulation') {
             $ns->delete($sessionKey);
