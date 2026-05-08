@@ -57,7 +57,10 @@ class ShortenString extends BaseModifier
             case 'center':
                 return $this->translate('the center');
             default:
-                throw new InvalidArgumentException('strip="$strip" is not a valid setting');
+                throw new InvalidArgumentException(sprintf(
+                    'strip="%s" is not a valid setting',
+                    $this->settings->get('strip', 'ending')
+                ));
         }
     }
 
