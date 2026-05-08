@@ -3,7 +3,7 @@
 namespace Icinga\Module\Eventtracker\Daemon;
 
 use gipfl\ZfDb\Adapter\Pdo\PdoAdapter;
-use gipfl\ZfDbStore\ZfDbStore;
+use Icinga\Module\Eventtracker\Db\DbStore;
 use Psr\Log\LoggerInterface;
 use React\EventLoop\Loop;
 use React\Promise\Deferred;
@@ -12,12 +12,12 @@ use React\Promise\PromiseInterface;
 trait SimpleDbBasedComponent
 {
     protected ?PdoAdapter $db = null;
-    protected ?ZfDbStore $dbStore = null;
+    protected ?DbStore $dbStore = null;
 
     public function initDb(PdoAdapter $db): void
     {
         $this->db = $db;
-        $this->dbStore = new ZfDbStore($db);
+        $this->dbStore = new DbStore($db);
         Loop::futureTick(function () {
             if (method_exists($this, 'onDbReady')) {
                 try {

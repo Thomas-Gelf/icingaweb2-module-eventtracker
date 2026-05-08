@@ -3,6 +3,7 @@
 namespace Icinga\Module\Eventtracker\Web\Table;
 
 use gipfl\IcingaWeb2\Link;
+use Icinga\Module\Eventtracker\Db\DbUtil;
 use Icinga\Module\Eventtracker\Web\WebAction;
 use Ramsey\Uuid\Uuid;
 

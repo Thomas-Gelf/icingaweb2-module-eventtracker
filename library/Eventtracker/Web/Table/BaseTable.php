@@ -200,6 +200,11 @@ abstract class BaseTable extends ZfQueryBasedTable
     public function renderRow($row)
     {
         $tr = $this::tr();
+        foreach (array_keys(get_object_vars($row)) as $key) {
+            if (is_resource($row->$key)) {
+                $row->$key = stream_get_contents($row->$key);
+            }
+        }
         foreach ($this->getChosenColumns() as $column) {
             $td = $column->renderRow($row);
             if (! $td instanceof BaseHtmlElement || $td->getTag() !== 'td') {

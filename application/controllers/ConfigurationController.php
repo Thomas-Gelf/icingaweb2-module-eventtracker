@@ -9,9 +9,9 @@ use gipfl\Json\JsonString;
 use gipfl\Web\Widget\Hint;
 use gipfl\ZfDbStore\DbStorableInterface;
 use gipfl\ZfDbStore\NotFoundError;
-use gipfl\ZfDbStore\ZfDbStore;
 use Icinga\Module\Eventtracker\Data\PlainObjectRenderer;
 use Icinga\Module\Eventtracker\Db\ConfigStore;
+use Icinga\Module\Eventtracker\Db\DbStore;
 use Icinga\Module\Eventtracker\Engine\Downtime\DowntimeRule;
 use Icinga\Module\Eventtracker\Engine\Input\KafkaInput;
 use Icinga\Module\Eventtracker\Modifier\ModifierRuleStore;
@@ -740,8 +740,7 @@ class ConfigurationController extends Controller
         } catch (\Throwable $e) {
             $info = [
                  Hint::error($e),
-                 Html::tag('pre', $modifierRuleStore->getRules()),
-                 Html::tag('pre', $modifierRuleStore->getRules(), JSON_PRETTY_PRINT),
+                 Html::tag('pre', JsonString::encode($modifierRuleStore->getRules(), JSON_PRETTY_PRINT)),
             ];
         }
 
@@ -919,7 +918,7 @@ class ConfigurationController extends Controller
     protected function loadObject(UuidInterface $uuid, WebAction $action): object
     {
         if ($action->formClass === DowntimeForm::class) {
-            $store = new ZfDbStore($this->db());
+            $store = new DbStore($this->db());
             $object = $store->load($uuid->getBytes(), DowntimeRule::class);
         } else {
             $object = $this->getStore()->fetchObject($action->table, $uuid);

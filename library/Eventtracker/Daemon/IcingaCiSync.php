@@ -4,6 +4,8 @@ namespace Icinga\Module\Eventtracker\Daemon;
 
 use Exception;
 use gipfl\ZfDb\Adapter\Adapter as ZfDb;
+use Icinga\Module\Director\Web\Table\DbHelper;
+use Icinga\Module\Eventtracker\Db\DbUtil;
 
 class IcingaCiSync
 {
@@ -61,9 +63,11 @@ class IcingaCiSync
                 if ($currentHost->checksum === $host->checksum) {
                     continue;
                 } else {
+                    $host->checksum = DbUtil::quoteBinary($host->checksum, $this->db);
                     $modify[$id] = $host;
                 }
             } else {
+                $host->checksum = DbUtil::quoteBinary($host->checksum, $this->db);
                 $create[$id] = $host;
             }
         }

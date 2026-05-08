@@ -11,8 +11,8 @@ use gipfl\Json\JsonString;
 use gipfl\ZfDb\Adapter\Adapter;
 use gipfl\ZfDbStore\DbStorableInterface;
 use gipfl\ZfDbStore\NotFoundError;
-use gipfl\ZfDbStore\ZfDbStore;
 use Icinga\Module\Eventtracker\Data\SerializationHelper;
+use Icinga\Module\Eventtracker\Db\DbStore;
 use Icinga\Module\Eventtracker\Time;
 use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\UuidInterface;
@@ -62,10 +62,9 @@ class DowntimeRule implements JsonSerialization, DbStorableInterface
     }
 
     /**
-     * @param ZfDbStore $store
      * @return static[]
      */
-    public static function loadAll(ZfDbStore $store): array
+    public static function loadAll(DbStore $store): array
     {
         $dummy = new self();
         $table = $dummy->getTableName();

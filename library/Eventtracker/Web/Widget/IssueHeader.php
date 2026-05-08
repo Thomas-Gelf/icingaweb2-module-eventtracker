@@ -9,10 +9,10 @@ use gipfl\Translation\TranslationHelper;
 use gipfl\Web\Widget\Hint;
 use gipfl\ZfDb\Adapter\Adapter as Db;
 use gipfl\ZfDbStore\NotFoundError;
-use gipfl\ZfDbStore\ZfDbStore;
 use Icinga\Application\Hook;
 use Icinga\Authentication\Auth;
 use Icinga\Date\DateFormatter;
+use Icinga\Module\Eventtracker\Db\DbStore;
 use Icinga\Module\Eventtracker\Engine\Downtime\DowntimeRule;
 use Icinga\Module\Eventtracker\Input;
 use Icinga\Module\Eventtracker\File;
@@ -109,7 +109,7 @@ class IssueHeader extends BaseHtmlElement
                             Uuid::fromBytes($issue->get('downtime_config_uuid'))
                         );
                     } else {
-                        $store = new ZfDbStore($this->db);
+                        $store = new DbStore($this->db);
                         $downtime = DowntimeRule::load(
                             $store,
                             $issue->get('downtime_rule_uuid')

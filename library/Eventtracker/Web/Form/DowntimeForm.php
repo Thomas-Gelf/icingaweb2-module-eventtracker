@@ -10,12 +10,13 @@ use gipfl\Web\Form\Decorator\DdDtDecorator;
 use gipfl\Web\Form\Element\TextWithActionButton;
 use gipfl\Web\Widget\Hint;
 use gipfl\ZfDbStore\DbStorableInterface;
-use gipfl\ZfDbStore\ZfDbStore;
 use Icinga\Authentication\Auth;
 use Icinga\Data\Filter\Filter;
 use Icinga\Data\Filter\FilterAnd;
 use Icinga\Data\Filter\FilterMatch;
 use Icinga\Module\Eventtracker\ConfigHistory;
+use Icinga\Module\Eventtracker\Db\DbStore;
+use Icinga\Module\Eventtracker\Db\DbUtil;
 use Icinga\Module\Eventtracker\Engine\Downtime\DowntimeRule;
 use Icinga\Module\Eventtracker\Time;
 use Icinga\Module\Eventtracker\Web\Form\Validator\CronExpressionValidator;
@@ -454,8 +455,8 @@ EOT
         $db = $this->store->getDb();
         $result = [];
         $query = $db->select()->from('host_list', ['uuid', 'label']);
-        foreach ($db->fetchPairs($query) as $uuid => $host) {
-            $result[Uuid::fromBytes($uuid)->toString()] = $host;
+        foreach ($db->fetchAll($query) as $row) {
+            $result[Uuid::fromBytes(DbUtil::binaryResult($row->uuid))->toString()] = $row->label;
         }
 
         return $result;
@@ -653,7 +654,7 @@ EOT
         assert($rule instanceof DowntimeRule);
         $rule->setProperties($properties);
         $rule->recalculateConfigUuid();
-        $store = new ZfDbStore($this->store->getDb());
+        $store = new DbStore($this->store->getDb()); // ??
         $subject = sprintf($this->translate('Downtime "%s"'), $properties['label']);
         if ($store->store($rule)) {
             $history = new ConfigHistory($store->getDb());

@@ -2,6 +2,7 @@
 
 namespace Icinga\Module\Eventtracker\Web\Form;
 
+use Icinga\Module\Eventtracker\Db\DbUtil;
 use Ramsey\Uuid\UuidInterface;
 
 class HostListForm extends UuidObjectForm
@@ -32,7 +33,7 @@ class HostListForm extends UuidObjectForm
         $db = $this->store->getDb();
         return $db->fetchCol(
             $db->select()->from(['hlm' => $this->membersTable], 'hostname')
-                ->where('list_uuid = ?', $this->uuid->getBytes())
+                ->where('list_uuid = ?', DbUtil::quoteBinary($this->uuid->getBytes(), $db))
         );
     }
 
@@ -66,11 +67,11 @@ class HostListForm extends UuidObjectForm
 
         foreach ($add as $host) {
             $db->insert($this->membersTable, [
-                'list_uuid' => $binaryUuid,
-                'hostname' => $host,
+                'list_uuid' => DbUtil::quoteBinary($binaryUuid, $db),
+                'hostname'  => $host,
             ]);
         }
-        $whereUuid = $db->quoteInto('list_uuid = ?', $binaryUuid);
+        $whereUuid = $db->quoteInto('list_uuid = ?', DbUtil::quoteBinary($binaryUuid, $db));
         foreach ($delete as $host) {
             $where = $whereUuid . $db->quoteInto(' AND hostname = ?', $host);
             $db->delete($this->membersTable, $where);

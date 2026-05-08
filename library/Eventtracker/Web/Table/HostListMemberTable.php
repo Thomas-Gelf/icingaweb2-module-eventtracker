@@ -6,6 +6,7 @@ use gipfl\Format\LocalDateFormat;
 use gipfl\Format\LocalTimeFormat;
 use gipfl\IcingaWeb2\Icon;
 use gipfl\IcingaWeb2\Link;
+use Icinga\Module\Eventtracker\Db\DbUtil;
 use Icinga\Module\Eventtracker\Web\WebAction;
 use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\UuidInterface;
@@ -59,7 +60,7 @@ class HostListMemberTable extends BaseTable
         return $this->db()
             ->select()
             ->from(['hlm' => 'host_list_member'], $this->getRequiredDbColumns())
-            ->where('hlm.list_uuid = ?', $this->hostListUuid->getBytes())
+            ->where('hlm.list_uuid = ?', DbUtil::quoteBinary($this->hostListUuid->getBytes(), $this->db()))
             ->order('hostname');
     }
 }

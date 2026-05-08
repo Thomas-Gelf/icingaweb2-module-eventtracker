@@ -6,6 +6,7 @@ use gipfl\Json\JsonDecodeException;
 use gipfl\Json\JsonString;
 use gipfl\ZfDb\Adapter\Adapter;
 use gipfl\ZfDb\Adapter\Pdo\PdoAdapter;
+use gipfl\ZfDb\Expr;
 use Icinga\Module\Eventtracker\Engine\Action;
 use Icinga\Module\Eventtracker\Engine\Action\ActionRegistry;
 use Icinga\Module\Eventtracker\Engine\Bucket\BucketInterface;
@@ -151,7 +152,9 @@ class ConfigStore
     public function fetchObject($table, UuidInterface $uuid)
     {
         $db = $this->db;
-        $row = $db->fetchRow($db->select()->from($table)->where('uuid = ?', $uuid->getBytes()));
+        $row = $db->fetchRow(
+            $db->select()->from($table)->where('uuid = ?', DbUtil::quoteBinary($uuid->getBytes(), $db))
+        );
         $this->unserializeSerializedProperties($row);
 
         return $row;
@@ -162,6 +165,12 @@ class ConfigStore
         foreach ($this->serializedProperties as $property) {
             if (isset($row->$property)) {
                 $row->$property = JsonString::decode($row->$property);
+            }
+        }
+
+        foreach (array_keys(get_object_vars($row)) as $key) {
+            if (is_resource($row->$key)) {
+                $row->$key = stream_get_contents($row->$key);
             }
         }
     }
@@ -190,8 +199,8 @@ class ConfigStore
     {
         $db = $this->db;
         $result = [];
-        foreach ($db->fetchPairs("SELECT uuid, label FROM $table ORDER BY label") as $uuid => $label) {
-            $result[Uuid::fromBytes($uuid)->toString()] = $label;
+        foreach ($db->fetchAll("SELECT uuid, label FROM $table ORDER BY label") as $row) {
+            $result[Uuid::fromBytes(DbUtil::binaryResult($row->uuid))->toString()] = $row->label;
         }
 
         return $result;
@@ -222,7 +231,7 @@ class ConfigStore
         if ($isUpdate) {
             return $this->db->update($table, $object, $this->quotedWhere($uuid)) > 0;
         } else {
-            $object['uuid'] = $uuid->getBytes();
+            $object['uuid'] = DbUtil::quoteBinary($uuid->getBytes(), $this->db);
             $this->db->insert($table, $object);
         }
 
@@ -240,7 +249,7 @@ class ConfigStore
 
     protected function quotedWhere(UuidInterface $uuid)
     {
-        return $this->db->quoteInto('uuid = ?', $uuid->getBytes());
+        return $this->db->quoteInto('uuid = ?', DbUtil::quoteBinary($uuid->getBytes(), $this->db));
     }
 
     protected function propertyArrayCleanup(&$array)
