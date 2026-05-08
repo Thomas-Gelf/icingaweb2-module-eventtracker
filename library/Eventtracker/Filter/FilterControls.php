@@ -74,7 +74,11 @@ class FilterControls
         $isCompact,
         bool $isHistory = false
     ) {
-        $historySummaryUrl = Url::fromPath("/icingaweb2/eventtracker/historysummary/$type");
+        if ($isHistory) {
+            $baseUrl = "eventtracker/historysummary/$type";
+        } else {
+            $baseUrl = "eventtracker/summary/$type";
+        }
         $li = Html::tag('li');
         $parent->add($li);
         $parent = $li;
@@ -84,48 +88,26 @@ class FilterControls
             if ($isCompact) {
                 return;
             }
-            if ($isHistory) {
-                $parent->add(
-                    Link::create(
-                        sprintf($title, $value),
-                        $historySummaryUrl,
-                        null,
-                        ['data-base-target' => '_self']
-                    )
-                );
-            } else {
-                $parent->add(
-                    Link::create(
-                        sprintf($title, $value),
-                        'eventtracker/summary' . "/$type",
-                        null,
-                        ['data-base-target' => '_self']
-                    )
-                );
-            }
+            $parent->add(
+                Link::create(
+                    sprintf($title, $value),
+                    $baseUrl,
+                    null,
+                    ['data-base-target' => '_self']
+                )
+            );
         } else {
             if ($isCompact) {
                 return;
             }
-            if ($isHistory) {
-                $parent->add(
-                    Link::create(
-                        sprintf($title, $this->translate('all')),
-                        $historySummaryUrl,
-                        null,
-                        ['data-base-target' => '_next']
-                    )
-                );
-            } else {
-                $parent->add(
-                    Link::create(
-                        sprintf($title, $this->translate('all')),
-                        'eventtracker/summary' . "/$type",
-                        null,
-                        ['data-base-target' => '_next']
-                    )
-                );
-            }
+            $parent->add(
+                Link::create(
+                    sprintf($title, $this->translate('all')),
+                    $baseUrl,
+                    null,
+                    ['data-base-target' => '_next']
+                )
+            );
         }
     }
 }
