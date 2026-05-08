@@ -41,6 +41,19 @@ class EventSummaryByProperty
         }
     }
 
+    public static function addAggregationColumnsToHistoryQuery(Select $query)
+    {
+        $property = static::PROPERTY;
+        $class = static::CLASS_NAME;
+        foreach ($class::ENUM_LIST as $value) {
+            $query->columns([
+                "cnt_$value" => "COALESCE(SUM(CASE WHEN $property = '$value' THEN 1 ELSE 0 END), 0)",
+                "cnt_{$value}_handled"   => "(0)",
+                "cnt_{$value}_unhandled" => "(0)",
+            ]);
+        }
+    }
+
     protected function prepareQuery()
     {
         $query = clone $this->select;
@@ -49,6 +62,7 @@ class EventSummaryByProperty
             ->reset(Select::LIMIT_COUNT)
             ->reset(Select::LIMIT_OFFSET);
 
+        // Watch out not for History
         static::addAggregationColumnsToQuery($query);
 
         return $query;

@@ -20,6 +20,13 @@ abstract class BaseSummaryTable extends BaseTable
         'class' => ['common-table', 'table-row-selectable'],
         'data-base-target' => 'col1',
     ];
+    protected string $tableName;
+
+    public function __construct($db, string $tableName, ?Url $url = null)
+    {
+        $this->tableName = $tableName;
+        parent::__construct($db, $url);
+    }
 
     abstract protected function getMainColumn();
 
@@ -65,6 +72,11 @@ abstract class BaseSummaryTable extends BaseTable
     protected function urlForRow($row): Url
     {
         $column = $this->getMainColumnAlias();
+        if ($this->tableName === 'issue_history') {
+            return Url::fromPath('eventtracker/history/issues', [
+                $this->getFilterParamName() => $this->decodeRowValue($row->$column)
+            ]);
+        }
         return Url::fromPath('eventtracker/issues', [
             $this->getFilterParamName() => $this->decodeRowValue($row->$column)
         ]);
@@ -82,7 +94,7 @@ abstract class BaseSummaryTable extends BaseTable
 
         $query = $this->db()
             ->select()
-            ->from(['i' => 'issue'], $this->getRequiredDbColumns())
+            ->from(['i' => $this->tableName], $this->getRequiredDbColumns())
             ->order('cnt_alert DESC')
             ->order('cnt_critical DESC')
             ->order('cnt_error DESC')
@@ -91,7 +103,11 @@ abstract class BaseSummaryTable extends BaseTable
             ->group($column);
         // TODO: Auth as param
         RestrictionHelper::applyInputFilters($query, Auth::getInstance());
-        EventSummaryBySeverity::addAggregationColumnsToQuery($query);
+        if ($this->tableName === 'issue_history') {
+            EventSummaryBySeverity::addAggregationColumnsToHistoryQuery($query);
+        } else {
+            EventSummaryBySeverity::addAggregationColumnsToQuery($query);
+        }
 
         return $query;
     }
