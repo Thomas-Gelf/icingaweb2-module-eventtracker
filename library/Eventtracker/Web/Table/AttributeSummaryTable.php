@@ -19,7 +19,7 @@ class AttributeSummaryTable extends BaseSummaryTable
     {
         $this->attributeName = $attributeName;
         $this->attributeTitle = $attributeTitle;
-        parent::__construct($db, $url);
+        parent::__construct($db, 'issue', $url);
     }
 
     protected function getMainColumn(): Expr
