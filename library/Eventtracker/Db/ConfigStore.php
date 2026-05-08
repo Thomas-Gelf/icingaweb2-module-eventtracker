@@ -184,9 +184,9 @@ class ConfigStore
         }
         $filters = [];
         foreach ($filter as $key => $value) {
-             if ($key === 'uuid' || preg_match('/_uuid$/', $key)) {
-                 $value = DbUtil::quoteBinary($value, $db);
-             }
+            if ($key === 'uuid' || preg_match('/_uuid$/', $key)) {
+                $value = DbUtil::quoteBinary($value, $db);
+            }
             $filters[] = $db->quoteInto(sprintf(' %s = ?', $db->quoteIdentifier($key)), $value);
         }
         $query .= implode(' AND ', $filters);
