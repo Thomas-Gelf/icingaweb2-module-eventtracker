@@ -48,8 +48,7 @@ class ApiTokenForm extends UuidObjectForm
             ]));
         }
         $this->addElement('text', 'label', [
-            'label'   => $this->translate('Label'),
-        ]);
+            'label'   => $this->translate('Label'), 'required' => true]);
         $this->addElement('select', 'permissions', [
             'label'    => $this->translate('Permissions'),
             'required' => true,
