@@ -14,6 +14,7 @@ class InputConfigForm extends UuidObjectForm
     {
         $this->addElement('text', 'label', [
             'label'   => $this->translate('Label'),
+            'required' => true,
         ]);
         $this->addElement('select', 'implementation', [
             'label'    => $this->translate('Implementation'),
