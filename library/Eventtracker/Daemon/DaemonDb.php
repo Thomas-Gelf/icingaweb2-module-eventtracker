@@ -4,6 +4,7 @@ namespace Icinga\Module\Eventtracker\Daemon;
 
 use Evenement\EventEmitterTrait;
 use Exception;
+use gipfl\DbMigration\Migration;
 use gipfl\DbMigration\Migrations;
 use gipfl\IcingaCliDaemon\DbResourceConfigWatch;
 use gipfl\IcingaCliDaemon\RetryUnless;
@@ -154,8 +155,15 @@ class DaemonDb
         assert($db instanceof Mysql); // TODO: IDE hint only. Drop in case we're using PostgreSQL
         $migrations = $this->getMigrations($db);
         if (! $migrations->hasSchema()) {
-            $this->emitStatus(self::ON_NO_SCHEMA, 'error');
-            throw new RuntimeException('DB has no schema');
+            if ($migrations->hasAnyTable()) {
+                $this->emitStatus(self::ON_NO_SCHEMA, 'error');
+                throw new RuntimeException('DB has no eventtracker schema, but other tables');
+            }
+            $this->logger->warning('DB has no eventtracker schema, creating now');
+            $migration = new Migration(0, $migrations->loadMigrationFile(0));
+            $migration->apply($db);
+            $this->startupSchemaVersion = $migrations->getLastMigrationNumber();
+            $this->logger->notice('Eventtracker schema has been created');
         }
         $this->wipeOrphanedInstances($db);
         if ($this->hasAnyOtherActiveInstance($db)) {
