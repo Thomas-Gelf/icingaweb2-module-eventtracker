@@ -43,6 +43,28 @@ class DbUtil
         return new Expr('0x' . bin2hex($binary));
     }
 
+    public static function dbHexFunction($column, Adapter $db): string
+    {
+        if ($db instanceof Pgsql) {
+            return sprintf("LOWER(ENCODE(%s, 'hex'))", $column);
+        } else {
+            return sprintf("LOWER(HEX(%s))", $column);
+        }
+    }
+
+    public static function dbJsonExtractFunction(string $column, string $attribute, Adapter $db): string
+    {
+        if ($db instanceof Pgsql) {
+            return sprintf(
+                'JSON_EXTRACT_PATH_TEXT(%s::json, %s)',
+                $db->quoteIdentifier($column),
+                $db->quote($attribute)
+            );
+        } else {
+            return sprintf("LOWER(HEX(%s))", $column);
+        }
+    }
+
     protected static function quoteArray($array, $method, $db): array
     {
         $result = [];

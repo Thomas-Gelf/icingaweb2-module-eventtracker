@@ -488,6 +488,11 @@ class Issue implements JsonSerialization
         if ($properties['sender_event_id'] === null) {
             $properties['sender_event_id'] = '';
         }
+        foreach ($properties as $k => $v) {
+            if ($k === 'uuid' || preg_match('/_uuid$/', $k)) {
+                $properties[$k] = DbUtil::quoteBinary($v, $db);
+            }
+        }
 
         $db->insert(self::$tableName, $properties);
 
