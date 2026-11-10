@@ -2,9 +2,11 @@
 
 namespace Icinga\Module\Eventtracker\Filter;
 
+use gipfl\ZfDb\Adapter\Pdo\PdoAdapter;
 use gipfl\ZfDb\Select;
+use Icinga\Module\Eventtracker\Db\DbUtil;
+use Icinga\Module\Eventtracker\Web\Table\BaseTable;
 use Icinga\Web\UrlParams;
-use ipl\Html\Table;
 
 class SimpleFilterHandler
 {
@@ -16,7 +18,7 @@ class SimpleFilterHandler
         $this->params = $params;
     }
 
-    public function applyToTable(Table $table)
+    public function applyToTable(BaseTable $table)
     {
         $table->search($this->params->get('q'));
         $this->prepareFilterQuery($table, 'host_name');
@@ -24,10 +26,10 @@ class SimpleFilterHandler
         $this->prepareFilterQuery($table, 'owner');
         $this->prepareFilterQuery($table, 'label');
         $this->prepareFilterQuery($table, 'sender_name');
-        $this->attributesFilter($table->getQuery());
+        $this->attributesFilter($table->getQuery(), $table->db());
     }
 
-    protected function prepareFilterQuery($table, $column)
+    protected function prepareFilterQuery(BaseTable $table, string $column)
     {
         if ($this->params->has($column)) {
             $value = $this->params->get($column);
@@ -55,11 +57,11 @@ class SimpleFilterHandler
         }
     }
 
-    protected function attributesFilter(Select $query)
+    protected function attributesFilter(Select $query, PdoAdapter $db)
     {
         foreach ($this->params->toArray() as $pair) {
             if (preg_match('/^attributes\.([a-zA-Z_-]+)/', $pair[0], $match)) {
-                $query->where("JSON_EXTRACT(attributes, '$." . $match[1] . "') = ?", $pair[1]);
+                $query->where(DbUtil::dbJsonExtractFunction("attributes", $match[1], $db). " = ?", $pair[1]);
             }
         }
     }

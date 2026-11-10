@@ -61,7 +61,7 @@ class DbUtil
                 $db->quote($attribute)
             );
         } else {
-            return sprintf("LOWER(HEX(%s))", $column);
+            return "JSON_EXTRACT(" . $db->quoteIdentifier($column) .", " . $db->quote('$.' . $attribute) . ")";
         }
     }
 

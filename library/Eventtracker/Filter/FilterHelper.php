@@ -4,11 +4,13 @@ namespace Icinga\Module\Eventtracker\Filter;
 
 use gipfl\IcingaWeb2\Url;
 use gipfl\IcingaWeb2\Zf1\Db\FilterRenderer;
+use gipfl\ZfDb\Adapter\Pdo\PdoAdapter;
 use gipfl\ZfDb\Expr;
 use gipfl\ZfDb\Select;
 use Icinga\Data\Filter\Filter;
 use Icinga\Data\Filter\FilterChain;
 use Icinga\Data\Filter\FilterExpression;
+use Icinga\Module\Eventtracker\Db\DbUtil;
 use InvalidArgumentException;
 use Ramsey\Uuid\Uuid;
 
@@ -32,7 +34,7 @@ class FilterHelper
             if ($attributeColumn = self::extractOptionalAttributesColumn($column)) {
                 $query->columns([
                     'attributes_' . $attributeColumn => new Expr(
-                        "JSON_EXTRACT(attributes, '$." . $attributeColumn . "')"
+                        DbUtil::dbJsonExtractFunction("attributes", $attributeColumn, $db)
                     )
                 ]);
             } else {

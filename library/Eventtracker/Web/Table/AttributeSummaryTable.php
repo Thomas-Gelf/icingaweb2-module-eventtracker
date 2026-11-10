@@ -5,6 +5,7 @@ namespace Icinga\Module\Eventtracker\Web\Table;
 use gipfl\IcingaWeb2\Url;
 use gipfl\Json\JsonString;
 use gipfl\ZfDb\Expr;
+use Icinga\Module\Eventtracker\Db\DbUtil;
 
 class AttributeSummaryTable extends BaseSummaryTable
 {
@@ -24,7 +25,7 @@ class AttributeSummaryTable extends BaseSummaryTable
 
     protected function getMainColumn(): Expr
     {
-        return new Expr("JSON_EXTRACT(attributes, '$." . $this->attributeName . "')");
+        return new Expr(DbUtil::dbJsonExtractFunction("attributes", $this->attributeName, $this->db()));
     }
 
     protected function getMainColumnAlias(): string

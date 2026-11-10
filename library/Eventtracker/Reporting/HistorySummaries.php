@@ -4,6 +4,7 @@ namespace Icinga\Module\Eventtracker\Reporting;
 
 use DateTimeInterface as DT;
 use gipfl\ZfDb\Adapter\Pdo\PdoAdapter;
+use gipfl\ZfDb\Adapter\Pdo\Pgsql;
 use gipfl\ZfDb\Select;
 use Icinga\Module\Eventtracker\Time;
 
@@ -11,7 +12,7 @@ class HistorySummaries
 {
     protected PdoAdapter $db;
 
-    protected const AGGREGATIONS = [
+    protected const MYSQL_AGGREGATIONS = [
         AggregationPeriod::HOURLY
             => "DATE_FORMAT(FROM_UNIXTIME(FLOOR(ts_first_event / 1000)), '%H')",
         AggregationPeriod::DAILY
@@ -25,6 +26,19 @@ class HistorySummaries
             => "DATE_FORMAT(FROM_UNIXTIME(FLOOR(ts_first_event / 1000)), '%Y%m')",
     ];
 
+    protected const POSTGRES_AGGREGATIONS = [
+        AggregationPeriod::HOURLY
+        => "to_char(to_timestamp(FLOOR(ts_first_event / 1000)), 'HH24')",
+        AggregationPeriod::DAILY
+        => "to_char(to_timestamp(FLOOR(ts_first_event / 1000)), 'YYYY-MM-DD')",
+        AggregationPeriod::WEEKLY
+        => "to_char(to_timestamp(FLOOR(ts_first_event / 1000)), 'IW')",
+        // Postgres 'ID' is ISO weekday: mon(1)-sun(7)
+        AggregationPeriod::WEEKDAY
+        => "to_char(to_timestamp(FLOOR(ts_first_event / 1000)), 'ID')",
+        AggregationPeriod::MONTHLY
+        => "to_char(to_timestamp(FLOOR(ts_first_event / 1000)), 'YYYYMM')",
+    ];
     protected const COLUMNS = [
         'cnt_total'               => 'COUNT(*)',
         'cnt_with_owner'          => 'SUM(CASE WHEN owner IS NULL THEN 0 ELSE 1 END)',
@@ -53,7 +67,10 @@ class HistorySummaries
 
     public function getAggregationExpression(): string
     {
-        return self::AGGREGATIONS[$this->aggregation];
+        if ($this->db instanceof Pgsql) {
+            return self::POSTGRES_AGGREGATIONS[$this->aggregation];
+        }
+        return self::MYSQL_AGGREGATIONS[$this->aggregation];
     }
 
     public function getAvailableColumns(): array

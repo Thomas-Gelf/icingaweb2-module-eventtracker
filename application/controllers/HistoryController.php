@@ -115,7 +115,7 @@ class HistoryController extends Controller
                 $from = $this->params->get('fromTimestampMs');
                 $to = $this->params->get('toTimestampMs');
                 $query = $this->prepareQueryString($table, $tsColumn, $columns, $from, $to);
-                FilterHelper::applyColumnAndFilterParams($query, $this->url(), Issue::listValidProperties());
+                FilterHelper::applyColumnAndFilterParams($query, $this->url(), Issue::listValidProperties(), $this->db());
                 $this->sendQueryResultAsResponse($query);
             });
         }

@@ -104,7 +104,7 @@ class IssuesController extends Controller
         }
 
         $query = $this->db()->select()->from(['i' => 'issue'], []);
-        FilterHelper::applyColumnAndFilterParams($query, $this->url(), Issue::listValidProperties());
+        FilterHelper::applyColumnAndFilterParams($query, $this->url(), Issue::listValidProperties(), $this->db());
         $result = $this->db()->fetchAll($query);
         foreach ($result as $row) {
             self::fixIssueResultRow($row);
