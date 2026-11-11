@@ -2,9 +2,10 @@
 
 namespace Icinga\Module\Eventtracker\Clicommands;
 
+use Exception;
 use Icinga\Module\Eventtracker\Config\IcingaResource;
-use Icinga\Module\Eventtracker\Db\DbUtil;
 use Icinga\Module\Eventtracker\Db\ZfDbConnectionFactory;
+use Icinga\Module\Eventtracker\MigrateDatabase;
 
 class MigrateCommand extends Command
 {
@@ -18,6 +19,7 @@ class MigrateCommand extends Command
      * icingacli eventtracker migrate database
      *     --source
      *     --target
+     * @throws Exception
      */
     public function databaseAction()
     {
@@ -25,35 +27,7 @@ class MigrateCommand extends Command
         $targetName = $this->params->getRequired('target');
         $sourceDb = ZfDbConnectionFactory::connection(IcingaResource::requireResourceConfig($sourceName));
         $targetDb = ZfDbConnectionFactory::connection(IcingaResource::requireResourceConfig($targetName));
-
-        $tables = [
-            "object_class",
-            "sender",
-            "input",
-            "bucket",
-            "channel",
-            "api_token",
-            "action",
-            "map",
-            "problem_handling",
-            "icinga_ci",
-            "icinga_ci_status",
-            "icinga_ci_var",
-            "raw_event",
-            "issue",
-            "issue_activity",
-            "file",
-            "issue_file",
-            "issue_history",
-            "host_list",
-            "host_list_member",
-            "downtime_rule",
-            "issue_downtime_history",
-            "config_history",
-            "action_history",
-            "daemon_info",
-            "eventtracker_schema_migration"
-        ];
+        $migration = new MigrateDatabase($sourceDb, $targetDb);
         if (!$this->params->get('force')) {
             foreach (["issue", "input"] as $table) {
                 if ($targetDb->fetchOne(($targetDb->select()->from($table, "COUNT(*)"))) > 0) {
@@ -61,29 +35,20 @@ class MigrateCommand extends Command
                 }
             }
         }
-        foreach (array_reverse($tables) as $table) {
-            $targetDb->delete($table);
-        }
-        foreach ($tables as $table) {
-            $targetDb->beginTransaction();
-            try {
-                foreach ($sourceDb->fetchAll($sourceDb->select()->from($table)) as $row) {
-                    $row = (array) $row;
-                    foreach ($row as $k => $v) {
-                        if ($k === 'uuid' || preg_match('/_uuid$/', $k) || preg_match('/_checksum$/', $k)) {
-                            $row[$k] = DbUtil::quoteBinary($v, $targetDb);
-                        }
-                    }
-                    $targetDb->insert($table, $row);
-                }
-                $targetDb->commit();
-            } catch (\Exception $e) {
-                try {
-                    $targetDb->rollback();
-                } catch (\Exception $e) {
-                }
-                throw $e;
-            }
-        }
+        $migration->migrateConfigTables();
+        $migration->migrateInitialHistoryTables();
+    }
+
+    /**
+     * @throws Exception
+     */
+    public function historyAction()
+    {
+        $sourceName = $this->params->getRequired('source');
+        $targetName = $this->params->getRequired('target');
+        $sourceDb = ZfDbConnectionFactory::connection(IcingaResource::requireResourceConfig($sourceName));
+        $targetDb = ZfDbConnectionFactory::connection(IcingaResource::requireResourceConfig($targetName));
+        $migration = new MigrateDatabase($sourceDb, $targetDb);
+        $migration->migrateHistoryTables();
     }
 }
