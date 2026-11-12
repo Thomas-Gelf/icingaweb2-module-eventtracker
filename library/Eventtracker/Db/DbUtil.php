@@ -35,6 +35,7 @@ class DbUtil
         if ($binary === null) {
             return null;
         }
+        $binary = self::binaryResult($binary);
 
         if ($db instanceof Pgsql) {
             return new Expr("'\\x" . bin2hex($binary) . "'");

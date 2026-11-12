@@ -28,6 +28,7 @@ class MigrateCommand extends Command
         $sourceDb = ZfDbConnectionFactory::connection(IcingaResource::requireResourceConfig($sourceName));
         $targetDb = ZfDbConnectionFactory::connection(IcingaResource::requireResourceConfig($targetName));
         $migration = new MigrateDatabase($sourceDb, $targetDb);
+        $migration->ensureSchemaIsReady();
         if (!$this->params->get('force')) {
             foreach (["issue", "input"] as $table) {
                 if ($targetDb->fetchOne(($targetDb->select()->from($table, "COUNT(*)"))) > 0) {
