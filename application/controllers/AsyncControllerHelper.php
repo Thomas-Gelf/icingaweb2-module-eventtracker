@@ -2,10 +2,11 @@
 
 namespace Icinga\Module\Eventtracker\Controllers;
 
-use Clue\React\Block;
 use Icinga\Module\Eventtracker\Configuration;
 use Icinga\Module\Eventtracker\Daemon\RemoteClient;
-use React\EventLoop\Loop;
+
+use function React\Async\await;
+use function React\Promise\Timer\timeout;
 
 trait AsyncControllerHelper
 {
@@ -13,7 +14,7 @@ trait AsyncControllerHelper
 
     protected function syncRpcCall($method, $params = [], $timeout = 30)
     {
-        return Block\await($this->remoteClient()->request($method, $params), Loop::get(), $timeout);
+        return await(timeout($this->remoteClient()->request($method, $params), $timeout));
     }
 
     protected function remoteClient(): RemoteClient

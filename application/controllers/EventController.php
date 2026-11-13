@@ -10,7 +10,7 @@ use Icinga\Module\Eventtracker\Engine\Input;
 use Icinga\Module\Eventtracker\Engine\Input\RestApiInput;
 use Psr\Log\NullLogger;
 
-use function Clue\React\Block\await as block_await;
+use function React\Async\await;
 
 class EventController extends Controller
 {
@@ -56,7 +56,7 @@ class EventController extends Controller
         }
 
         $client = new RemoteClient(Configuration::getSocketPath());
-        $accepted = block_await(
+        $accepted = await(
             $client->request('event.sendToInput', [
                 $input->getUuid(),
                 JsonString::decode($body)

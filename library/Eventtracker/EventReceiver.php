@@ -5,7 +5,7 @@ namespace Icinga\Module\Eventtracker;
 use Icinga\Module\Eventtracker\Daemon\RemoteClient;
 use React\EventLoop\Loop;
 
-use function Clue\React\Block\await as block_await;
+use function React\Async\await;
 
 /**
  * Hint: this code is NOT to be used in the main (async) daemon
@@ -24,7 +24,7 @@ class EventReceiver
 
     public function processEvent(Event $event): ?Issue
     {
-        $issue = block_await($this->remoteClient()->request('event.receive', [$event]), Loop::get());
+        $issue = await($this->remoteClient()->request('event.receive', [$event]));
         Loop::stop();
         if ($issue) {
             return Issue::fromSerialization($issue);

@@ -25,7 +25,8 @@ use Icinga\Module\Eventtracker\Web\Widget\IssueHeader;
 use ipl\Html\Html;
 use Ramsey\Uuid\Uuid;
 
-use function Clue\React\Block\awaitAll;
+use function React\Async\await;
+use function React\Promise\all;
 
 class IssueController extends Controller
 {
@@ -326,7 +327,7 @@ class IssueController extends Controller
             ], $rpcParams));
         }
         $result = [];
-        foreach (awaitAll($requests) as $uuid => $success) {
+        foreach (await(all($requests)) as $uuid => $success) {
             if ($success) {
                 $result[] = $uuid;
             }

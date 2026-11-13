@@ -9,7 +9,7 @@ use Icinga\Module\Eventtracker\Daemon\RemoteClient;
 use ipl\Html\FormElement\SelectElement;
 use Psr\Log\LogLevel;
 
-use function Clue\React\Block\await;
+use function React\Async\await;
 
 class LogLevelForm extends InlineForm
 {

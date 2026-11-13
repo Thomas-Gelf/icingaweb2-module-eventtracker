@@ -18,7 +18,7 @@ use React\Promise\Deferred;
 use React\Promise\PromiseInterface;
 use RuntimeException;
 
-use function Clue\React\Block\await;
+use function React\Async\await;
 
 class RpcNamespaceCleanup
 {

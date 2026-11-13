@@ -14,9 +14,9 @@ use Icinga\Module\Eventtracker\Engine\Downtime\DowntimePeriodRunner;
 use Icinga\Module\Eventtracker\Engine\Downtime\DowntimeRunner;
 use Psr\Log\LoggerInterface;
 use React\EventLoop\Loop;
-use React\EventLoop\LoopInterface;
 use Ramsey\Uuid\Uuid;
 use React\Stream\Util as StreamUtil;
+
 use function React\Promise\all;
 use function React\Promise\reject;
 

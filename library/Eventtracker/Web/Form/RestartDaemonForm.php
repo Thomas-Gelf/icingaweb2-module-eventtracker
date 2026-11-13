@@ -6,7 +6,8 @@ use gipfl\Translation\TranslationHelper;
 use gipfl\Web\Form\Feature\NextConfirmCancel;
 use gipfl\Web\InlineForm;
 use Icinga\Module\Eventtracker\Daemon\RemoteClient;
-use function Clue\React\Block\await;
+
+use function React\Async\await;
 
 class RestartDaemonForm extends InlineForm
 {
